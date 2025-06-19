@@ -896,6 +896,11 @@
     { name: 'Fear of Blood', maxTier: 3, desc: 'DC 15 WIS seeing blood, -Tier' }
   ];
 
+  /**
+   * Collects and returns the current character's data from the character sheet form.
+   * Gathers skills, advantages, disadvantages, and powers based on user input.
+   * @returns {Object|null} Character data object with skills, advantages, disadvantages, powers, level, and class, or null if character name is missing.
+   */
   function getCharacterData() {
   try {
     const charName = document.getElementById('charName').value.trim();
@@ -982,7 +987,6 @@
     console.error('Error getting character data:', error);
     return null;
   }
-}
 
   function debounce(func, wait) {
     let timeout;
@@ -1829,7 +1833,7 @@
       availableStats = [...rolledStats];
       document.getElementById('rolledStats').value = rolledStats.join(', ');
       assignedStats = {};
-
+  
       const attrs = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
       attrs.forEach(attr => {
         document.getElementById(`attr${attr}`).value = '';
@@ -1839,7 +1843,6 @@
         assignSelect.value = '';
         assignSelect.disabled = false;
       });
-
       // Clear all previous assignments
       Object.keys(assignedStats).forEach(attr => {
         delete assignedStats[attr];
@@ -4743,12 +4746,15 @@ function removePowerField(button) {
     console.log(`Initial DOM state: class=${document.getElementById('charClass')?.value}, level=${document.getElementById('charLevel')?.value}`);
 
     // Step 2: Validate attrMethod
+    // When loading a character from a file, the attribute method may not match the user's current selection.
+    // To support imported characters, we add a hidden "Imported" option to the attribute method select,
+    // so that the UI can reflect that attributes were loaded from a file and not chosen by the user.
     const attrMethodSelect = document.getElementById('attrMethod');
     if (attrMethodSelect) {
-      if (!Array.from(attrMethodSelect.options).some(opt => opt.value === 'loaded')) {
+      if (!Array.from(attrMethodSelect.options).some(opt => opt.value === 'imported')) {
         const opt = document.createElement('option');
-        opt.value = 'loaded';
-        opt.text = 'Loaded';
+        opt.value = 'imported';
+        opt.text = 'Imported';
         opt.style.display = 'none';
         attrMethodSelect.appendChild(opt);
       }
@@ -4771,24 +4777,34 @@ function removePowerField(button) {
     // Step 3: Load attributes
     const attributes = {};
     if (attrMethodSelect) {
-      setValue('attrMethod', 'loaded');
+      setValue('attrMethod', 'imported');
     }
-    ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
-      const value = data.attributes && data.attributes[attr] && data.attributes[attr] >= 8 && data.attributes[attr] <= 18 ? data.attributes[attr] : 10;
-      attributes[attr] = value;
-      setValue(`attr${attr}`, value);
+    // Helper to hide and clear assignSelect elements
+    function hideAndClearAssignSelect(attr) {
       const assignSelect = document.getElementById(`assign${attr}`);
       if (assignSelect) {
         assignSelect.classList.add('hidden');
         assignSelect.value = '';
       }
+    }
+    ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+      const value = data.attributes && data.attributes[attr] && data.attributes[attr] >= 8 && data.attributes[attr] <= 18 ? data.attributes[attr] : 10;
+      attributes[attr] = value;
+      setValue(`attr${attr}`, value);
+      hideAndClearAssignSelect(attr);
     });
-    const rerollButton = document.getElementById('rerollButton');
-    const randomRolls = document.getElementById('randomRolls');
-    const confirmAssignments = document.getElementById('confirmAssignments');
-    const pointsRemaining = document.getElementById('pointsRemaining');
     if (rerollButton) rerollButton.classList.add('hidden');
     if (randomRolls) randomRolls.classList.add('hidden');
+    if (confirmAssignments) confirmAssignments.classList.add('hidden');
+    if (pointsRemaining) {
+      if (attrMethodSelect && attrMethodSelect.value === 'pointBuy') {
+        updatePoints();
+      } else {
+        pointsRemaining.value = 'N/A';
+      }
+    }
+    updateDerivedStats();
+    console.log(`DOM state: INT=${document.getElementById('attrINT')?.value}, STR=${document.getElementById('attrSTR')?.value}`);
     if (confirmAssignments) confirmAssignments.classList.add('hidden');
     if (pointsRemaining) pointsRemaining.value = 'N/A';
     updateDerivedStats();
@@ -4932,49 +4948,64 @@ function removePowerField(button) {
       });
     }
     // Step 13: Load resources
-    function addResourcesAndSetValues(resources) {
-      return new Promise(resolve => {
-        if (!resources || !resources.length) return resolve();
-        resources.forEach(() => addResourceField());
-        // Wait for next animation frame to ensure DOM is updated
-        requestAnimationFrame(() => {
-          resources.forEach((resource, index) => {
-            const i = index + 1;
-            setValue(`resourceName${i}`, resource.name);
-            setValue(`resourceCurrent${i}`, resource.current || 0);
-            setValue(`resourceMax${i}`, resource.max || 0);
-            setValue(`resourceRecharge${i}`, resource.recharge);
+    if (data.resources) {
+      (async () => {
+        await (function addResourcesAndSetValues(resources) {
+          return new Promise(resolve => {
+            if (!resources || !resources.length) return resolve();
+            resources.forEach(() => addResourceField());
+            // Wait for next animation frame to ensure DOM is updated
+            requestAnimationFrame(() => {
+              resources.forEach((resource, index) => {
+                const i = index + 1;
+                setValue(`resourceName${i}`, resource.name);
+                setValue(`resourceCurrent${i}`, resource.current || 0);
+                setValue(`resourceMax${i}`, resource.max || 0);
+                setValue(`resourceRecharge${i}`, resource.recharge);
+              });
+              console.log(`DOM state: resourcesContainer=${document.getElementById('resourcesContainer')?.innerHTML}`);
+              // Now that all dynamic fields are present, update the sheet and UI
+              if (classSelect) setValue('charClass', charClass);
+              ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+                setValue(`attr${attr}`, attributes[attr]);
+              });
+              if (attrMethodSelect) setValue('attrMethod', 'loaded');
+              updateSheetInputs();
+              updateSkills();
+              debouncedUpdateFeatsSheet();
+              updateInputs();
+              updateSkillSpecOptions();
+              updateFeats();
+              console.log(`Final DOM state: class=${document.getElementById('charClass')?.value}, INT=${document.getElementById('attrINT')?.value}`);
+              // Restore onchange handlers
+              if (classSelect && originalClassOnChange) classSelect.onchange = originalClassOnChange;
+              if (attrMethodSelect && originalAttrMethodOnChange) attrMethodSelect.onchange = originalAttrMethodOnChange;
+              attrInputs.forEach((input, index) => {
+                if (input && originalAttrOnChanges[index]) input.onchange = originalAttrOnChanges[index];
+              });
+              window.isLoadingCharacter = false;
+              console.log('Character sheet populated successfully');
+              resolve();
+            });
           });
-          console.log(`DOM state: resourcesContainer=${document.getElementById('resourcesContainer')?.innerHTML}`);
-          resolve();
-        });
-      });
-    }
-
-    // Step 14: Final updates
-    addResourcesAndSetValues(data.resources).then(() => {
-      // Re-set critical values
-      if (classSelect) setValue('charClass', charClass);
-      ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
-        setValue(`attr${attr}`, attributes[attr]);
-      });
-      if (attrMethodSelect) setValue('attrMethod', 'loaded');
-      updateSheetInputs();
-      updateSkills();
-      debouncedUpdateFeatsSheet();
-      updateInputs();
-      updateSkillSpecOptions();
-      updateFeats();
-      console.log(`Final DOM state: class=${document.getElementById('charClass')?.value}, INT=${document.getElementById('attrINT')?.value}`);
-      // Restore onchange handlers
+        })(data.resources);
+      })();
+    } else {
+      // If no resources, still restore handlers and update UI
       if (classSelect && originalClassOnChange) classSelect.onchange = originalClassOnChange;
       if (attrMethodSelect && originalAttrMethodOnChange) attrMethodSelect.onchange = originalAttrMethodOnChange;
       attrInputs.forEach((input, index) => {
         if (input && originalAttrOnChanges[index]) input.onchange = originalAttrOnChanges[index];
       });
       window.isLoadingCharacter = false;
-      console.log('Character sheet populated successfully');
-    });
+      updateSheetInputs();
+      updateSkills();
+      debouncedUpdateFeatsSheet();
+      updateInputs();
+      updateSkillSpecOptions();
+      updateFeats();
+      console.log('Character sheet populated successfully (no resources)');
+    }
   } catch (e) {
     console.error('Error populating character sheet:', e);
     alert(`Failed to populate character sheet: ${e.message}`);
@@ -4982,23 +5013,30 @@ function removePowerField(button) {
   }
 }
 
-  function copySheetText() {
-    try {
-      const textArea = document.getElementById('sheetText');
-      // Use the modern Clipboard API
+function copySheetText() {
+  try {
+    const textArea = document.getElementById('sheetText');
+    if (navigator.clipboard && textArea) {
       navigator.clipboard.writeText(textArea.value)
         .then(() => {
-          alert('Character sheet copied to clipboard!');
+          alert('Sheet text copied to clipboard!');
         })
         .catch(err => {
-          console.error('Error copying sheet text:', err);
+          console.error('Clipboard write failed:', err);
           alert('Failed to copy sheet text.');
         });
-    } catch (e) {
-      console.error('Error copying sheet text:', e);
-      alert('Failed to copy sheet text.');
+    } else if (textArea) {
+      textArea.select();
+      document.execCommand('copy');
+      alert('Sheet text copied to clipboard!');
+    } else {
+      alert('Sheet text area not found.');
     }
+  } catch (e) {
+    console.error('Error copying sheet text:', e);
+    alert('Failed to copy sheet text.');
   }
+}
 
   function closeModal() {
     try {
@@ -5079,7 +5117,7 @@ function removePowerField(button) {
   } catch (e) {
     console.error('Error initializing page:', e);
     alert('Failed to initialize page.');
-  }
+   }
 });
 </script>
 </body>
