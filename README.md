@@ -44,7 +44,7 @@ Maintainers and Contributors
 
 
 
-Your Name (@your-username) - Creator and primary maintainer.
+hymlock@hotmail.com - Creator and primary maintainer.
 
 Contributions are welcome! Fork the repo, make changes, and submit a pull request.
 
