@@ -1839,6 +1839,11 @@
         assignSelect.value = '';
         assignSelect.disabled = false;
       });
+
+      // Clear all previous assignments
+      Object.keys(assignedStats).forEach(attr => {
+        delete assignedStats[attr];
+      });
     } catch (e) {
       console.error('Error rerolling attributes:', e);
       alert(`Failed to reroll attributes: ${e.message}`);
@@ -1942,11 +1947,10 @@
     }
   }
 
-  function roll4d6DropLowest() {
-    const rolls = Array(4).fill().map(() => 1 + (Math.random() * 6) | 0);
-    return rolls.sort((a, b) => b - a).slice(0, 3).reduce((s, v) => s + v, 0);
-  }
-
+  // Point-buy system: Each attribute score from 8 to 18 has a point cost.
+  // Scores below 10 have negative costs, meaning you gain points back for lowering a stat below 10.
+  // The player has 15 points to spend; exceeding this total is not allowed.
+  // Example: 10 = 0, 12 = 2, 8 = -2 (so lowering a stat to 8 gives you 2 extra points to spend elsewhere).
   function updatePoints() {
     try {
       if (document.getElementById('attrMethod').value !== 'pointBuy') return;
@@ -2649,25 +2653,41 @@
     }
   }
 
-  function removePowerField(button) {
-    try {
-        if (powerCounter > 0) {
-            const powerDiv = button.parentElement;
-            const id = powerCounter;
-            const prevCost = parseInt(document.getElementById(`powerCost${id}`).dataset.prevCost || '0');
-            const currentFatePoints = parseInt(document.getElementById('fatePointsCurrent').value) || 0;
-            powerDiv.remove();
-            powerCounter--;
-            if (prevCost > 0) {
-                document.getElementById('fatePointsCurrent').value = currentFatePoints + prevCost;
-                console.log(`Power removed: powerCounter=${powerCounter}, Refunded ${prevCost} Fate Points`);
-            }
-            updatePowers();
-        }
-    } catch (e) {
-        console.error('Error removing power field:', e);
-        alert('Failed to remove power field.');
+function removePowerField(button) {
+  try {
+    const powerDiv = button.parentElement;
+    // Find the correct id by parsing the number from the input/select IDs inside this div
+    let id = null;
+    const inputs = powerDiv.querySelectorAll('input[id^="powerCost"], select[id^="powerCost"]');
+    if (inputs.length > 0) {
+      const match = inputs[0].id.match(/powerCost(\d+)/);
+      if (match) id = parseInt(match[1]);
     }
+    // Fallback: try to find by powerName if needed
+    if (!id) {
+      const nameInput = powerDiv.querySelector('input[id^="powerName"]');
+      if (nameInput) {
+        const match = nameInput.id.match(/powerName(\d+)/);
+        if (match) id = parseInt(match[1]);
+      }
+    }
+    // Refund correct Fate Points if possible
+    if (id) {
+      const prevCostInput = document.getElementById(`powerCost${id}`);
+      const prevCost = prevCostInput ? parseInt(prevCostInput.dataset.prevCost || '0') : 0;
+      const currentFatePoints = parseInt(document.getElementById('fatePointsCurrent').value) || 0;
+      if (prevCost > 0) {
+        document.getElementById('fatePointsCurrent').value = currentFatePoints + prevCost;
+        console.log(`Power removed: id=${id}, Refunded ${prevCost} Fate Points`);
+      }
+    }
+    powerDiv.remove();
+    powerCounter = Math.max(0, powerCounter - 1);
+    updatePowers();
+  } catch (e) {
+    console.error('Error removing power field:', e);
+    alert('Failed to remove power field.');
+  }
 }
 
   function updatePowers() {
@@ -4430,27 +4450,19 @@
         yPos = addText(`Occupation: ${charData.occupation}`);
         yPos = addText(`Personality & Motivation: ${charData.personality}`);
         yPos = addText(`Milestone: ${charData.milestone}`);
-        yPos = addText(`Inherent Ability: ${charData.inherentAbility}`);
-        yPos += lineHeight;
-
-        yPos = addText('Attributes', { fontSize: 14, bold: true, underline: true });
         yPos = addTable(
             ['Attribute', 'Score', 'Modifier'],
             ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(attr => [
                 attr,
                 charData.attributes[attr],
-                Math.floor((charData.attributes[attr] - 10) / 2)
+                getModifier(charData.attributes[attr])
             ]),
             [colWidth, colWidth, colWidth]
         );
-        yPos = addText(`Method: ${charData.attrMethod === 'pointBuy' ? 'Point Buy' : 'Random'}`, { align: 'center' });
-        yPos += lineHeight;
-
-        yPos = addText('Derived Stats', { fontSize: 14, bold: true, underline: true });
-        const conMod = Math.floor((charData.attributes.CON - 10) / 2);
-        const dexMod = Math.floor((charData.attributes.DEX - 10) / 2);
-        const wisMod = Math.floor((charData.attributes.WIS - 10) / 2);
-        const chaMod = Math.floor((charData.attributes.CHA - 10) / 2);
+        const conMod = getModifier(charData.attributes.CON);
+        const dexMod = getModifier(charData.attributes.DEX);
+        const wisMod = getModifier(charData.attributes.WIS);
+        const chaMod = getModifier(charData.attributes.CHA);
         const health = charData.level === 1 ? 10 + conMod : 10 + conMod + 5 * (charData.level - 1);
         const sanity = charData.level === 1 ? 10 + wisMod : 10 + wisMod + 2 * (charData.level - 1);
         const defense = 10 + dexMod + charData.armors.reduce((s, a) => s + a.ac, 0);
@@ -4467,9 +4479,6 @@
             charData.resources.map(r => [r.name, r.current, r.max, r.recharge]),
             [colWidth, colWidth / 2, colWidth / 2, colWidth]
         );
-        yPos += lineHeight;
-
-        yPos = addText('Skills', { fontSize: 14, bold: true, underline: true });
         yPos = addTable(
             ['Skill', 'Attribute', 'Rank', 'Specializations', 'Total Bonus'],
             charData.skills.map(s => [
@@ -4477,7 +4486,7 @@
                 s.attr,
                 s.rank,
                 s.specs.join(', ') || 'None',
-                s.rank + Math.floor((charData.attributes[s.attr.split('/')[0]] - 10) / 2) + (s.specs.length ? 2 : 0)
+                s.rank + getModifier(charData.attributes[s.attr.split('/')[0]]) + (s.specs.length ? 2 : 0)
             ]),
             [colWidth, colWidth, colWidth / 2, colWidth, colWidth / 2]
         );
@@ -4551,8 +4560,8 @@
             [colWidth, colWidth / 2, colWidth / 2, colWidth, colWidth]
         );
         yPos = addText(`Carrying Capacity: Normal: ${charData.attributes.STR * 10} lbs | Heavy: ${charData.attributes.STR * 20} lbs`);
-        yPos = addText(`Wealth: Credits: ${charData.wealth.credits} | Rift Shards: ${charData.wealth.shards}`);
-        yPos += lineHeight * 1.5;
+        yPos = addText(`Melee Attack: d20 + ${getBAB(charData.level, charData.class)} + ${getModifier(charData.attributes.STR)} + Melee Weapon Rank`);
+        yPos = addText(`Ranged Attack: d20 + ${getBAB(charData.level, charData.class)} + ${getModifier(charData.attributes.DEX)} + Ranged Weapons Rank`);
 
         yPos = addText('Combat', { fontSize: 14, bold: true, underline: true });
         yPos = addText(`Melee Attack: d20 + ${getBAB(charData.level, charData.class)} + ${Math.floor((charData.attributes.STR - 10) / 2)} + Melee Weapon Rank`);
@@ -4582,7 +4591,7 @@
             ]),
             [colWidth, colWidth / 2, colWidth / 2, colWidth / 2, colWidth, colWidth / 2, colWidth / 2]
         );
-        yPos += lineHeight;
+        yPos = addText(`Next Level Benefits: +1 Attribute (every 3 levels), +5 Health, +2 Sanity, ${2 + getModifier(charData.attributes.INT) + (charData.class === 'Adventurer' ? 1 : 0)} Skill Points, Feat at even levels`);
 
         yPos = addText('Progression', { fontSize: 14, bold: true, underline: true });
         yPos = addText(`XP: ${charData.progression.currentXP} / ${charData.progression.nextLevelXP}`);
@@ -4744,7 +4753,8 @@
         attrMethodSelect.appendChild(opt);
       }
       const attrOptions = Array.from(attrMethodSelect.options).map(opt => opt.value);
-      console.log('attrMethod options:', attrOptions);
+      // Debug: log attrMethod options if needed
+      // if (window.DEBUG) console.log('attrMethod options:', attrOptions);
     } else {
       console.error('attrMethod element not found');
     }
@@ -4921,24 +4931,28 @@
         updateDowntimeOutcome(i);
       });
     }
-
     // Step 13: Load resources
-    if (data.resources) {
-      data.resources.forEach(() => addResourceField());
-      setTimeout(() => {
-        data.resources.forEach((resource, index) => {
-          const i = index + 1;
-          setValue(`resourceName${i}`, resource.name);
-          setValue(`resourceCurrent${i}`, resource.current || 0);
-          setValue(`resourceMax${i}`, resource.max || 0);
-          setValue(`resourceRecharge${i}`, resource.recharge);
+    function addResourcesAndSetValues(resources) {
+      return new Promise(resolve => {
+        if (!resources || !resources.length) return resolve();
+        resources.forEach(() => addResourceField());
+        // Wait for next animation frame to ensure DOM is updated
+        requestAnimationFrame(() => {
+          resources.forEach((resource, index) => {
+            const i = index + 1;
+            setValue(`resourceName${i}`, resource.name);
+            setValue(`resourceCurrent${i}`, resource.current || 0);
+            setValue(`resourceMax${i}`, resource.max || 0);
+            setValue(`resourceRecharge${i}`, resource.recharge);
+          });
+          console.log(`DOM state: resourcesContainer=${document.getElementById('resourcesContainer')?.innerHTML}`);
+          resolve();
         });
-        console.log(`DOM state: resourcesContainer=${document.getElementById('resourcesContainer')?.innerHTML}`);
-      }, 200); // Increased delay
+      });
     }
 
     // Step 14: Final updates
-    setTimeout(() => {
+    addResourcesAndSetValues(data.resources).then(() => {
       // Re-set critical values
       if (classSelect) setValue('charClass', charClass);
       ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
@@ -4960,7 +4974,7 @@
       });
       window.isLoadingCharacter = false;
       console.log('Character sheet populated successfully');
-    }, 300); // Increased delay
+    });
   } catch (e) {
     console.error('Error populating character sheet:', e);
     alert(`Failed to populate character sheet: ${e.message}`);
@@ -4971,9 +4985,15 @@
   function copySheetText() {
     try {
       const textArea = document.getElementById('sheetText');
-      textArea.select();
-      document.execCommand('copy');
-      alert('Character sheet copied to clipboard!');
+      // Use the modern Clipboard API
+      navigator.clipboard.writeText(textArea.value)
+        .then(() => {
+          alert('Character sheet copied to clipboard!');
+        })
+        .catch(err => {
+          console.error('Error copying sheet text:', err);
+          alert('Failed to copy sheet text.');
+        });
     } catch (e) {
       console.error('Error copying sheet text:', e);
       alert('Failed to copy sheet text.');
@@ -5026,18 +5046,14 @@
       alert('Failed to clear sheet fields.');
     }
   }
-
   // Initialize on page load
+  // This initialization sequence sets up the UI state, resets dynamic containers and counters,
+  // and ensures that event handlers (such as onchange) are temporarily disabled during setup
+  // to prevent unwanted side effects or premature updates while the DOM is being populated.
+  // This is especially important when loading or resetting character data, as it avoids
+  // triggering validation or update logic before all fields are correctly set.
   document.addEventListener('DOMContentLoaded', () => {
     try {
-    // Disable onchange handlers during initialization
-    const charLevel = document.getElementById('charLevel');
-    const charClass = document.getElementById('charClass');
-    const originalLevelOnChange = charLevel ? charLevel.onchange : null;
-    const originalClassOnChange = charClass ? charClass.onchange : null;
-    if (charLevel) charLevel.onchange = null;
-    if (charClass) charClass.onchange = null;
-
     // Clear power fields and counter
     const powersContainer = document.getElementById('powersContainer');
     if (powersContainer) {
@@ -5060,10 +5076,6 @@
       updateInputs();
       updateSkillSpecOptions();
     });
-
-    // Restore onchange handlers
-    if (charLevel && originalLevelOnChange) charLevel.onchange = originalLevelOnChange;
-    if (charClass && originalClassOnChange) charClass.onchange = originalClassOnChange;
   } catch (e) {
     console.error('Error initializing page:', e);
     alert('Failed to initialize page.');
