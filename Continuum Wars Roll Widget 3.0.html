@@ -987,7 +987,7 @@
     console.error('Error getting character data:', error);
     return null;
   }
-
+} 
   function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -1670,6 +1670,7 @@
     document.getElementById('charAlignment').value = lvl <= 3 ? 'None' : document.getElementById('charAlignment').value || 'Balance';
     document.getElementById('nextLevelXP').value = getNextLevelXP(lvl);
     updateAttributes();
+    const pointsRemaining = document.getElementById('pointsRemaining');
     updateDerivedStats();
     updateSkills();
     debouncedUpdateFeatsSheet();
@@ -4755,12 +4756,11 @@ function removePowerField(button) {
         const opt = document.createElement('option');
         opt.value = 'imported';
         opt.text = 'Imported';
-        opt.style.display = 'none';
+        opt.hidden = true;
         attrMethodSelect.appendChild(opt);
       }
       const attrOptions = Array.from(attrMethodSelect.options).map(opt => opt.value);
       // Debug: log attrMethod options if needed
-      // if (window.DEBUG) console.log('attrMethod options:', attrOptions);
     } else {
       console.error('attrMethod element not found');
     }
@@ -4793,9 +4793,13 @@ function removePowerField(button) {
       setValue(`attr${attr}`, value);
       hideAndClearAssignSelect(attr);
     });
-    if (rerollButton) rerollButton.classList.add('hidden');
+    const rerollButton = document.getElementById('rerollButton');
+    const randomRolls = document.getElementById('randomRolls');
     if (randomRolls) randomRolls.classList.add('hidden');
+    // Only hide confirmAssignments if it exists
+    const confirmAssignments = document.getElementById('confirmAssignments');
     if (confirmAssignments) confirmAssignments.classList.add('hidden');
+    const pointsRemaining = document.getElementById('pointsRemaining');
     if (pointsRemaining) {
       if (attrMethodSelect && attrMethodSelect.value === 'pointBuy') {
         updatePoints();
@@ -4803,10 +4807,6 @@ function removePowerField(button) {
         pointsRemaining.value = 'N/A';
       }
     }
-    updateDerivedStats();
-    console.log(`DOM state: INT=${document.getElementById('attrINT')?.value}, STR=${document.getElementById('attrSTR')?.value}`);
-    if (confirmAssignments) confirmAssignments.classList.add('hidden');
-    if (pointsRemaining) pointsRemaining.value = 'N/A';
     updateDerivedStats();
     console.log(`DOM state: INT=${document.getElementById('attrINT')?.value}, STR=${document.getElementById('attrSTR')?.value}`);
 
@@ -4969,8 +4969,8 @@ function removePowerField(button) {
               ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
                 setValue(`attr${attr}`, attributes[attr]);
               });
-              if (attrMethodSelect) setValue('attrMethod', 'loaded');
-              updateSheetInputs();
+              if (attrMethodSelect) setValue('attrMethod', 'imported');
+              if (attrMethodSelect) setValue('attrMethod', 'imported');
               updateSkills();
               debouncedUpdateFeatsSheet();
               updateInputs();
