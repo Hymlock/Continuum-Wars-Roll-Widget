@@ -228,7 +228,7 @@
     </div>
     <div>
       <label>Roll Type</label>
-      <select id="rollType" title="Type of dice roll" onchange="resetInputs(); updateInputs();">
+      <select id="rollType" title="Type of dice roll" onchange="resetInputs(); updateInputs(); updateSkillSpecOptions();">
         <option value="skill">Skill Check (d20 + Modifier + Rank)</option>
         <option value="attack">Attack Roll (d20 + BAB + Modifier vs. AC)</option>
         <option value="damage">Damage Roll (Dice + Modifier)</option>
@@ -391,6 +391,10 @@
       <label>Custom Feat Description</label>
       <input id="customFeat" type="text" placeholder="Describe custom feat" title="Description of custom feat">
     </div>
+    <div id="rollFormulaInput" class="hidden">
+      <label>Roll Formula</label>
+      <input id="rollFormula" type="text" readonly title="Calculated roll formula">
+    </div>
   </div>
   <div id="classAbilities">
     <h2>Class Abilities</h2>
@@ -426,259 +430,260 @@
   <div class="character-sheet collapsed">
     <div class="toggle-button" onclick="toggleCharacterSheet()">Show Character Sheet Generator</div>
     <div class="sheet-content">
-      <h2>Character Sheet Generator</h2>
-      <div class="grid">
-        <div>
-          <label>Character Name</label>
-          <input id="charName" type="text" placeholder="e.g., Kael Vortex" title="Your character's name">
-        </div>
-        <div>
-          <label>Player Name</label>
-          <input id="playerName" type="text" placeholder="e.g., Alex" title="Your name as the player">
-        </div>
-        <div>
-          <label>Level</label>
-          <input id="charLevel" type="number" value="1" min="1" max="15" placeholder="Level (1-15)" title="Character's current level (1-15)" onchange="updateSheetInputs()">
-        </div>
-        <div>
-          <label>Class</label>
-          <select id="charClass" title="Character's class" onchange="updateSheetInputs()">
-            <option value="Fatemarked">Fatemarked</option>
-            <option value="Biomatrix Suit">Biomatrix Suit</option>
-            <option value="Continuum Raider">Continuum Raider</option>
-            <option value="Gunrunner">Gunrunner</option>
-            <option value="Faterunner">Faterunner</option>
-            <option value="Harlequin">Harlequin</option>
-            <option value="Warrior">Warrior</option>
-            <option value="Mage">Mage</option>
-            <option value="Shape">Shape</option>
-            <option value="Masque">Masque</option>
-            <option value="Adventurer">Adventurer</option>
-          </select>
-        </div>
-        <div>
-          <label>Primordial Alignment</label>
-          <select id="charAlignment" title="Character's alignment (None for Levels 1-3)">
-            <option value="None">None (Levels 1–3)</option>
-            <option value="Balance">Balance</option>
-            <option value="Chaos">Chaos</option>
-            <option value="Order">Order</option>
-            <option value="Neutrality">Neutrality</option>
-          </select>
-        </div>
-        <div>
-          <label>Background</label>
-          <input id="charBackground" type="text" placeholder="e.g., Rift Survivor" title="Character's backstory or origin">
-        </div>
-        <div>
-          <label>Appearance</label>
-          <input id="charAppearance" type="text" placeholder="e.g., Cybernetic eye, blue cloak" title="Physical description of the character">
-        </div>
-        <div>
-          <label>Occupation</label>
-          <input id="charOccupation" type="text" placeholder="e.g., Rift Navigator" title="Character's profession or role">
-        </div>
-        <div>
-          <label>Personality & Motivation</label>
-          <textarea id="charPersonality" placeholder="e.g., Curious, seeks to seal rifts" title="Character's personality traits and goals"></textarea>
-        </div>
-        <div>
-          <label>Narrative Milestone</label>
-          <input id="charMilestone" type="text" placeholder="e.g., Sealed first rift" title="Significant event in character's story">
-        </div>
+    <h2>Character Sheet Generator</h2>
+    <div class="grid">
+      <div>
+        <label>Character Name</label>
+        <input id="charName" type="text" placeholder="e.g., Kael Vortex" title="Your character's name" onchange="">
       </div>
-      <h2>Attributes</h2>
-      <div class="grid">
-        <div>
-          <label>Attribute Method</label>
-          <select id="attrMethod" title="Method for generating attributes" onchange="updateAttributes()">
-            <option value="pointBuy">Point Buy (15 points)</option>
-            <option value="random">Random (4d6 drop lowest)</option>
-          </select>
-        </div>
-        <div id="rerollButton" class="hidden">
-          <button class="reroll-button" onclick="rerollAttributes()">Re-roll Attributes</button>
-        </div>
-        <div>
-          <label>Points Remaining</label>
-          <input id="pointsRemaining" type="text" value="15" readonly title="Remaining points for point buy">
-        </div>
-        <div id="randomRolls" class="hidden">
-          <label>Random Rolls</label>
-          <input id="rolledStats" type="text" readonly placeholder="Rolled stats appear here" title="Results of random attribute rolls">
-        </div>
-        <div>
-          <label>Strength (STR)</label>
-          <input id="attrSTR" type="number" min="1" max="20" value="10" placeholder="STR (8-18)" title="Strength score (8-18)" onchange="updatePoints()">
-          <select id="assignSTR" class="hidden" title="Assign rolled stat to Strength" onchange="assignStat('STR')"></select>
-        </div>
-        <div>
-          <label>Dexterity (DEX)</label>
-          <input id="attrDEX" type="number" min="1" max="20" value="10" placeholder="DEX (8-18)" title="Dexterity score (8-18)" onchange="updatePoints()">
-          <select id="assignDEX" class="hidden" title="Assign rolled stat to Dexterity" onchange="assignStat('DEX')"></select>
-        </div>
-        <div>
-          <label>Constitution (CON)</label>
-          <input id="attrCON" type="number" min="1" max="20" value="10" placeholder="CON (8-18)" title="Constitution score (8-18)" onchange="updatePoints()">
-          <select id="assignCON" class="hidden" title="Assign rolled stat to Constitution" onchange="assignStat('CON')"></select>
-        </div>
-        <div>
-          <label>Intelligence (INT)</label>
-          <input id="attrINT" type="number" min="1" max="20" value="10" placeholder="INT (8-18)" title="Intelligence score (8-18)" onchange="updatePoints()">
-          <select id="assignINT" class="hidden" title="Assign rolled stat to Intelligence" onchange="assignStat('INT')"></select>
-        </div>
-        <div>
-          <label>Wisdom (WIS)</label>
-          <input id="attrWIS" type="number" min="1" max="20" value="10" placeholder="WIS (8-18)" title="Wisdom score (8-18)" onchange="updatePoints()">
-          <select id="assignWIS" class="hidden" title="Assign rolled stat to Wisdom" onchange="assignStat('WIS')"></select>
-        </div>
-        <div>
-          <label>Charisma (CHA)</label>
-          <input id="attrCHA" type="number" min="1" max="20" value="10" placeholder="CHA (8-18)" title="Charisma score (8-18)" onchange="updatePoints()">
-          <select id="assignCHA" class="hidden" title="Assign rolled stat to Charisma" onchange="assignStat('CHA')"></select>
-        </div>
-        <div id="confirmAssignments" class="hidden">
-          <button class="dynamic-button" onclick="assignStats()">Confirm Assignments</button>
-        </div>
+      <div>
+        <label>Player Name</label>
+        <input id="playerName" type="text" placeholder="e.g., Alex" title="Your name as the player">
       </div>
-      <h2>Derived Stats</h2>
-      <div class="grid">
-        <div>
-          <label>Health (Max HP)</label>
-          <input id="health" type="number" readonly title="Maximum hit points based on CON and level">
-        </div>
-        <div>
-          <label>Sanity (Mental Resilience)</label>
-          <input id="sanity" type="number" readonly title="Mental resilience based on WIS">
-        </div>
-        <div>
-          <label>Defense (AC)</label>
-          <input id="defense" type="number" readonly title="Armor Class based on DEX and armor">
-        </div>
-        <div>
-          <label>Initiative Base</label>
-          <input id="initiative" type="number" readonly title="Initiative bonus based on DEX">
-        </div>
-        <div>
-          <label>Base Attack Rating (BAB)</label>
-          <input id="bab" type="number" readonly title="Base Attack Bonus for attacks">
-        </div>
-        <div>
-          <label>Speed (ft/round)</label>
-          <input id="speed" type="number" value="30" readonly title="Movement speed in feet per round">
-        </div>
-        <div>
-          <label>Reflex Save</label>
-          <input id="reflex" type="number" readonly title="Reflex save based on DEX">
-        </div>
-        <div>
-          <label>Fortitude Save</label>
-          <input id="fortitude" type="number" readonly title="Fortitude save based on CON">
-        </div>
-        <div>
-          <label>Willpower Save</label>
-          <input id="willpower" type="number" readonly title="Willpower save based on WIS">
-        </div>
-        <div>
-          <label>Luck Save (Level 4+)</label>
-          <input id="luck" type="number" readonly title="Luck save based on CHA (Level 4+)">
-        </div>
-        <div>
-          <label>Fate Points</label>
-          <input id="fatePointsCurrent" type="number" readonly>
-          <button class="dynamic-button" onclick="spendFatePoint()">Spend Fate Point</button>
-          <button id="fatePointsRegenerate" class="dynamic-button hidden" onclick="regenerateFatePoints()">Regenerate</button>
-          <button id="fatePointsRest" class="dynamic-button hidden" onclick="restCharacter()">Rest (8 Hours)</button>
-        </div>
-        <div>
-          <label>Paradox Points</label>
-          <input id="paradoxPoints" type="number" value="0" readonly>
-          <button class="dynamic-button" onclick="addParadoxPoint()">Add Paradox</button>
-        </div>
+      <div>
+        <label>Level</label>
+        <input id="charLevel" type="number" value="1" min="1" max="15" placeholder="Level (1-15)" title="Character's current level (1-15)" onchange="updateSheetInputs({ preserveAttributes: true }); updateInputs(); updateSkillSpecOptions(); updateFeats(); updateClassAbilities()">
       </div>
-      <h2>Resources</h2>
-      <div id="resourcesContainer"></div>
-      <h2>Inherent Abilities</h2>
-      <div id="inherentAbilitiesContainer"></div>
-      <h2>Skills</h2>
-      <div id="skillPointsDisplay">Skill Points: 20/20</div>
-      <div id="skillsContainer"></div>
-      <button class="add-button" onclick="addSkillField()">Add Skill</button>
-      <h2>Starting Feats</h2>
-      <div id="startingFeatsContainer"></div>
-      <button class="add-button" onclick="addStartingFeatField()">Add Starting Feat</button>
-      <h2>Level-Up Feats</h2>
-      <div id="levelUpFeatsContainer"></div>
-      <button class="add-button" onclick="addLevelUpFeatField()">Add Level-Up Feat</button>
-      <h2>Advantages</h2>
-      <div id="advantageWarning" class="advantage-warning">Select at least one disadvantage before adding advantages.</div>
-      <div id="advantagesContainer"></div>
-      <button class="add-button" onclick="addAdvantageField()">Add Advantage</button>
-      <h2>Disadvantages</h2>
-      <div id="disadvantagesContainer"></div>
-      <button class="add-button" onclick="addDisadvantageField()">Add Disadvantage</button>
-      <h2>Powers/Effects</h2>
-      <div id="powersContainer"></div>
-      <button id="addPowerButton" class="add-button" onclick="addPowerField()">Add Power/Effect</button>
-      <h2>Inventory</h2>
-      <div class="grid">
-        <div>
-          <label>Credits</label>
-          <input id="credits" type="number" value="0" min="0" placeholder="Credits" title="Currency for purchases">
-        </div>
-        <div>
-          <label>Rift Shards</label>
-          <input id="shards" type="number" value="0" min="0" placeholder="Rift Shards" title="Rare magical currency">
-        </div>
+      <div>
+        <label>Class</label>
+        <select id="charClass" title="Character's class" onchange="updateSheetInputs({ preserveAttributes: true }); updateInputs(); updateSkillSpecOptions(); updateFeats(); updateClassAbilities()">
+          <option value="Fatemarked">Fatemarked</option>
+          <option value="Biomatrix Suit">Biomatrix Suit</option>
+          <option value="Continuum Raider">Continuum Raider</option>
+          <option value="Gunrunner">Gunrunner</option>
+          <option value="Faterunner">Faterunner</option>
+          <option value="Harlequin">Harlequin</option>
+          <option value="Warrior">Warrior</option>
+          <option value="Mage">Mage</option>
+          <option value="Shape">Shape</option>
+          <option value="Masque">Masque</option>
+          <option value="Adventurer">Adventurer</option>
+        </select>
       </div>
-      <div id="inventoryContainer"></div>
-      <button class="add-button" onclick="addInventoryField()">Add Item</button>
-      <h2>Combat</h2>
-      <div id="weaponsContainer"></div>
-      <button class="add-button" onclick="addWeaponField()">Add Weapon</button>
-      <div id="armorContainer"></div>
-      <button class="add-button" onclick="addArmorField()">Add Armor</button>
-      <h2>Progression</h2>
-      <div class="grid">
-        <div>
-          <label>Current XP</label>
-          <input id="currentXP" type="number" value="0" min="0" placeholder="Current XP" title="Experience points earned">
-        </div>
-        <div>
-          <label>Next Level XP</label>
-          <input id="nextLevelXP" type="number" readonly title="XP needed for next level">
-        </div>
+      <div>
+        <label>Primordial Alignment</label>
+        <select id="charAlignment" title="Character's alignment (None for Levels 1-3)">
+          <option value="None">None (Levels 1–3)</option>
+          <option value="Balance">Balance</option>
+          <option value="Chaos">Chaos</option>
+          <option value="Order">Order</option>
+          <option value="Neutrality">Neutrality</option>
+        </select>
       </div>
-      <h2>Lifestyle</h2>
-      <div class="grid">
-        <div>
-          <label>Lifestyle</label>
-          <select id="charLifestyle" title="Daily living standard">
-            <option value="Squalid">Squalid (0 Credits/day)</option>
-            <option value="Modest">Modest (1 Credit/day)</option>
-            <option value="Comfortable">Comfortable (5 Credits/day)</option>
-            <option value="Luxurious">Luxurious (20 Credits/day)</option>
-          </select>
-        </div>
-        <div>
-          <label>Cost Paid</label>
-          <input id="lifestyleCost" type="number" value="0" min="0" placeholder="Daily Cost" title="Credits spent on lifestyle">
-        </div>
+      <div>
+        <label>Background</label>
+        <input id="charBackground" type="text" placeholder="e.g., Rift Survivor" title="Character's backstory or origin">
       </div>
-      <h2>Downtime Activities</h2>
-      <div id="downtimeContainer"></div>
-      <button class="add-button" onclick="addDowntimeField()">Add Downtime Activity</button>
-      <h2>Notes</h2>
-      <textarea id="charNotes" placeholder="e.g., Faction standings, backstory details" title="Additional character notes"></textarea>
-      <div class="button-group">
-        <button onclick="generateCharacterSheet()">Generate Character Sheet</button>
-        <button onclick="saveCharacter()">Save Character</button>
-        <button onclick="document.getElementById('loadCharacterInput').click()">Load Character</button>
-        <input id="loadCharacterInput" type="file" accept=".json" onchange="loadCharacter(event)" style="display: none;">
-        <button onclick="clearSheetFields()">Clear Sheet Fields</button>
+      <div>
+        <label>Appearance</label>
+        <input id="charAppearance" type="text" placeholder="e.g., Cybernetic eye, blue cloak" title="Physical description of the character">
+      </div>
+      <div>
+        <label>Occupation</label>
+        <input id="charOccupation" type="text" placeholder="e.g., Rift Navigator" title="Character's profession or role">
+      </div>
+      <div>
+        <label>Personality & Motivation</label>
+        <textarea id="charPersonality" placeholder="e.g., Curious, seeks to seal rifts" title="Character's personality traits and goals"></textarea>
+      </div>
+      <div>
+        <label>Narrative Milestone</label>
+        <input id="charMilestone" type="text" placeholder="e.g., Sealed first rift" title="Significant event in character's story">
       </div>
     </div>
+    <h2>Attributes</h2>
+    <div class="grid">
+      <div>
+        <label>Attribute Method</label>
+        <select id="attrMethod" title="Method for generating attributes" onchange="updateAttributes()">
+          <option value="pointBuy">Point Buy (15 points)</option>
+          <option value="random">Random (4d6 drop lowest)</option>
+          <option value="imported" hidden>Imported</option>
+        </select>
+      </div>
+      <div id="rerollButton" class="hidden">
+        <button class="reroll-button" onclick="rerollAttributes()">Re-roll Attributes</button>
+      </div>
+      <div>
+        <label>Points Remaining</label>
+        <input id="pointsRemaining" type="text" value="15" readonly title="Remaining points for point buy">
+      </div>
+      <div id="randomRolls" class="hidden">
+        <label>Random Rolls</label>
+        <input id="rolledStats" type="text" readonly placeholder="Rolled stats appear here" title="Results of random attribute rolls">
+      </div>
+      <div>
+        <label>Strength (STR)</label>
+        <input id="attrSTR" type="number" min="1" max="20" value="10" placeholder="STR (8-18)" title="Strength score (8-18)" onchange="updatePoints(); updateSheetInputs({ preserveAttributes: true }); updateInputs()">
+        <select id="assignSTR" class="hidden" title="Assign rolled stat to Strength" onchange="assignStat('STR')"></select>
+      </div>
+      <div>
+        <label>Dexterity (DEX)</label>
+        <input id="attrDEX" type="number" min="1" max="20" value="10" placeholder="DEX (8-18)" title="Dexterity score (8-18)" onchange="updatePoints(); updateSheetInputs({ preserveAttributes: true }); updateInputs()">
+        <select id="assignDEX" class="hidden" title="Assign rolled stat to Dexterity" onchange="assignStat('DEX')"></select>
+      </div>
+      <div>
+        <label>Constitution (CON)</label>
+        <input id="attrCON" type="number" min="1" max="20" value="10" placeholder="CON (8-18)" title="Constitution score (8-18)" onchange="updatePoints(); updateSheetInputs({ preserveAttributes: true }); updateInputs()">
+        <select id="assignCON" class="hidden" title="Assign rolled stat to Constitution" onchange="assignStat('CON')"></select>
+      </div>
+      <div>
+        <label>Intelligence (INT)</label>
+        <input id="attrINT" type="number" min="1" max="20" value="10" placeholder="INT (8-18)" title="Intelligence score (8-18)" onchange="updatePoints(); updateSheetInputs({ preserveAttributes: true }); updateInputs()">
+        <select id="assignINT" class="hidden" title="Assign rolled stat to Intelligence" onchange="assignStat('INT')"></select>
+      </div>
+      <div>
+        <label>Wisdom (WIS)</label>
+        <input id="attrWIS" type="number" min="1" max="20" value="10" placeholder="WIS (8-18)" title="Wisdom score (8-18)" onchange="updatePoints(); updateSheetInputs({ preserveAttributes: true }); updateInputs()">
+        <select id="assignWIS" class="hidden" title="Assign rolled stat to Wisdom" onchange="assignStat('WIS')"></select>
+      </div>
+      <div>
+        <label>Charisma (CHA)</label>
+        <input id="attrCHA" type="number" min="1" max="20" value="10" placeholder="CHA (8-18)" title="Charisma score (8-18)" onchange="updatePoints(); updateSheetInputs({ preserveAttributes: true }); updateInputs()">
+        <select id="assignCHA" class="hidden" title="Assign rolled stat to Charisma" onchange="assignStat('CHA')"></select>
+      </div>
+      <div id="confirmAssignments" class="hidden">
+        <button class="dynamic-button" onclick="assignStats()">Confirm Assignments</button>
+      </div>
+    </div>
+    <h2>Derived Stats</h2>
+    <div class="grid">
+      <div>
+        <label>Health (Max HP)</label>
+        <input id="health" type="number" readonly title="Maximum hit points based on CON and level">
+      </div>
+      <div>
+        <label>Sanity (Mental Resilience)</label>
+        <input id="sanity" type="number" readonly title="Mental resilience based on WIS">
+      </div>
+      <div>
+        <label>Defense (AC)</label>
+        <input id="defense" type="number" readonly title="Armor Class based on DEX and armor">
+      </div>
+      <div>
+        <label>Initiative Base</label>
+        <input id="initiative" type="number" readonly title="Initiative bonus based on DEX">
+      </div>
+      <div>
+        <label>Base Attack Rating (BAB)</label>
+        <input id="charBAB" type="number" readonly title="Base Attack Bonus for attacks">
+      </div>
+      <div>
+        <label>Speed (ft/round)</label>
+        <input id="speed" type="number" value="30" readonly title="Movement speed in feet per round">
+      </div>
+      <div>
+        <label>Reflex Save</label>
+        <input id="reflex" type="number" readonly title="Reflex save based on DEX">
+      </div>
+      <div>
+        <label>Fortitude Save</label>
+        <input id="fortitude" type="number" readonly title="Fortitude save based on CON">
+      </div>
+      <div>
+        <label>Willpower Save</label>
+        <input id="willpower" type="number" readonly title="Willpower save based on WIS">
+      </div>
+      <div>
+        <label>Luck Save (Level 4+)</label>
+        <input id="luck" type="number" readonly title="Luck save based on CHA (Level 4+)">
+      </div>
+      <div>
+        <label>Fate Points</label>
+        <input id="fatePointsCurrent" type="number" readonly>
+        <button class="dynamic-button" onclick="spendFatePoint()">Spend Fate Point</button>
+        <button id="fatePointsRegenerate" class="dynamic-button hidden" onclick="regenerateFatePoints()">Regenerate</button>
+        <button id="fatePointsRest" class="dynamic-button hidden" onclick="restCharacter()">Rest (8 Hours)</button>
+      </div>
+      <div>
+        <label>Paradox Points</label>
+        <input id="paradoxPoints" type="number" value="0" readonly>
+        <button class="dynamic-button" onclick="addParadoxPoint()">Add Paradox</button>
+      </div>
+    </div>
+    <h2>Resources</h2>
+    <div id="resourcesContainer"></div>
+    <h2>Inherent Abilities</h2>
+    <div id="inherentAbilitiesContainer"></div>
+    <h2>Skills</h2>
+    <div id="skillPointsDisplay">Skill Points: 20/20</div>
+    <div id="skillsContainer"></div>
+    <button class="add-button" onclick="addSkillField()">Add Skill</button>
+    <h2>Starting Feats</h2>
+    <div id="startingFeatsContainer"></div>
+    <button class="add-button" onclick="addStartingFeatField()">Add Starting Feat</button>
+    <h2>Level-Up Feats</h2>
+    <div id="levelUpFeatsContainer"></div>
+    <button class="add-button" onclick="addLevelUpFeatField()">Add Level-Up Feat</button>
+    <h2>Advantages</h2>
+    <div id="advantageWarning" class="advantage-warning">Select at least one disadvantage before adding advantages.</div>
+    <div id="advantagesContainer"></div>
+    <button class="add-button" onclick="addAdvantageField()">Add Advantage</button>
+    <h2>Disadvantages</h2>
+    <div id="disadvantagesContainer"></div>
+    <button class="add-button" onclick="addDisadvantageField()">Add Disadvantage</button>
+    <h2>Powers/Effects</h2>
+    <div id="powersContainer"></div>
+    <button id="addPowerButton" class="add-button" onclick="addPowerField()">Add Power/Effect</button>
+    <h2>Inventory</h2>
+    <div class="grid">
+      <div>
+        <label>Credits</label>
+        <input id="credits" type="number" value="0" min="0" placeholder="Credits" title="Currency for purchases">
+      </div>
+      <div>
+        <label>Rift Shards</label>
+        <input id="shards" type="number" value="0" min="0" placeholder="Rift Shards" title="Rare magical currency">
+      </div>
+    </div>
+    <div id="inventoryContainer"></div>
+    <button class="add-button" onclick="addInventoryField()">Add Item</button>
+    <h2>Combat</h2>
+    <div id="weaponsContainer"></div>
+    <button class="add-button" onclick="addWeaponField()">Add Weapon</button>
+    <div id="armorContainer"></div>
+    <button class="add-button" onclick="addArmorField()">Add Armor</button>
+    <h2>Progression</h2>
+    <div class="grid">
+      <div>
+        <label>Current XP</label>
+        <input id="currentXP" type="number" value="0" min="0" placeholder="Current XP" title="Experience points earned">
+      </div>
+      <div>
+        <label>Next Level XP</label>
+        <input id="nextLevelXP" type="number" readonly title="XP needed for next level">
+      </div>
+    </div>
+    <h2>Lifestyle</h2>
+    <div class="grid">
+      <div>
+        <label>Lifestyle</label>
+        <select id="charLifestyle" title="Daily living standard">
+          <option value="Squalid">Squalid (0 Credits/day)</option>
+          <option value="Modest">Modest (1 Credit/day)</option>
+          <option value="Comfortable">Comfortable (5 Credits/day)</option>
+          <option value="Luxurious">Luxurious (20 Credits/day)</option>
+        </select>
+      </div>
+      <div>
+        <label>Cost Paid</label>
+        <input id="lifestyleCost" type="number" value="0" min="0" placeholder="Daily Cost" title="Credits spent on lifestyle">
+      </div>
+    </div>
+    <h2>Downtime Activities</h2>
+    <div id="downtimeContainer"></div>
+    <button class="add-button" onclick="addDowntimeField()">Add Downtime Activity</button>
+    <h2>Notes</h2>
+    <textarea id="charNotes" placeholder="e.g., Faction standings, backstory details" title="Additional character notes"></textarea>
+    <div class="button-group">
+      <button onclick="generateCharacterSheet()">Generate Character Sheet</button>
+      <button onclick="saveCharacter()">Save Character</button>
+      <button onclick="document.getElementById('loadCharacterInput').click()">Load Character</button>
+      <input id="loadCharacterInput" type="file" accept=".json" onchange="loadCharacter(event)" style="display: none;">
+      <button onclick="clearSheetFields()">Clear Sheet Fields</button>
+    </div>
   </div>
+</div>
 
   <div id="results" class="results hidden" role="region" aria-live="polite">
     <h2>Roll Results</h2>
@@ -709,6 +714,7 @@
   </div>
 
 <script>
+  let statPointsSpent = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
   let skillCriticalTracker = {};
   let hasParadoxSuccess = false;
   let extendedProgress = 0;
@@ -729,6 +735,97 @@
   let availableStats = [];
   let fatePointsUsedInEncounter = 0;
   let totalResourcesUsedInSession = 0;
+
+  // Stat point system variables
+  let statPointsAvailable = 0;
+  let statPointsAllocated = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+
+  // Calculate stat points for a given level
+  function getStatPointsForLevel(level) {
+    return Math.floor(level / 3) * 2;
+  }
+
+  // Update stat point UI and logic
+  function updateStatPointUI() {
+    const lvl = parseInt(document.getElementById('charLevel').value) || 1;
+    const totalPoints = getStatPointsForLevel(lvl);
+    const spent = Object.values(statPointsAllocated).reduce((a, b) => a + b, 0);
+    statPointsAvailable = totalPoints - spent;
+    if (document.getElementById('statPointsAvailable')) {
+      document.getElementById('statPointsAvailable').textContent = statPointsAvailable;
+    }
+    if (document.getElementById('statPointAllocation')) {
+      document.getElementById('statPointAllocation').classList.toggle('hidden', statPointsAvailable <= 0 && spent === 0);
+    }
+  }
+
+  // Allocate or remove a stat point
+  function allocateStatPoint(stat, delta) {
+    if (delta > 0 && statPointsAvailable <= 0) return;
+    if (delta < 0 && statPointsAllocated[stat] <= 0) return;
+    const input = document.getElementById('attr' + stat);
+    if (!input) return;
+    const val = parseInt(input.value) || 10;
+    if (delta > 0 && val >= 18) return;
+    if (delta < 0 && val <= 8) return;
+    statPointsAllocated[stat] += delta;
+    input.value = val + delta;
+    updateStatPointUI();
+    updateSheetInputs({ preserveAttributes: true });
+  }
+
+  // Reset stat points when level changes
+  function resetStatPointsOnLevelChange() {
+    const lvl = parseInt(document.getElementById('charLevel').value) || 1;
+    const totalPoints = getStatPointsForLevel(lvl);
+    let spent = Object.values(statPointsAllocated).reduce((a, b) => a + b, 0);
+    // If spent > total, remove excess from stats in order
+    if (spent > totalPoints) {
+      let excess = spent - totalPoints;
+      for (const stat of ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA']) {
+        while (statPointsAllocated[stat] > 0 && excess > 0) {
+          statPointsAllocated[stat]--;
+          const input = document.getElementById('attr' + stat);
+          if (input) input.value = Math.max(8, (parseInt(input.value) || 10) - 1);
+          excess--;
+        }
+      }
+    }
+    updateStatPointUI();
+  }
+
+  // Save/load stat points with character sheet
+  function saveStatPointsToData(data) {
+    data.statPointsAllocated = { ...statPointsAllocated };
+  }
+  function loadStatPointsFromData(data) {
+    if (data.statPointsAllocated) {
+      statPointsAllocated = { ...data.statPointsAllocated };
+      for (const stat of ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA']) {
+        const input = document.getElementById('attr' + stat);
+        if (input) input.value = 10 + statPointsAllocated[stat];
+      }
+      updateStatPointUI();
+    }
+  }
+
+  // Hook into level change and character load
+  const origUpdateSheetInputs = updateSheetInputs;
+  updateSheetInputs = function(options = {}) {
+    origUpdateSheetInputs(options);
+    resetStatPointsOnLevelChange();
+  };
+  const origPopulateCharacterSheet = populateCharacterSheet;
+  populateCharacterSheet = function(data) {
+    origPopulateCharacterSheet(data);
+    loadStatPointsFromData(data);
+  };
+  const origCollectCharacterData = collectCharacterData;
+  collectCharacterData = function() {
+    const data = origCollectCharacterData();
+    saveStatPointsToData(data);
+    return data;
+  };
 
   const skillsList = [
     { name: 'Acrobatics', attr: 'DEX', specs: ['Tumbling', 'Balance'], cost: 2 },
@@ -898,96 +995,181 @@
 
   /**
    * Collects and returns the current character's data from the character sheet form.
-   * Gathers skills, advantages, disadvantages, and powers based on user input.
-   * @returns {Object|null} Character data object with skills, advantages, disadvantages, powers, level, and class, or null if character name is missing.
+   * Gathers skills, advantages, disadvantages, powers, level, class, and attributes.
+   * @returns {Object|null} Character data object with skills, advantages, disadvantages, powers, level, class, and attributes, or null if character name is missing.
    */
   function getCharacterData() {
   try {
     const charName = document.getElementById('charName').value.trim();
-    if (!charName) return null;
+    console.log('getCharacterData: charName=', charName); // Debug: Log character name
+    if (!charName) {
+      console.warn('No character name provided, returning null');
+      return null;
+    }
 
     const lvl = parseInt(document.getElementById('charLevel').value) || 1;
     const cls = document.getElementById('charClass').value || 'Fatemarked';
+    // Validate class
+    const validClasses = [
+      'Fatemarked', 'Biomatrix Suit', 'Continuum Raider', 'Gunrunner', 'Faterunner',
+      'Harlequin', 'Warrior', 'Mage', 'Shape', 'Masque', 'Adventurer'
+    ];
+    const validatedCls = validClasses.includes(cls) ? cls : 'Fatemarked';
+    console.log(`getCharacterData: level=${lvl}, class=${validatedCls}`); // Debug: Log level and class
+
+    // Collect attributes
+    const attributes = {
+      STR: parseInt(document.getElementById('attrSTR').value) || 10,
+      DEX: parseInt(document.getElementById('attrDEX').value) || 10,
+      CON: parseInt(document.getElementById('attrCON').value) || 10,
+      INT: parseInt(document.getElementById('attrINT').value) || 10,
+      WIS: parseInt(document.getElementById('attrWIS').value) || 10,
+      CHA: parseInt(document.getElementById('attrCHA').value) || 10
+    };
+    // Add statPointsSpent to character data for saving/loading
+    const statPoints = { ...statPointsSpent };
+
     const skills = [];
     const advantages = [];
     const disadvantages = [];
     const powers = [];
 
     // Collect skills
-    for (let i = 1; i <= skillCounter; i++) {
-      const skillSelect = document.getElementById(`skill${i}`);
-      const rankInput = document.getElementById(`skillRank${i}`);
-      if (skillSelect && skillSelect.value) {
-        const skillData = skillsList.find(s => s.name === skillSelect.value);
-        const specs = skillData.specs.filter(spec => document.getElementById(`spec${i}_${spec}`)?.checked);
-        skills.push({
-          name: skillSelect.value,
-          rank: parseInt(rankInput.value) || 0,
-          specs: specs
-        });
+    const skillElements = document.querySelectorAll('[id^="skill"]:not([id*="Rank"]):not([id*="spec"])');
+    console.log('getCharacterData: Found', skillElements.length, 'skill elements'); // Debug
+    skillElements.forEach((el) => {
+      const idMatch = el.id.match(/skill(\d+)/);
+      if (idMatch && el.tagName === 'SELECT') {
+        const i = idMatch[1];
+        const skillElement = document.getElementById(`skill${i}`);
+        const rankInput = document.getElementById(`skillRank${i}`);
+        if (skillElement && skillElement.value) {
+          const skillData = skillsList.find(s => s.name === skillElement.value);
+          if (skillData) {
+            const specs = skillData.specs.filter(spec => document.getElementById(`spec${i}_${spec}`)?.checked);
+            skills.push({
+              name: skillElement.value,
+              rank: parseInt(rankInput?.value) || 0,
+              specs: specs
+            });
+            console.log(`getCharacterData: Added skill ${skillElement.value} (Rank ${rankInput?.value}, Specs: ${specs.join(', ')})`); // Debug
+          }
+        }
       }
-    }
+    });
 
-    // Collect advantages
-    for (let i = 1; i <= startingFeatCounter; i++) {
-      const featSelect = document.getElementById(`startingFeat${i}`);
-      if (featSelect && featSelect.value !== 'none' && advantagesList.some(a => a.name === featSelect.value)) {
-        advantages.push({ name: featSelect.value, tier: 1 });
+    // Collect advantages (starting feats, level-up feats, and advantages)
+    const startingFeatElements = document.querySelectorAll('[id^="startingFeat"]:not([id*="Desc"])');
+    console.log('getCharacterData: Found', startingFeatElements.length, 'starting feat elements'); // Debug
+    startingFeatElements.forEach((el) => {
+      const idMatch = el.id.match(/startingFeat(\d+)/);
+      if (idMatch && el.tagName === 'SELECT') {
+        const i = idMatch[1];
+        const featElement = document.getElementById(`startingFeat${i}`);
+        if (featElement && featElement.value !== 'none') {
+          advantages.push({
+            name: featElement.value,
+            tier: 1,
+            desc: document.getElementById(`startingFeatDesc${i}`)?.value || ''
+          });
+          console.log(`getCharacterData: Added starting feat ${featElement.value}`); // Debug
+        }
       }
-    }
-    for (let i = 1; i <= levelUpFeatCounter; i++) {
-      const featSelect = document.getElementById(`levelUpFeat${i}`);
-      if (featSelect && featSelect.value !== 'none' && advantagesList.some(a => a.name === featSelect.value)) {
-        advantages.push({ name: featSelect.value, tier: 1 });
+    });
+
+    const levelUpFeatElements = document.querySelectorAll('[id^="levelUpFeat"]:not([id*="Desc"])');
+    console.log('getCharacterData: Found', levelUpFeatElements.length, 'level-up feat elements'); // Debug
+    levelUpFeatElements.forEach((el) => {
+      const idMatch = el.id.match(/levelUpFeat(\d+)/);
+      if (idMatch && el.tagName === 'SELECT') {
+        const i = idMatch[1];
+        const featElement = document.getElementById(`levelUpFeat${i}`);
+        if (featElement && featElement.value !== 'none') {
+          advantages.push({
+            name: featElement.value,
+            tier: 1,
+            desc: document.getElementById(`levelUpFeatDesc${i}`)?.value || ''
+          });
+          console.log(`getCharacterData: Added level-up feat ${featElement.value}`); // Debug
+        }
       }
-    }
-    for (let i = 1; i <= advantageCounter; i++) {
-      const advSelect = document.getElementById(`advantage${i}`);
-      if (advSelect && advSelect.value !== 'none') {
-        advantages.push({
-          name: advSelect.value,
-          tier: parseInt(document.getElementById(`advantageTier${i}`).value) || 1
-        });
+    });
+
+    const advantageElements = document.querySelectorAll('[id^="advantage"]:not([id*="Tier"])');
+    console.log('getCharacterData: Found', advantageElements.length, 'advantage elements'); // Debug
+    advantageElements.forEach((el) => {
+      const idMatch = el.id.match(/advantage(\d+)/);
+      if (idMatch && el.tagName === 'SELECT') {
+        const i = idMatch[1];
+        const advElement = document.getElementById(`advantage${i}`);
+        const tierInput = document.getElementById(`advantageTier${i}`);
+        if (advElement && advElement.value !== 'none') {
+          advantages.push({
+            name: advElement.value,
+            tier: parseInt(tierInput?.value) || 1
+          });
+          console.log(`getCharacterData: Added advantage ${advElement.value} (Tier ${tierInput?.value})`); // Debug
+        }
       }
-    }
+    });
 
     // Collect disadvantages
-    for (let i = 1; i <= disadvantageCounter; i++) {
-      const disSelect = document.getElementById(`disadvantage${i}`);
-      if (disSelect && disSelect.value !== 'none') {
-        disadvantages.push({
-          name: disSelect.value,
-          tier: parseInt(document.getElementById(`disadvantageTier${i}`).value) || 1
-        });
+    const disadvantageElements = document.querySelectorAll('[id^="disadvantage"]:not([id*="Tier"])');
+    console.log('getCharacterData: Found', disadvantageElements.length, 'disadvantage elements'); // Debug
+    disadvantageElements.forEach((el) => {
+      const idMatch = el.id.match(/disadvantage(\d+)/);
+      if (idMatch && el.tagName === 'SELECT') {
+        const i = idMatch[1];
+        const disElement = document.getElementById(`disadvantage${i}`);
+        const tierInput = document.getElementById(`disadvantageTier${i}`);
+        if (disElement && disElement.value !== 'none') {
+          disadvantages.push({
+            name: disElement.value,
+            tier: parseInt(tierInput?.value) || 1
+          });
+          console.log(`getCharacterData: Added disadvantage ${disElement.value} (Tier ${tierInput?.value})`); // Debug
+        }
       }
-    }
+    });
 
     // Collect powers
-    if (lvl <= 3 && cls === 'Fatemarked') {
+    if (lvl <= 3 && validatedCls === 'Fatemarked') {
       if (lvl >= 1) powers.push({ name: 'Fate’s Edge', level: 'PL1', cost: 0, dc: 15, risk: 'INT DC 15, -1 penalty' });
       if (lvl >= 2) powers.push({ name: 'Fate’s Influence', level: 'PL1', cost: 0, dc: 15, risk: 'INT DC 15, -1 or anomaly' });
       if (lvl >= 3) powers.push({ name: 'Fate’s Reach', level: 'PL1', cost: 0, dc: 15, risk: 'INT DC 15, -2 or rift' });
-    } else if (lvl > 3 && !['Faterunner', 'Harlequin'].includes(cls)) {
-      for (let i = 1; i <= powerCounter; i++) {
-        const nameInput = document.getElementById(`powerName${i}`);
-        if (nameInput && nameInput.value) {
-          powers.push({
-            name: nameInput.value,
-            level: document.getElementById(`powerLevel${i}`).value,
-            cost: parseInt(document.getElementById(`powerCost${i}`).value) || 0,
-            dc: parseInt(document.getElementById(`powerDC${i}`).value) || 10,
-            risk: document.getElementById(`powerRisk${i}`).value
-          });
+      console.log('getCharacterData: Added Fatemarked powers for Level', lvl); // Debug
+    } else if (lvl > 3 && !['Faterunner', 'Harlequin'].includes(validatedCls)) {
+      const powerElements = document.querySelectorAll('[id^="powerName"]');
+      console.log('getCharacterData: Found', powerElements.length, 'power elements'); // Debug
+      powerElements.forEach((el) => {
+        const idMatch = el.id.match(/powerName(\d+)/);
+        if (idMatch) {
+          const i = idMatch[1];
+          const nameInput = document.getElementById(`powerName${i}`);
+          if (nameInput && nameInput.value) {
+            powers.push({
+              name: nameInput.value,
+              level: document.getElementById(`powerLevel${i}`)?.value || 'PL1',
+              cost: parseInt(document.getElementById(`powerCost${i}`)?.value) || 0,
+              dc: parseInt(document.getElementById(`powerDC${i}`)?.value) || 10,
+              risk: document.getElementById(`powerRisk${i}`)?.value || 'None'
+            });
+            console.log(`getCharacterData: Added power ${nameInput.value} (Level ${document.getElementById(`powerLevel${i}`)?.value})`); // Debug
+          }
         }
-      }
+      });
     }
 
-    return { skills, advantages, disadvantages, powers, level: lvl, class: cls };
+    const charData = { skills, advantages, disadvantages, powers, level: lvl, class: validatedCls, attributes, statPoints };
+    console.log('getCharacterData: Returning data:', JSON.stringify(charData, null, 2)); // Debug
+    return charData;
   } catch (error) {
     console.error('Error getting character data:', error);
+    alert('Failed to get character data. Check console for details.');
     return null;
   }
-} 
+}
+
   function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -1002,31 +1184,48 @@
 
   function resetInputs() {
     try {
-      document.getElementById('modifier').value = 0;
-      document.getElementById('skillRank').value = 0;
-      document.getElementById('bab').value = 0;
-      document.getElementById('dc').value = '';
-      document.getElementById('ac').value = 15;
-      document.getElementById('opponentRoll').value = 0;
-      document.getElementById('cumulativeDC').value = '';
-      document.getElementById('customParadoxDC').value = '';
-      document.getElementById('classFeatTier').value = 1;
-      document.getElementById('customFeat').value = '';
-      document.getElementById('synergyBonus').checked = false;
-      document.getElementById('envAdvantage').checked = false;
-      document.getElementById('coverConcealment').value = 'none';
-      document.getElementById('powerLevel').value = 'none';
-      document.getElementById('paradoxDC').value = 'custom';
-      document.getElementById('classFeat').value = 'none';
-      document.getElementById('advantage').value = 'none';
-      document.getElementById('featContainer').innerHTML = '';
-      featCounter = 0;
-      updateInputs();
-    } catch (error) {
-      console.error('Error resetting inputs:', error);
-      alert('Failed to reset inputs. Please refresh the page.');
+    const type = document.getElementById('rollType').value || 'skill';
+    const modifierInput = document.getElementById('modifier');
+    const skillRankInput = document.getElementById('skillRank');
+
+    // Preserve modifier and skillRank for skill-based rolls
+    const currentModifier = modifierInput ? parseInt(modifierInput.value) || 0 : 0;
+    const currentSkillRank = skillRankInput ? parseInt(skillRankInput.value) || 0 : 0;
+
+    document.getElementById('bab').value = 0;
+    document.getElementById('dc').value = '';
+    document.getElementById('ac').value = 15;
+    document.getElementById('opponentRoll').value = 0;
+    document.getElementById('cumulativeDC').value = '';
+    document.getElementById('customParadoxDC').value = '';
+    document.getElementById('classFeatTier').value = 1;
+    document.getElementById('customFeat').value = '';
+    document.getElementById('synergyBonus').checked = false;
+    document.getElementById('envAdvantage').checked = false;
+    document.getElementById('coverConcealment').value = 'none';
+    document.getElementById('powerLevel').value = 'none';
+    document.getElementById('paradoxDC').value = 'custom';
+    document.getElementById('classFeat').value = 'none';
+    document.getElementById('advantage').value = 'none';
+    document.getElementById('featContainer').innerHTML = '';
+    featCounter = 0;
+
+    if (!['skill', 'extended', 'opposed', 'extendedOpposed'].includes(type)) {
+      if (modifierInput) modifierInput.value = 0;
+      if (skillRankInput) skillRankInput.value = 0;
+      console.log('resetInputs: Reset modifier and skillRank to 0 for non-skill roll type', type);
+    } else {
+      if (modifierInput) modifierInput.value = currentModifier;
+      if (skillRankInput) skillRankInput.value = currentSkillRank;
+      console.log(`resetInputs: Preserved modifier=${currentModifier}, skillRank=${currentSkillRank} for ${type}`);
     }
+
+    updateInputs();
+  } catch (error) {
+    console.error('Error resetting inputs:', error);
+    alert('Failed to reset inputs. Please refresh the page.');
   }
+}
 
   function updateFeats() {
     try {
@@ -1206,10 +1405,79 @@
   function updateInputs() {
     try {
     const type = document.getElementById('rollType').value || 'skill';
-    const lvl = parseInt(document.getElementById('characterLevel').value) || 1;
-    const cls = document.getElementById('characterClass').value || 'Fatemarked';
-    const primaryFeat = document.getElementById('classFeat').value || 'none';
     const charData = getCharacterData();
+    const skillSelect = document.getElementById('skillName');
+    const modifierInput = document.getElementById('modifier');
+    const skillRankInput = document.getElementById('skillRank');
+    const savingTypeSelect = document.getElementById('savingType');
+    const babInput = document.getElementById('bab');
+    const rollFormulaInput = document.getElementById('rollFormula');
+
+    console.log('updateInputs: charData=', JSON.stringify(charData, null, 2)); // Debug
+
+    // Update level and class
+    const levelInput = document.getElementById('characterLevel');
+    const classInput = document.getElementById('characterClass');
+    const charLevelInput = document.getElementById('charLevel');
+    const charClassInput = document.getElementById('charClass');
+    let level = 1;
+    let cls = 'Fatemarked';
+    if (charData && charData.level && charData.class) {
+      level = charData.level;
+      cls = charData.class;
+      if (levelInput) {
+        const prevLevel = levelInput.value;
+        levelInput.value = level;
+        console.log(`updateInputs: Set characterLevel from ${prevLevel} to ${level}`);
+        if (prevLevel !== level.toString()) {
+          updateFeats();
+          updateClassAbilities();
+        }
+      }
+      if (classInput) {
+        const validClasses = Array.from(classInput.options).map(opt => opt.value);
+        const prevClass = classInput.value;
+        classInput.value = validClasses.includes(cls) ? cls : 'Fatemarked';
+        console.log(`updateInputs: Set characterClass from ${prevClass} to ${classInput.value}`);
+        if (prevClass !== classInput.value) {
+          updateFeats();
+          updateClassAbilities();
+        }
+      }
+    } else if (charLevelInput && charClassInput) {
+      level = parseInt(charLevelInput.value) || 1;
+      cls = charClassInput.value || 'Fatemarked';
+      if (levelInput) {
+        const prevLevel = levelInput.value;
+        levelInput.value = level;
+        console.log(`updateInputs: Fallback set characterLevel from ${prevLevel} to ${levelInput.value}`);
+        if (prevLevel !== levelInput.value.toString()) {
+          updateFeats();
+          updateClassAbilities();
+        }
+      }
+      if (classInput) {
+        const validClasses = Array.from(classInput.options).map(opt => opt.value);
+        const prevClass = classInput.value;
+        classInput.value = validClasses.includes(cls) ? cls : 'Fatemarked';
+        console.log(`updateInputs: Fallback set characterClass from ${prevClass} to ${classInput.value}`);
+        if (prevClass !== classInput.value) {
+          updateFeats();
+          updateClassAbilities();
+        }
+      }
+    } else {
+      if (levelInput) {
+        levelInput.value = '1';
+        console.log('updateInputs: Set characterLevel to default 1');
+      }
+      if (classInput) {
+        classInput.value = 'Fatemarked';
+        console.log('updateInputs: Set characterClass to default Fatemarked');
+      }
+      updateFeats();
+      updateClassAbilities();
+    }
 
     // Define visibility mapping
     const mapping = {
@@ -1231,100 +1499,280 @@
       powerSelectInput: ['paradox'],
       synergyBonusInput: ['skill', 'extended'],
       coverConcealmentInput: ['attack', 'disarm', 'grapple', 'trip'],
-      classFeatTierInput: advantagesList.filter(a => a.name === primaryFeat && a.maxTier > 1).length ? [type] : [],
-      customFeatInput: primaryFeat === 'custom' ? [type] : [],
-      paradoxCheckInput: ['paradox'].filter(() => ['Faterunner', 'Harlequin'].includes(cls))
+      classFeatTierInput: advantagesList.filter(a => a.name === (document.getElementById('classFeat')?.value || 'none') && a.maxTier > 1).length ? [type] : [],
+      customFeatInput: (document.getElementById('classFeat')?.value || 'none') === 'custom' ? [type] : [],
+      paradoxCheckInput: ['paradox'].filter(() => ['Faterunner', 'Harlequin'].includes(charData?.class || document.getElementById('characterClass')?.value || 'Fatemarked')),
+      rollFormulaInput: ['skill', 'attack', 'sanity', 'saving', 'initiative', 'paradox', 'hazard', 'damage', 'nonLethal', 'extended', 'opposed', 'extendedOpposed', 'disarm', 'grapple', 'trip', 'custom']
     };
 
     // Toggle visibility
     for (let id in mapping) {
       const element = document.getElementById(id);
-      element.classList.toggle('hidden', !mapping[id].includes(type));
+      if (element) {
+        element.classList.toggle('hidden', !mapping[id].includes(type));
+      } else {
+        console.warn(`updateInputs: Element ${id} not found`);
+      }
+    }
+
+    // Get fallback attributes
+    const attrsFallback = {
+      STR: parseInt(document.getElementById('attrSTR')?.value) || 10,
+      DEX: parseInt(document.getElementById('attrDEX')?.value) || 10,
+      CON: parseInt(document.getElementById('attrCON')?.value) || 10,
+      INT: parseInt(document.getElementById('attrINT')?.value) || 10,
+      WIS: parseInt(document.getElementById('attrWIS')?.value) || 10,
+      CHA: parseInt(document.getElementById('attrCHA')?.value) || 10
+    };
+    const attrs = charData && charData.attributes ? charData.attributes : attrsFallback;
+
+    const getModifierValue = (score) => {
+      if (score <= 2) return -4;
+      if (score <= 4) return -3;
+      if (score <= 6) return -2;
+      if (score <= 8) return -1;
+      if (score <= 10) return 0;
+      if (score <= 12) return 1;
+      if (score <= 14) return 2;
+      if (score <= 16) return 3;
+      if (score <= 18) return 4;
+      return 5;
+    };
+
+    // Initialize roll formula
+    let rollFormula = '';
+    let modifier = 0;
+
+    // Update fields based on roll type
+    if (['skill', 'extended', 'opposed', 'extendedOpposed'].includes(type)) {
+      const selectedSkill = skillSelect?.value || 'none';
+      if (selectedSkill !== 'none') {
+        const skillData = skillsList.find(s => s.name === selectedSkill);
+        const charSkill = charData?.skills?.find(s => s.name === selectedSkill);
+        if (skillData && modifierInput) {
+          const attr = skillData.attr.split('/')[0];
+          modifier = getModifierValue(attrs[attr] || 10);
+          modifierInput.value = modifier;
+          console.log(`updateInputs: Set modifier to ${modifier} for ${selectedSkill} (${attr})`);
+        }
+        if (charSkill && skillRankInput) {
+          skillRankInput.value = charSkill.rank || 0;
+          console.log(`updateInputs: Set skillRank to ${charSkill.rank} for ${selectedSkill}`);
+        } else if (skillRankInput) {
+          skillRankInput.value = 0;
+          console.log(`updateInputs: Set skillRank to 0 for ${selectedSkill} (no charSkill)`);
+        }
+        const specSelect = document.getElementById('skillSpec');
+        const synergyBonus = document.getElementById('synergyBonus')?.checked ? 2 : 0;
+        rollFormula = `d20 + ${modifier} (${attr}) + ${skillRankInput?.value || 0} (Rank)${specSelect?.value !== 'none' ? ' + 2 (Spec)' : ''}${synergyBonus ? ' + 2 (Synergy)' : ''}`;
+      }
+    } else if (['attack', 'disarm', 'trip'].includes(type)) {
+      if (modifierInput) {
+        modifier = getModifierValue(attrs.DEX || 10);
+        modifierInput.value = modifier;
+        console.log(`updateInputs: Set modifier to ${modifier} for ${type} (DEX)`);
+      }
+      if (babInput) {
+        babInput.value = getBAB(level, cls);
+        console.log(`updateInputs: Set BAB to ${babInput.value} for ${type}`);
+      }
+      const coverConcealment = document.getElementById('coverConcealment')?.value || 'none';
+      rollFormula = `d20 + ${babInput?.value || 0} (BAB) + ${modifier} (DEX)${coverConcealment === 'cover' ? ' - 4 (Cover)' : ''}`;
+    } else if (type === 'grapple') {
+      if (modifierInput) {
+        modifier = getModifierValue(attrs.STR || 10);
+        modifierInput.value = modifier;
+        console.log(`updateInputs: Set modifier to ${modifier} for grapple (STR)`);
+      }
+      if (babInput) {
+        babInput.value = getBAB(level, cls);
+        console.log(`updateInputs: Set BAB to ${babInput.value} for grapple`);
+      }
+      rollFormula = `d20 + ${babInput?.value || 0} (BAB) + ${modifier} (STR)`;
+    } else if (type === 'sanity') {
+      if (modifierInput) {
+        modifier = getModifierValue(attrs.WIS || 10);
+        modifierInput.value = modifier;
+        console.log(`updateInputs: Set modifier to ${modifier} for sanity (WIS)`);
+      }
+      rollFormula = `d20 + ${modifier} (WIS)`;
+    } else if (type === 'saving') {
+      if (savingTypeSelect && modifierInput) {
+        const savingType = savingTypeSelect.value || 'reflex';
+        const attrMap = {
+          reflex: 'DEX',
+          fortitude: 'CON',
+          willpower: 'WIS',
+          luck: 'CHA'
+        };
+        modifier = getModifierValue(attrs[attrMap[savingType]] || 10);
+        modifierInput.value = modifier;
+        console.log(`updateInputs: Set modifier to ${modifier} for saving (${savingType})`);
+        rollFormula = `d20 + ${modifier} (${attrMap[savingType]})`;
+      }
+    } else if (type === 'initiative') {
+      if (modifierInput) {
+        modifier = getModifierValue(attrs.DEX || 10);
+        modifierInput.value = modifier;
+        console.log(`updateInputs: Set modifier to ${modifier} for initiative (DEX)`);
+      }
+      rollFormula = `d20 + ${modifier} (DEX)`;
+    } else if (type === 'paradox') {
+      if (modifierInput) {
+        const attr = ['Faterunner', 'Harlequin'].includes(cls) ? 'CHA' : 'INT';
+        modifier = getModifierValue(attrs[attr] || 10);
+        modifierInput.value = modifier;
+        console.log(`updateInputs: Set modifier to ${modifier} for paradox (${attr})`);
+        rollFormula = `d20 + ${modifier} (${attr})`;
+      }
+    } else if (type === 'hazard') {
+      if (modifierInput) {
+        modifier = getModifierValue(attrs.WIS || 10);
+        modifierInput.value = modifier;
+        console.log(`updateInputs: Set modifier to ${modifier} for hazard (WIS)`);
+      }
+      rollFormula = `d20 + ${modifier} (WIS)`;
+    } else if (['damage', 'nonLethal'].includes(type)) {
+      if (modifierInput) {
+        modifier = getModifierValue(attrs.STR || 10);
+        modifierInput.value = modifier;
+        console.log(`updateInputs: Set modifier to ${modifier} for ${type} (STR)`);
+      }
+      const damageDice = document.getElementById('damageDice')?.value || '1d4';
+      rollFormula = `${damageDice} + ${modifier} (STR)${type === 'nonLethal' ? ' - 2 (Non-Lethal)' : ''}`;
+    } else if (type === 'custom') {
+      if (modifierInput) {
+        modifierInput.value = 0;
+        console.log('updateInputs: Set modifier to 0 for custom');
+      }
+      const customDice = document.getElementById('customDice')?.value || '1d6';
+      rollFormula = `${customDice}`;
+    }
+
+    // Set roll formula
+    if (rollFormulaInput) {
+      rollFormulaInput.value = rollFormula;
+      console.log(`updateInputs: Set rollFormula to ${rollFormula}`);
     }
 
     // Populate skillName
-    const skillSelect = document.getElementById('skillName');
-    skillSelect.innerHTML = '<option value="none">Select Skill</option>';
-    if (charData) {
-      charData.skills.forEach(skill => {
-        skillSelect.innerHTML += `<option value="${skill.name}">${skill.name} (Rank ${skill.rank})</option>`;
-      });
+    if (skillSelect) {
+      skillSelect.innerHTML = '<option value="none">Select Skill</option>';
+      if (charData && Array.isArray(charData.skills) && charData.skills.length > 0) {
+        charData.skills.forEach(skill => {
+          skillSelect.innerHTML += `<option value="${skill.name}">${skill.name} (Rank ${skill.rank})</option>`;
+        });
+        console.log('updateInputs: Populated skillSelect with', charData.skills.length, 'skills');
+      } else {
+        skillsList.forEach(skill => {
+          skillSelect.innerHTML += `<option value="${skill.name}">${skill.name} (${skill.attr})</option>`;
+        });
+        console.log('updateInputs: Populated skillSelect with default skillsList');
+      }
     } else {
-      skillsList.forEach(skill => {
-        skillSelect.innerHTML += `<option value="${skill.name}">${skill.name} (${skill.attr})</option>`;
-      });
+      console.warn('updateInputs: skillName element not found');
     }
 
-    // Populate skillSpec (updated dynamically via updateSkillSpecOptions)
+    // Populate skillSpec
     updateSkillSpecOptions();
 
     // Populate advantageSelect
     const advantageSelect = document.getElementById('advantageSelect');
     const advantageTierInput = document.getElementById('advantageTier');
-    advantageSelect.innerHTML = '<option value="none">None</option>';
-    if (charData) {
-      charData.advantages.forEach(adv => {
-        advantageSelect.innerHTML += `<option value="${adv.name}">${adv.name} (Tier ${adv.tier})</option>`;
-      });
+    if (advantageSelect) {
+      advantageSelect.innerHTML = '<option value="none">None</option>';
+      if (charData && Array.isArray(charData.advantages) && charData.advantages.length > 0) {
+        charData.advantages.forEach(adv => {
+          advantageSelect.innerHTML += `<option value="${adv.name}">${adv.name} (Tier ${adv.tier})</option>`;
+        });
+        console.log('updateInputs: Populated advantageSelect with', charData.advantages.length, 'advantages');
+      } else {
+        advantagesList.forEach(adv => {
+          advantageSelect.innerHTML += `<option value="${adv.name}">${adv.name} (${adv.desc})</option>`;
+        });
+        console.log('updateInputs: Populated advantageSelect with default advantagesList');
+      }
+      if (advantageTierInput) {
+        advantageTierInput.classList.toggle('hidden', !advantagesList.some(a => a.name === advantageSelect.value && a.maxTier > 1));
+      }
     } else {
-      advantagesList.forEach(adv => {
-        advantageSelect.innerHTML += `<option value="${adv.name}">${adv.name} (${adv.desc})</option>`;
-      });
+      console.warn('updateInputs: advantageSelect element not found');
     }
-    advantageTierInput.classList.toggle('hidden', !advantagesList.some(a => a.name === advantageSelect.value && a.maxTier > 1));
 
     // Populate disadvantageSelect
     const disadvantageSelect = document.getElementById('disadvantageSelect');
     const disadvantageTierInput = document.getElementById('disadvantageTier');
-    disadvantageSelect.innerHTML = '<option value="none">None</option>';
-    if (charData) {
-      charData.disadvantages.forEach(dis => {
-        disadvantageSelect.innerHTML += `<option value="${dis.name}">${dis.name} (Tier ${dis.tier})</option>`;
-      });
+    if (disadvantageSelect) {
+      disadvantageSelect.innerHTML = '<option value="none">None</option>';
+      if (charData && Array.isArray(charData.disadvantages) && charData.disadvantages.length > 0) {
+        charData.disadvantages.forEach(dis => {
+          disadvantageSelect.innerHTML += `<option value="${dis.name}">${dis.name} (Tier ${dis.tier})</option>`;
+        });
+        console.log('updateInputs: Populated disadvantageSelect with', charData.disadvantages.length, 'disadvantages');
+      } else {
+        disadvantagesList.forEach(dis => {
+          disadvantageSelect.innerHTML += `<option value="${dis.name}">${dis.name} (${dis.desc})</option>`;
+        });
+        console.log('updateInputs: Populated disadvantageSelect with default disadvantagesList');
+      }
+      if (disadvantageTierInput) {
+        disadvantageTierInput.classList.toggle('hidden', !disadvantagesList.some(d => d.name === disadvantageSelect.value && d.maxTier > 1));
+      }
     } else {
-      disadvantagesList.forEach(dis => {
-        disadvantageSelect.innerHTML += `<option value="${dis.name}">${dis.name} (${dis.desc})</option>`;
-      });
+      console.warn('updateInputs: disadvantageSelect element not found');
     }
-    disadvantageTierInput.classList.toggle('hidden', !disadvantagesList.some(d => d.name === disadvantageSelect.value && d.maxTier > 1));
 
     // Populate powerSelect
     const powerSelect = document.getElementById('powerSelect');
-    powerSelect.innerHTML = '<option value="none">None</option>';
-    if (charData) {
-      charData.powers.forEach(power => {
-        powerSelect.innerHTML += `<option value="${power.name}" data-cost="${power.cost}" data-dc="${power.dc}" data-risk="${power.risk}">${power.name} (${power.level})</option>`;
-      });
+    if (powerSelect) {
+      powerSelect.innerHTML = '<option value="none">None</option>';
+      if (charData && Array.isArray(charData.powers) && charData.powers.length > 0) {
+        charData.powers.forEach(power => {
+          powerSelect.innerHTML += `<option value="${power.name}" data-cost="${power.cost}" data-dc="${power.dc}" data-risk="${power.risk}">${power.name} (${power.level})</option>`;
+        });
+        console.log('updateInputs: Populated powerSelect with', charData.powers.length, 'powers');
+      } else {
+        const lvl = charData?.level || parseInt(document.getElementById('characterLevel')?.value) || 1;
+        const genericPowers = [
+          { name: 'Light Energy Bolt', level: 'PL1', cost: 1, dc: 15, risk: 'None', effect: '1d6 + CHA, Burn (1d6 fire, DC 15 DEX save)' },
+          { name: 'Medium Plasma Shot', level: 'PL2', cost: 2, dc: 15, risk: 'None', effect: '1d8 + CHA, Daze (-2 attacks, DC 15 CON save)' },
+          { name: 'Heavy Kinetic Blast', level: 'PL3', cost: 3, dc: 15, risk: 'DC 15 INT/WIS', effect: '1d10 + CHA, Blast (10-ft. radius, DC 15 DEX save)' },
+          { name: 'Exotic Antimatter Ray', level: 'PL3', cost: 3, dc: 18, risk: 'DC 18 INT/WIS', effect: '1d12 + CHA, Disintegrate (1d12/round, DC 15 CON save)' }
+        ].filter(power => {
+          if (power.level === 'PL2') return lvl >= 4;
+          if (power.level === 'PL3') return lvl >= 7;
+          return true;
+        });
+        genericPowers.forEach(power => {
+          powerSelect.innerHTML += `<option value="${power.name}" data-cost="${power.cost}" data-dc="${power.dc}" data-risk="${power.risk}">${power.name} (${power.level})</option>`;
+        });
+        console.log('updateInputs: Populated powerSelect with default genericPowers');
+      }
     } else {
-      // Generic powers from weapons table (Section 5.2.6)
-      const genericPowers = [
-        { name: 'Light Energy Bolt', level: 'PL1', cost: 1, dc: 15, risk: 'None', effect: '1d6 + CHA, Burn (1d6 fire, DC 15 DEX save)' },
-        { name: 'Medium Plasma Shot', level: 'PL2', cost: 2, dc: 15, risk: 'None', effect: '1d8 + CHA, Daze (-2 attacks, DC 15 CON save)' },
-        { name: 'Heavy Kinetic Blast', level: 'PL3', cost: 3, dc: 15, risk: 'DC 15 INT/WIS', effect: '1d10 + CHA, Blast (10-ft. radius, DC 15 DEX save)' },
-        { name: 'Exotic Antimatter Ray', level: 'PL3', cost: 3, dc: 18, risk: 'DC 18 INT/WIS', effect: '1d12 + CHA, Disintegrate (1d12/round, DC 15 CON save)' }
-      ].filter(power => {
-        if (power.level === 'PL2') return lvl >= 4;
-        if (power.level === 'PL3') return lvl >= 7;
-        return true;
-      });
-      genericPowers.forEach(power => {
-        powerSelect.innerHTML += `<option value="${power.name}" data-cost="${power.cost}" data-dc="${power.dc}" data-risk="${power.risk}">${power.name} (${power.level})</option>`;
-      });
+      console.warn('updateInputs: powerSelect element not found');
     }
 
     // Populate powerLevel
     const powerLevelSelect = document.getElementById('powerLevel');
-    powerLevelSelect.innerHTML = '<option value="none">None</option>';
-    if (cls === 'Fatemarked' && lvl <= 3) {
-      powerLevelSelect.innerHTML += '<option value="Fate\'s Edge">Fate\'s Edge (Advantage on one roll)</option>';
-      if (lvl >= 2) powerLevelSelect.innerHTML += '<option value="Fate\'s Influence">Fate\'s Influence (As above, plus enemy disadvantage)</option>';
-      if (lvl >= 3) powerLevelSelect.innerHTML += '<option value="Fate\'s Reach">Fate\'s Reach (As above, any roll)</option>';
-    } else if (['paradox', 'skill', 'extended', 'opposed', 'extendedOpposed'].includes(type)) {
-      powerLevelSelect.innerHTML += `
-        <option value="PL1">PL 1 / Tier 1</option>
-        ${lvl >= 7 ? '<option value="PL2">PL 2 / Tier 2</option>' : ''}
-        ${lvl >= 11 ? '<option value="PL3">PL 3 / Tier 3</option>' : ''}
-      `;
+    if (powerLevelSelect) {
+      powerLevelSelect.innerHTML = '<option value="none">None</option>';
+      const cls = charData?.class || document.getElementById('characterClass')?.value || 'Fatemarked';
+      const lvl = charData?.level || parseInt(document.getElementById('characterLevel')?.value) || 1;
+      if (cls === 'Fatemarked' && lvl <= 3) {
+        powerLevelSelect.innerHTML += '<option value="Fate\'s Edge">Fate\'s Edge (Advantage on one roll)</option>';
+        if (lvl >= 2) powerLevelSelect.innerHTML += '<option value="Fate\'s Influence">Fate\'s Influence (As above, plus enemy disadvantage)</option>';
+        if (lvl >= 3) powerLevelSelect.innerHTML += '<option value="Fate\'s Reach">Fate\'s Reach (As above, any roll)</option>';
+        console.log('updateInputs: Populated powerLevelSelect with Fatemarked abilities');
+      } else if (['paradox', 'skill', 'extended', 'opposed', 'extendedOpposed'].includes(type)) {
+        powerLevelSelect.innerHTML += `
+          <option value="PL1">PL 1 / Tier 1</option>
+          ${lvl >= 7 ? '<option value="PL2">PL 2 / Tier 2</option>' : ''}
+          ${lvl >= 11 ? '<option value="PL3">PL 3 / Tier 3</option>' : ''}
+        `;
+        console.log('updateInputs: Populated powerLevelSelect with power levels for', type);
+      }
+    } else {
+      console.warn('updateInputs: powerLevel element not found');
     }
 
     updateParadoxDC();
@@ -1338,26 +1786,77 @@
     try {
     const skillSelect = document.getElementById('skillName');
     const specSelect = document.getElementById('skillSpec');
-    const selectedSkill = skillSelect.value;
+    const modifierInput = document.getElementById('modifier');
+    const skillRankInput = document.getElementById('skillRank');
+    const selectedSkill = skillSelect ? skillSelect.value : 'none';
     const charData = getCharacterData();
 
-    specSelect.innerHTML = '<option value="none">None</option>';
-    if (selectedSkill !== 'none') {
-      if (charData) {
-        const charSkill = charData.skills.find(s => s.name === selectedSkill);
-        if (charSkill && charSkill.specs.length) {
-          charSkill.specs.forEach(spec => {
-            specSelect.innerHTML += `<option value="${spec}">${spec}</option>`;
-          });
+    if (specSelect) {
+      specSelect.innerHTML = '<option value="none">None</option>';
+      if (selectedSkill !== 'none' && skillSelect) {
+        let specsAdded = false;
+        if (charData && charData.skills) {
+          const charSkill = charData.skills.find(s => s.name === selectedSkill);
+          if (charSkill && charSkill.specs && charSkill.specs.length) {
+            charSkill.specs.forEach(spec => {
+              specSelect.innerHTML += `<option value="${spec}">${spec}</option>`;
+            });
+            specsAdded = true;
+            console.log(`updateSkillSpecOptions: Populated ${charSkill.specs.length} specs for ${selectedSkill} from charData`);
+          }
+          if (charSkill && skillRankInput) {
+            skillRankInput.value = charSkill.rank || 0;
+            console.log(`updateSkillSpecOptions: Set skillRank to ${charSkill.rank} for ${selectedSkill}`);
+          }
         }
-      } else {
-        const skillData = skillsList.find(s => s.name === selectedSkill);
-        if (skillData && skillData.specs.length) {
-          skillData.specs.forEach(spec => {
-            specSelect.innerHTML += `<option value="${spec}">${spec}</option>`;
-          });
+        if (!specsAdded) {
+          const skillData = skillsList.find(s => s.name === selectedSkill);
+          if (skillData && skillData.specs && skillData.specs.length) {
+            skillData.specs.forEach(spec => {
+              specSelect.innerHTML += `<option value="${spec}">${spec}</option>`;
+            });
+            console.log(`updateSkillSpecOptions: Populated ${skillData.specs.length} default specs for ${selectedSkill}`);
+          }
         }
       }
+    } else {
+      console.warn('updateSkillSpecOptions: skillSpec element not found');
+    }
+
+    // Update modifier
+    const attrsFallback = {
+      STR: parseInt(document.getElementById('attrSTR')?.value) || 10,
+      DEX: parseInt(document.getElementById('attrDEX')?.value) || 10,
+      CON: parseInt(document.getElementById('attrCON')?.value) || 10,
+      INT: parseInt(document.getElementById('attrINT')?.value) || 10,
+      WIS: parseInt(document.getElementById('attrWIS')?.value) || 10,
+      CHA: parseInt(document.getElementById('attrCHA')?.value) || 10
+    };
+    const attrs = charData && charData.attributes ? charData.attributes : attrsFallback;
+
+    if (selectedSkill !== 'none' && modifierInput) {
+      const skillData = skillsList.find(s => s.name === selectedSkill);
+      if (skillData) {
+        const attr = skillData.attr.split('/')[0];
+        const getModifierValue = (score) => {
+          if (score <= 2) return -4;
+          if (score <= 4) return -3;
+          if (score <= 6) return -2;
+          if (score <= 8) return -1;
+          if (score <= 10) return 0;
+          if (score <= 12) return 1;
+          if (score <= 14) return 2;
+          if (score <= 16) return 3;
+          if (score <= 18) return 4;
+          return 5;
+        };
+        modifierInput.value = getModifierValue(attrs[attr] || 10);
+        console.log(`updateSkillSpecOptions: Set modifier to ${modifierInput.value} for ${selectedSkill} (${attr})`);
+      }
+    } else if (modifierInput && skillRankInput) {
+      skillRankInput.value = 0;
+      modifierInput.value = 0;
+      console.log('updateSkillSpecOptions: Set skillRank and modifier to 0 (no skill selected)');
     }
   } catch (error) {
     console.error('Error updating skill specialization options:', error);
@@ -1652,135 +2151,239 @@
 
   function updateSheetInputs(options = {}) {
     try {
-    if (window.isLoadingCharacter) {
-      console.log('Skipping updateSheetInputs during loading');
-      return;
-    }
-    const lvl = parseInt(document.getElementById('charLevel').value) || 1;
-    const prevLvl = parseInt(document.getElementById('charLevel').dataset.prevLevel || '1');
-    const cls = document.getElementById('charClass').value || 'Fatemarked';
-    if (lvl > prevLvl && parseInt(document.getElementById('fatePointsCurrent').value) >= lvl) {
-      if (powerCounter >= lvl) {
-        alert('Power limit reached! Sacrifice a power to gain 1 Fate Point.');
-        const sacrifice = confirm('Sacrifice a power to regain 1 Fate Point?');
-        if (sacrifice) removePowerField();
+      if (window.isLoadingCharacter && !options.preserveAttributes) {
+        console.log('Skipping updateSheetInputs during loading unless preserveAttributes is set');
+        return;
       }
-    }
-    document.getElementById('charLevel').dataset.prevLevel = lvl;
-    document.getElementById('charAlignment').value = lvl <= 3 ? 'None' : document.getElementById('charAlignment').value || 'Balance';
-    document.getElementById('nextLevelXP').value = getNextLevelXP(lvl);
-    updateAttributes();
-    const pointsRemaining = document.getElementById('pointsRemaining');
-    updateDerivedStats();
-    updateSkills();
-    debouncedUpdateFeatsSheet();
-    if (!options.skipPowers) {
-      updatePowers();
-    } else {
-      console.log('Skipped updatePowers during initialization');
-    }
-    document.getElementById('fatePointsCurrent').value = lvl <= 3 ? 0 : lvl;
-
-    // Update class dropdown only if not loading
-    const classSelect = document.getElementById('charClass');
-    const currentClass = classSelect.value || 'Fatemarked';
-    const advancedClasses = [
-      'Fatemarked', 'Biomatrix Suit', 'Continuum Raider', 'Gunrunner', 'Faterunner', 'Harlequin',
-      'Warrior', 'Mage', 'Shape', 'Masque', 'Adventurer'
-    ];
-    if (!window.isLoadingCharacter) {
-      classSelect.innerHTML = lvl <= 3 ? '<option value="Fatemarked">Fatemarked</option>' :
-        advancedClasses.map(cls => `<option value="${cls}" ${cls === currentClass ? 'selected' : ''}>${cls}</option>`).join('');
-      if (lvl <= 3 && currentClass !== 'Fatemarked') {
-        classSelect.value = 'Fatemarked';
-      } else if (lvl > 3 && !advancedClasses.includes(currentClass)) {
-        classSelect.value = 'Continuum Raider';
-        console.warn(`Invalid class ${currentClass} for Level ${lvl}, setting to Continuum Raider`);
-      }
-    }
-    classSelect.disabled = false;
-
-    // Update UI elements
-    document.getElementById('fatePointsRegenerate').classList.toggle('hidden', !['Faterunner', 'Harlequin'].includes(cls));
-    document.getElementById('fatePointsRest').classList.toggle('hidden', !['Faterunner', 'Harlequin'].includes(cls));
-    document.getElementById('addPowerButton').classList.toggle('hidden', lvl <= 3 || ['Faterunner', 'Harlequin'].includes(cls));
-
-    // Update inherent abilities
-    const inherentAbilitiesContainer = document.getElementById('inherentAbilitiesContainer');
-    inherentAbilitiesContainer.innerHTML = '';
-    const inherentAbilities = {
-      'Biomatrix Suit': '+2 to INT-based checks',
-      'Continuum Raider': '+2 to Survival and Navigate checks',
-      'Gunrunner': '+2 to Ranged Weapons checks',
-      'Faterunner': 'Tier 1 effects have no paradox risk',
-      'Harlequin': '+2 to Deception checks',
-      'Warrior': '+2 to Melee Weapon checks',
-      'Mage': '+2 to Knowledge and Perform checks',
-      'Shape': '+2 to Stealth checks',
-      'Masque': '+2 to Disguise checks',
-      'Adventurer': '+1 skill point per level, reduced cost for cross-class feats',
-      'Fatemarked': 'None'
-    };
-    if (inherentAbilities[cls] !== 'None') {
-      const div = document.createElement('div');
-      div.className = 'dynamic-group';
-      div.innerHTML = `<p><strong>Inherent Ability:</strong> ${inherentAbilities[cls]}</p>`;
-      inherentAbilitiesContainer.appendChild(div);
-    }
-
-    // Update powers section
-    const powersContainer = document.getElementById('powersContainer');
-    if (cls === 'Fatemarked' && lvl <= 3) {
-      powersContainer.innerHTML = '';
-      powerCounter = 0;
-      const fatemarkedAbilities = [
-        { level: 1, name: 'Fate’s Edge', category: 'Manipulation', effect: 'Advantage on one roll/encounter', dc: 15, risk: 'INT DC 15, -1 penalty' },
-        { level: 2, name: 'Fate’s Influence', category: 'Manipulation', effect: 'As above, plus disadvantage on enemy roll', dc: 15, risk: 'INT DC 15, -1 or anomaly' },
-        { level: 3, name: 'Fate’s Reach', category: 'Manipulation', effect: 'As above, plus any roll', dc: 15, risk: 'INT DC 15, -2 or rift' }
-      ];
-      fatemarkedAbilities.forEach(ability => {
-        if (lvl >= ability.level) {
-          powerCounter++;
-          const div = document.createElement('div');
-          div.className = 'dynamic-group';
-          div.style.display = 'flex';
-          div.innerHTML = `
-            <input id="powerName${powerCounter}" type="text" value="${ability.name}" style="width: 150px;" title="Name of the power" readonly>
-            <input id="powerCategory${powerCounter}" type="text" value="${ability.category}" style="width: 100px;" title="Power category" readonly>
-            <input id="powerLevel${powerCounter}" type="text" value="PL1" style="width: 100px;" title="Power level or tier" readonly>
-            <input id="powerCost${powerCounter}" type="number" value="0" style="width: 100px;" title="Fate Point cost" readonly>
-            <input id="powerEffect${powerCounter}" type="text" value="${ability.effect}" style="width: 200px;" title="Power effect" readonly>
-            <input id="powerDC${powerCounter}" type="number" value="${ability.dc}" style="width: 100px;" title="Difficulty Class" readonly>
-            <input id="powerRisk${powerCounter}" type="text" value="${ability.risk}" style="width: 200px;" title="Paradox risk" readonly>
-          `;
-          powersContainer.appendChild(div);
+      const lvl = parseInt(document.getElementById('charLevel').value) || 1;
+      const prevLvl = parseInt(document.getElementById('charLevel').dataset.prevLevel || '1');
+      const cls = document.getElementById('charClass').value || 'Fatemarked';
+      if (lvl > prevLvl && parseInt(document.getElementById('fatePointsCurrent').value) >= lvl) {
+        if (powerCounter >= lvl) {
+          alert('Power limit reached! Sacrifice a power to gain 1 Fate Point.');
+          const sacrifice = confirm('Sacrifice a power to regain 1 Fate Point?');
+          if (sacrifice) removePowerField();
         }
-      });
-    } else if (cls === 'Fatemarked' && lvl > 3) {
-      powersContainer.innerHTML = '<p>Fatemarked abilities lost at Level 4+. Select an advanced class.</p>';
-      powerCounter = 0;
-    } else if (lvl > 3 && !['Faterunner', 'Harlequin'].includes(cls)) {
-      powersContainer.innerHTML = powerCounter > 0 ? powersContainer.innerHTML : '<p>Add powers using the button above.</p>';
-      if (!options.skipPowers) updatePowers();
-    } else if (['Faterunner', 'Harlequin'].includes(cls)) {
-      powersContainer.innerHTML = '<p>No powers for Faterunner/Harlequin.</p>';
-      powerCounter = 0;
-    }
+      }
+      document.getElementById('charLevel').dataset.prevLevel = lvl;
+      document.getElementById('charAlignment').value = lvl <= 3 ? 'None' : document.getElementById('charAlignment').value || 'Balance';
+      document.getElementById('nextLevelXP').value = getNextLevelXP(lvl);
 
-    skillCriticalTracker = {};
-    if (!['Faterunner', 'Harlequin', 'Fatemarked', 'Adventurer'].includes(cls)) {
-      document.getElementById('resourcesContainer').innerHTML = '';
-      resourceCounter = 0;
-      addResourceField();
-    } else {
-      document.getElementById('resourcesContainer').innerHTML = '';
-      resourceCounter = 0;
+      // Update BAB and other derived stats
+      const babInput = document.getElementById('bab');
+      const charBABInput = document.getElementById('charBAB');
+      const healthInput = document.getElementById('health');
+      const sanityInput = document.getElementById('sanity');
+      const defenseInput = document.getElementById('defense');
+      const initiativeInput = document.getElementById('initiative');
+      const reflexInput = document.getElementById('reflex');
+      const fortitudeInput = document.getElementById('fortitude');
+      const willpowerInput = document.getElementById('willpower');
+      const luckInput = document.getElementById('luck');
+      const fatePointsInput = document.getElementById('fatePointsCurrent');
+
+      // Get attributes
+      const attrs = {
+        STR: parseInt(document.getElementById('attrSTR')?.value) || 10,
+        DEX: parseInt(document.getElementById('attrDEX')?.value) || 10,
+        CON: parseInt(document.getElementById('attrCON')?.value) || 10,
+        INT: parseInt(document.getElementById('attrINT')?.value) || 10,
+        WIS: parseInt(document.getElementById('attrWIS')?.value) || 10,
+        CHA: parseInt(document.getElementById('attrCHA')?.value) || 10
+      };
+      const charData = getCharacterData();
+      if (charData && charData.attributes) {
+        Object.assign(attrs, charData.attributes);
+      }
+
+      const getModifierValue = (score) => {
+        if (score <= 2) return -4;
+        if (score <= 4) return -3;
+        if (score <= 6) return -2;
+        if (score <= 8) return -1;
+        if (score <= 10) return 0;
+        if (score <= 12) return 1;
+        if (score <= 14) return 2;
+        if (score <= 16) return 3;
+        if (score <= 18) return 4;
+        return 5;
+      };
+
+      // Populate BAB
+      const babValue = getBAB(lvl, cls);
+      if (babInput) {
+        babInput.value = babValue;
+        console.log(`updateSheetInputs: Set bab to ${babInput.value} for Level ${lvl}, Class ${cls}`);
+      } else {
+        console.warn('updateSheetInputs: bab element not found');
+      }
+      if (charBABInput) {
+        charBABInput.value = babValue;
+        console.log(`updateSheetInputs: Set charBAB to ${charBABInput.value} for Level ${lvl}, Class ${cls}`);
+      } else {
+        console.warn('updateSheetInputs: charBAB element not found');
+      }
+
+      // Populate other derived stats
+      if (healthInput) {
+        const conMod = getModifierValue(attrs.CON);
+        healthInput.value = (cls === 'Warrior' ? 10 : 8) + conMod + (lvl - 1) * (cls === 'Warrior' ? 6 : 4);
+        console.log(`updateSheetInputs: Set health to ${healthInput.value}`);
+      }
+      if (sanityInput) {
+        sanityInput.value = attrs.WIS + getModifierValue(attrs.WIS);
+        console.log(`updateSheetInputs: Set sanity to ${sanityInput.value}`);
+      }
+      if (defenseInput) {
+        defenseInput.value = 10 + getModifierValue(attrs.DEX);
+        console.log(`updateSheetInputs: Set defense to ${defenseInput.value}`);
+      }
+      if (initiativeInput) {
+        initiativeInput.value = getModifierValue(attrs.DEX);
+        console.log(`updateSheetInputs: Set initiative to ${initiativeInput.value}`);
+      }
+      if (reflexInput) {
+        reflexInput.value = getModifierValue(attrs.DEX) + (cls === 'Faterunner' ? 2 : 0);
+        console.log(`updateSheetInputs: Set reflex to ${reflexInput.value}`);
+      }
+      if (fortitudeInput) {
+        fortitudeInput.value = getModifierValue(attrs.CON) + (cls === 'Warrior' ? 2 : 0);
+        console.log(`updateSheetInputs: Set fortitude to ${fortitudeInput.value}`);
+      }
+      if (willpowerInput) {
+        willpowerInput.value = getModifierValue(attrs.WIS) + (cls === 'Mage' ? 2 : 0);
+        console.log(`updateSheetInputs: Set willpower to ${willpowerInput.value}`);
+      }
+      if (luckInput) {
+        luckInput.value = lvl >= 4 ? getModifierValue(attrs.CHA) : 0;
+        console.log(`updateSheetInputs: Set luck to ${luckInput.value}`);
+      }
+      if (fatePointsInput) {
+        fatePointsInput.value = lvl <= 3 ? 0 : lvl;
+        console.log(`updateSheetInputs: Set fatePointsCurrent to ${fatePointsInput.value}`);
+      }
+
+      // Update attributes only if not preserving or not imported
+      const attrMethod = document.getElementById('attrMethod').value;
+      if (!options.preserveAttributes && attrMethod !== 'imported') {
+        updateAttributes();
+        const pointsRemaining = document.getElementById('pointsRemaining');
+        if (pointsRemaining && attrMethod === 'pointBuy') {
+          updatePoints();
+        }
+      } else {
+        console.log('Preserving attributes during updateSheetInputs');
+      }
+
+      updateDerivedStats();
+      updateSkills();
+      debouncedUpdateFeatsSheet();
+      if (!options.skipPowers) {
+        updatePowers();
+      } else {
+        console.log('Skipped updatePowers during initialization');
+      }
+
+      // Update class dropdown
+      const classSelect = document.getElementById('charClass');
+      const currentClass = classSelect.value || 'Fatemarked';
+      const advancedClasses = [
+        'Fatemarked', 'Biomatrix Suit', 'Continuum Raider', 'Gunrunner', 'Faterunner', 'Harlequin',
+        'Warrior', 'Mage', 'Shape', 'Masque', 'Adventurer'
+      ];
+      if (!window.isLoadingCharacter) {
+        classSelect.innerHTML = lvl <= 3 ? '<option value="Fatemarked">Fatemarked</option>' :
+          advancedClasses.map(cls => `<option value="${cls}" ${cls === currentClass ? 'selected' : ''}>${cls}</option>`).join('');
+        if (lvl <= 3 && currentClass !== 'Fatemarked') {
+          classSelect.value = 'Fatemarked';
+        } else if (lvl > 3 && !advancedClasses.includes(currentClass)) {
+          classSelect.value = 'Continuum Raider';
+          console.warn(`Invalid class ${currentClass} for Level ${lvl}, setting to Continuum Raider`);
+        }
+      }
+      classSelect.disabled = false;
+
+      // Update UI elements
+      document.getElementById('fatePointsRegenerate').classList.toggle('hidden', !['Faterunner', 'Harlequin'].includes(cls));
+      document.getElementById('fatePointsRest').classList.toggle('hidden', !['Faterunner', 'Harlequin'].includes(cls));
+      document.getElementById('addPowerButton').classList.toggle('hidden', lvl <= 3 || ['Faterunner', 'Harlequin'].includes(cls));
+
+      // Update inherent abilities
+      const inherentAbilitiesContainer = document.getElementById('inherentAbilitiesContainer');
+      inherentAbilitiesContainer.innerHTML = '';
+      const inherentAbilities = {
+        'Biomatrix Suit': '+2 to INT-based checks',
+        'Continuum Raider': '+2 to Survival and Navigate checks',
+        'Gunrunner': '+2 to Ranged Weapons checks',
+        'Faterunner': 'Tier 1 effects have no paradox risk',
+        'Harlequin': '+2 to Deception checks',
+        'Warrior': '+2 to Melee Weapon checks',
+        'Mage': '+2 to Knowledge and Perform checks',
+        'Shape': '+2 to Stealth checks',
+        'Masque': '+2 to Disguise checks',
+        'Adventurer': '+1 skill point per level, reduced cost for cross-class feats',
+        'Fatemarked': 'None'
+      };
+      if (inherentAbilities[cls] !== 'None') {
+        const div = document.createElement('div');
+        div.className = 'dynamic-group';
+        div.innerHTML = `<p><strong>Inherent Ability:</strong> ${inherentAbilities[cls]}</p>`;
+        inherentAbilitiesContainer.appendChild(div);
+      }
+
+      // Update powers section
+      const powersContainer = document.getElementById('powersContainer');
+      if (cls === 'Fatemarked' && lvl <= 3) {
+        powersContainer.innerHTML = '';
+        powerCounter = 0;
+        const fatemarkedAbilities = [
+          { level: 1, name: 'Fate’s Edge', category: 'Manipulation', effect: 'Advantage on one roll/encounter', dc: 15, risk: 'INT DC 15, -1 penalty' },
+          { level: 2, name: 'Fate’s Influence', category: 'Manipulation', effect: 'As above, plus disadvantage on enemy roll', dc: 15, risk: 'INT DC 15, -1 or anomaly' },
+          { level: 3, name: 'Fate’s Reach', category: 'Manipulation', effect: 'As above, plus any roll', dc: 15, risk: 'INT DC 15, -2 or rift' }
+        ];
+        fatemarkedAbilities.forEach(ability => {
+          if (lvl >= ability.level) {
+            powerCounter++;
+            const div = document.createElement('div');
+            div.className = 'dynamic-group';
+            div.style.display = 'flex';
+            div.innerHTML = `
+              <input id="powerName${powerCounter}" type="text" value="${ability.name}" style="width: 150px;" title="Name of the power" readonly>
+              <input id="powerCategory${powerCounter}" type="text" value="${ability.category}" style="width: 100px;" title="Power category" readonly>
+              <input id="powerLevel${powerCounter}" type="text" value="PL1" style="width: 100px;" title="Power level or tier" readonly>
+              <input id="powerCost${powerCounter}" type="number" value="0" style="width: 100px;" title="Fate Point cost" readonly>
+              <input id="powerEffect${powerCounter}" type="text" value="${ability.effect}" style="width: 200px;" title="Power effect" readonly>
+              <input id="powerDC${powerCounter}" type="number" value="${ability.dc}" style="width: 100px;" title="Difficulty Class" readonly>
+              <input id="powerRisk${powerCounter}" type="text" value="${ability.risk}" style="width: 200px;" title="Paradox risk" readonly>
+            `;
+            powersContainer.appendChild(div);
+          }
+        });
+      } else if (cls === 'Fatemarked' && lvl > 3) {
+        powersContainer.innerHTML = '<p>Fatemarked abilities lost at Level 4+. Select an advanced class.</p>';
+        powerCounter = 0;
+      } else if (lvl > 3 && !['Faterunner', 'Harlequin'].includes(cls)) {
+        powersContainer.innerHTML = powerCounter > 0 ? powersContainer.innerHTML : '<p>Add powers using the button above.</p>';
+        if (!options.skipPowers) updatePowers();
+      } else if (['Faterunner', 'Harlequin'].includes(cls)) {
+        powersContainer.innerHTML = '<p>No powers for Faterunner/Harlequin.</p>';
+        powerCounter = 0;
+      }
+
+      skillCriticalTracker = {};
+      if (!['Faterunner', 'Harlequin', 'Fatemarked', 'Adventurer'].includes(cls)) {
+        document.getElementById('resourcesContainer').innerHTML = '';
+        resourceCounter = 0;
+        addResourceField();
+      } else {
+        document.getElementById('resourcesContainer').innerHTML = '';
+        resourceCounter = 0;
+      }
+    } catch (error) {
+      console.error('Error updating sheet inputs:', error);
+      alert('Failed to update sheet inputs.');
     }
-  } catch (error) {
-    console.error('Error updating sheet inputs:', error);
-    alert('Failed to update sheet inputs.');
   }
-}
 
   function getNextLevelXP(level) {
     if (level < 3) return 100 * level;
@@ -1796,6 +2399,19 @@
       document.getElementById('randomRolls').classList.toggle('hidden', method !== 'random');
       document.getElementById('confirmAssignments').classList.toggle('hidden', method !== 'random');
       const attrs = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+
+      if (method === 'imported') {
+        console.log('Skipping attribute reset for imported method');
+        attrs.forEach(attr => {
+          const input = document.getElementById(`attr${attr}`);
+          if (input) input.readOnly = true;
+          const assignSelect = document.getElementById(`assign${attr}`);
+          if (assignSelect) assignSelect.classList.add('hidden');
+        });
+        document.getElementById('pointsRemaining').value = 'N/A';
+        return;
+      }
+
       if (method === 'random') {
         attrs.forEach(attr => {
           const input = document.getElementById(`attr${attr}`);
@@ -1826,6 +2442,14 @@
       console.error('Error updating attributes:', e);
       alert(`Failed to update attributes: ${e.message}`);
     }
+  }
+
+  function roll4d6DropLowest() {
+    const rolls = Array(4).fill().map(() => Math.floor(Math.random() * 6) + 1);
+    const lowest = Math.min(...rolls);
+    const total = rolls.reduce((sum, roll) => sum + roll, 0) - lowest;
+    console.log(`roll4d6DropLowest: Rolls=${rolls}, Dropped=${lowest}, Total=${total}`);
+    return total;
   }
 
   function rerollAttributes() {
@@ -2027,66 +2651,66 @@
 
   function updateSkills() {
     try {
-      const lvl = parseInt(document.getElementById('charLevel').value) || 1;
-      const int = parseInt(document.getElementById('attrINT').value) || 10;
-      const cls = document.getElementById('charClass').value || 'Fatemarked';
-      const background = document.getElementById('charBackground').value.toLowerCase();
-      const intMod = getModifier(int);
-      const maxRank = lvl <= 1 ? 4 : 3 + lvl;
-      const baseSkillPoints = cls === 'Adventurer' ? (5 + intMod + 1) : (5 + intMod);
-      const skillPoints = lvl === 1 ? baseSkillPoints * 4 : baseSkillPoints * 4 + (2 + intMod + (cls === 'Adventurer' ? 1 : 0)) * (lvl - 1);
-      let usedPoints = 0;
-      const selectedSkills = new Set();
+    const lvl = parseInt(document.getElementById('charLevel').value) || 1;
+    const int = parseInt(document.getElementById('attrINT').value) || 10;
+    const cls = document.getElementById('charClass').value || 'Fatemarked';
+    const background = document.getElementById('charBackground').value.toLowerCase();
+    const intMod = getModifier(int);
+    const maxRank = lvl <= 1 ? 4 : 3 + lvl;
+    const baseSkillPoints = cls === 'Adventurer' ? (5 + intMod + 1) : (5 + intMod);
+    const skillPoints = lvl === 1 ? baseSkillPoints * 4 : baseSkillPoints * 4 + (2 + intMod + (cls === 'Adventurer' ? 1 : 0)) * (lvl - 1);
+    let usedPoints = 0;
+    const selectedSkills = new Set();
 
-      const alignedSkills = {
-        'Fatemarked': ['Insight', 'Knowledge'],
-        'Biomatrix Suit': ['Technical Expertise', 'Crafting'],
-        'Continuum Raider': ['Survival', 'Navigate'],
-        'Gunrunner': ['Ranged Weapons'],
-        'Faterunner': ['Deception', 'Persuade'],
-        'Harlequin': ['Deception', 'Perform'],
-        'Warrior': ['Melee Weapon', 'Intimidate'],
-        'Mage': ['Knowledge', 'Perform'],
-        'Shape': ['Stealth', 'Escape Artist'],
-        'Masque': ['Disguise', 'Deception'],
-        'Adventurer': ['Knowledge', 'Survival']
-      };
+    const alignedSkills = {
+      'Fatemarked': ['Insight', 'Knowledge'],
+      'Biomatrix Suit': ['Technical Expertise', 'Crafting'],
+      'Continuum Raider': ['Survival', 'Navigate'],
+      'Gunrunner': ['Ranged Weapons'],
+      'Faterunner': ['Deception', 'Persuade'],
+      'Harlequin': ['Deception', 'Perform'],
+      'Warrior': ['Melee Weapon', 'Intimidate'],
+      'Mage': ['Knowledge', 'Perform'],
+      'Shape': ['Stealth', 'Escape Artist'],
+      'Masque': ['Disguise', 'Deception'],
+      'Adventurer': ['Knowledge', 'Survival']
+    };
 
-      for (let i = 1; i <= skillCounter; i++) {
-        const skillSelect = document.getElementById(`skill${i}`);
-        const rankInput = document.getElementById(`skillRank${i}`);
-        if (skillSelect && skillSelect.value) {
-          if (selectedSkills.has(skillSelect.value)) {
-            skillSelect.value = '';
-            continue;
-          }
-          selectedSkills.add(skillSelect.value);
-          let rank = parseInt(rankInput.value) || 0;
-          if (rank > maxRank) {
-            rankInput.value = maxRank;
-            rank = maxRank;
-          }
-          usedPoints += rank;
-          const skillData = skillsList.find(s => s.name === skillSelect.value);
-          if (skillData && skillData.specs.length) {
-            const checkedSpecs = skillData.specs.filter(spec => document.getElementById(`spec${i}_${spec}`)?.checked);
-            const specCost = (skillData.name === 'Knowledge' && checkedSpecs.includes('Arcana') && 
-                             (alignedSkills[cls].includes('Knowledge') || background.includes('arcane'))) ? 1 : 2;
-            usedPoints += checkedSpecs.length * specCost;
-          }
+    for (let i = 1; i <= skillCounter; i++) {
+      const skillFieldSelect = document.getElementById(`skill${i}`);
+      const rankInput = document.getElementById(`skillRank${i}`);
+      if (skillFieldSelect && skillFieldSelect.value) {
+        if (selectedSkills.has(skillFieldSelect.value)) {
+          skillFieldSelect.value = '';
+          continue;
+        }
+        selectedSkills.add(skillFieldSelect.value);
+        let rank = parseInt(rankInput.value) || 0;
+        if (rank > maxRank) {
+          rankInput.value = maxRank;
+          rank = maxRank;
+        }
+        usedPoints += rank;
+        const skillData = skillsList.find(s => s.name === skillFieldSelect.value);
+        if (skillData && skillData.specs.length) {
+          const checkedSpecs = skillData.specs.filter(spec => document.getElementById(`spec${i}_${spec}`)?.checked);
+          const specCost = (skillData.name === 'Knowledge' && checkedSpecs.includes('Arcana') && 
+                           (alignedSkills[cls].includes('Knowledge') || background.includes('arcane'))) ? 1 : 2;
+          usedPoints += checkedSpecs.length * specCost;
         }
       }
-
-      const remainingPoints = skillPoints - usedPoints;
-      document.getElementById('skillPointsDisplay').innerHTML = `Skill Points: ${remainingPoints}/${skillPoints}`;
-      if (remainingPoints < 0) {
-        alert(`Skill points exceeded! Available: ${skillPoints}, Used: ${usedPoints}. Reduce ranks or specializations.`);
-      }
-    } catch (e) {
-      console.error('Error updating skills:', e);
-      alert('Failed to update skills.');
     }
+
+    const remainingPoints = skillPoints - usedPoints;
+    document.getElementById('skillPointsDisplay').innerHTML = `Skill Points: ${remainingPoints}/${skillPoints}`;
+    if (remainingPoints < 0) {
+      alert(`Skill points exceeded! Available: ${skillPoints}, Used: ${usedPoints}. Reduce ranks or specializations.`);
+    }
+  } catch (e) {
+    console.error('Error updating skills:', e);
+    alert('Failed to update skills.');
   }
+}
 
   function addSkillField() {
     try {
@@ -2116,14 +2740,32 @@
       const skill = document.getElementById(`skill${id}`).value;
       const specsDiv = document.getElementById(`skillSpecs${id}`);
       const skillData = skillsList.find(s => s.name === skill);
-      specsDiv.innerHTML = skillData && skillData.specs.length ? skillData.specs.map(spec => `
-        <label><input type="checkbox" id="spec${id}_${spec}" value="${spec}" title="${spec} specialization" onchange="updateSkills()">${spec}</label>
-      `).join('') : '';
+      if (skillData && skillData.specs.length) {
+        specsDiv.innerHTML = skillData.specs.map(spec => `
+          <label><input type="checkbox" id="spec${id}_${spec}" value="${spec}" title="${spec} specialization" onchange="handleSingleSpecSelect(${id}, '${spec}')">${spec}</label>
+        `).join('');
+      } else {
+        specsDiv.innerHTML = '';
+      }
       updateSkills();
     } catch (e) {
       console.error('Error updating skill specs:', e);
       alert('Failed to update skill specs.');
     }
+  }
+
+  function handleSingleSpecSelect(id, selectedSpec) {
+    // Only allow one specialization per skill
+    const skill = document.getElementById(`skill${id}`).value;
+    const skillData = skillsList.find(s => s.name === skill);
+    if (!skillData) return;
+    skillData.specs.forEach(spec => {
+      const checkbox = document.getElementById(`spec${id}_${spec}`);
+      if (checkbox && spec !== selectedSpec) {
+        checkbox.checked = false;
+      }
+    });
+    updateSkills();
   }
 
   function removeSkillField(button) {
@@ -2436,138 +3078,130 @@
 
   function addPowerField() {
     try {
-        const cls = document.getElementById('charClass').value;
-        const lvl = parseInt(document.getElementById('charLevel').value) || 1;
-        const alignment = document.getElementById('charAlignment').value;
-        console.log(`addPowerField: Level=${lvl}, Class=${cls}, Alignment=${alignment}`);
-        if (lvl <= 3 || ['Faterunner', 'Harlequin'].includes(cls)) {
-            console.warn(`Power addition blocked: Level=${lvl}, Class=${cls}`);
-            return;
-        }
-        if (lvl > 3 && alignment === 'None') {
-            console.warn('Alignment must be set for power creation at Level 4+');
-            alert('Please select an alignment (Balance, Chaos, Order, or Neutrality) to add powers.');
-            return;
-        }
-        const container = document.getElementById('powersContainer');
-        if (!container) {
-            console.error('powersContainer not found');
-            throw new Error('Powers container element missing');
-        }
-        powerCounter++;
-        const div = document.createElement('div');
-        div.className = 'dynamic-group';
-        div.style.display = 'flex';
-        div.innerHTML = `
-            <select id="powerCategory${powerCounter}" title="Power category" onchange="updatePowerCost(${powerCounter})">
-                <option value="none">Select Category</option>
-                <option value="Alteration">Alteration</option>
-                <option value="Protection">Protection</option>
-                <option value="Manipulation">Manipulation</option>
-                <option value="Creation">Creation</option>
-            </select>
-            <input id="powerName${powerCounter}" type="text" placeholder="Power Name" style="width: 150px;" title="Name of the power">
-            <select id="powerLevel${powerCounter}" title="Power level or tier" onchange="updatePowerCost(${powerCounter})">
-                <option value="none">Select Tier</option>
-                <option value="PL1">PL 1 / Tier 1</option>
-                ${lvl >= 7 ? '<option value="PL2">PL 2 / Tier 2</option>' : ''}
-                ${lvl >= 11 ? '<option value="PL3">PL 3 / Tier 3</option>' : ''}
-            </select>
-            <input id="powerCost${powerCounter}" type="number" min="0" value="0" style="width: 100px;" placeholder="Fate Point Cost" title="Fate Point cost" readonly>
-            <input id="powerEffect${powerCounter}" type="text" placeholder="Effect (e.g., 1d6 Psychic)" style="width: 200px;" title="Power effect, including damage if applicable">
-            <input id="powerDC${powerCounter}" type="number" min="10" value="10" style="width: 100px;" placeholder="DC" title="Difficulty Class, including range modifier">
-            <input id="powerRisk${powerCounter}" type="text" placeholder="Paradox Risk (e.g., DC 18)" style="width: 200px;" title="Paradox risk, if applicable">
-            <button class="remove-button" onclick="removePowerField(this)">Remove</button>
-        `;
-        container.appendChild(div);
-        updatePowers();
-        console.log(`Power field added: powerCounter=${powerCounter}`);
-    } catch (e) {
-        console.error('Error adding power field:', e);
-        alert('Failed to add power field.');
+    const cls = document.getElementById('charClass').value;
+    const lvl = parseInt(document.getElementById('charLevel').value) || 1;
+    const alignment = document.getElementById('charAlignment').value;
+    if (lvl <= 3 || ['Faterunner', 'Harlequin'].includes(cls)) {
+      return;
     }
+    if (lvl > 3 && alignment === 'None') {
+      alert('Please select an alignment to add powers.');
+      return;
+    }
+    const container = document.getElementById('powersContainer');
+    powerCounter++;
+    const div = document.createElement('div');
+    div.className = 'dynamic-group';
+    div.style.display = 'flex';
+    div.dataset.id = powerCounter; // Add data-id
+    div.innerHTML = `
+      <select id="powerCategory${powerCounter}" title="Power category" onchange="updatePowerCost(${powerCounter})">
+        <option value="none">Select Category</option>
+        <option value="Alteration">Alteration</option>
+        <option value="Protection">Protection</option>
+        <option value="Manipulation">Manipulation</option>
+        <option value="Creation">Creation</option>
+      </select>
+      <input id="powerName${powerCounter}" type="text" placeholder="Power Name" style="width: 150px;" title="Name of the power">
+      <select id="powerLevel${powerCounter}" title="Power level or tier" onchange="updatePowerCost(${powerCounter})">
+        <option value="none">Select Tier</option>
+        <option value="PL1">PL 1 / Tier 1</option>
+        ${lvl >= 7 ? '<option value="PL2">PL 2 / Tier 2</option>' : ''}
+        ${lvl >= 11 ? '<option value="PL3">PL 3 / Tier 3</option>' : ''}
+      </select>
+      <input id="powerCost${powerCounter}" type="number" min="0" value="0" style="width: 100px;" placeholder="Fate Point Cost" title="Fate Point cost" readonly>
+      <input id="powerEffect${powerCounter}" type="text" placeholder="Effect (e.g., 1d6 Psychic)" style="width: 200px;" title="Power effect, including damage if applicable">
+      <input id="powerDC${powerCounter}" type="number" min="10" value="10" style="width: 100px;" placeholder="DC" title="Difficulty Class, including range modifier">
+      <input id="powerRisk${powerCounter}" type="text" placeholder="Paradox Risk (e.g., DC 18)" style="width: 200px;" title="Paradox risk, if applicable">
+      <button class="remove-button" onclick="removePowerField(this)">Remove</button>
+    `;
+    container.appendChild(div);
+    updatePowers();
+  } catch (e) {
+    console.error('Error adding power field:', e);
+    alert('Failed to add power field.');
+  }
 }
 
   function updatePowerCost(id) {
     try {
-        const powerLevel = document.getElementById(`powerLevel${id}`).value;
-        const powerCategory = document.getElementById(`powerCategory${id}`).value;
-        const cls = document.getElementById('charClass').value;
-        const lvl = parseInt(document.getElementById('charLevel').value) || 1;
-        const currentFatePoints = parseInt(document.getElementById('fatePointsCurrent').value) || 0;
-        const prevCost = parseInt(document.getElementById(`powerCost${id}`).dataset.prevCost || '0');
-        let baseCost = 0;
+    const powerLevel = document.getElementById(`powerLevel${id}`).value;
+    const powerCategory = document.getElementById(`powerCategory${id}`).value;
+    const cls = document.getElementById('charClass').value;
+    const lvl = parseInt(document.getElementById('charLevel').value) || 1;
+    const currentFatePoints = parseInt(document.getElementById('fatePointsCurrent').value) || 0;
+    const prevCostInput = document.getElementById(`powerCost${id}`);
+    const prevCost = prevCostInput.dataset.prevCost ? parseInt(prevCostInput.dataset.prevCost) : 0;
+    let baseCost = 0;
 
-        // Validate tier against level
-        if (powerLevel !== 'none') {
-            const tierNum = parseInt(powerLevel.replace('PL', '')) || 1;
-            if (tierNum === 1 && lvl < 4) {
-                alert(`Power Level 1 requires Level 4+!`);
-                document.getElementById(`powerLevel${id}`).value = 'none';
-                document.getElementById(`powerCost${id}`).value = 0;
-                return;
-            }
-            if (tierNum === 2 && lvl < 7) {
-                alert(`Power Level 2 requires Level 7+!`);
-                document.getElementById(`powerLevel${id}`).value = 'none';
-                document.getElementById(`powerCost${id}`).value = 0;
-                return;
-            }
-            if (tierNum === 3 && lvl < 11) {
-                alert(`Power Level 3 requires Level 11+!`);
-                document.getElementById(`powerLevel${id}`).value = 'none';
-                document.getElementById(`powerCost${id}`).value = 0;
-                return;
-            }
-            baseCost = tierNum; // PL1: 1, PL2: 2, PL3: 3 Fate Points
-        }
-
-        // Refund previous cost
-        if (prevCost > 0) {
-            document.getElementById('fatePointsCurrent').value = currentFatePoints + prevCost;
-            console.log(`Refunded ${prevCost} Fate Points for power ${id}`);
-        }
-
-        // Deduct new cost if tier and category are selected
-        if (powerLevel !== 'none' && powerCategory !== 'none') {
-            if (currentFatePoints < baseCost) {
-                alert(`Not enough Fate Points! Need ${baseCost}, have ${currentFatePoints}.`);
-                document.getElementById(`powerLevel${id}`).value = 'none';
-                document.getElementById(`powerCost${id}`).value = 0;
-                document.getElementById(`powerCost${id}`).dataset.prevCost = 0;
-                return;
-            }
-
-            // Update damage based on General Damage Chart
-            let damage = '';
-            if (['Alteration', 'Creation'].includes(powerCategory)) {
-                const attr = getClassAttribute(cls);
-                if (powerLevel === 'PL1') {
-                    damage = powerCategory === 'Alteration' ? `1d6 + ${attr}` : `1d4 + ${attr}`;
-                } else if (powerLevel === 'PL2') {
-                    damage = powerCategory === 'Alteration' ? `1d8 + ${attr}` : `1d6 + ${attr}`;
-                } else if (powerLevel === 'PL3') {
-                    damage = powerCategory === 'Alteration' ? `1d10 + ${attr}` : `1d8 + ${attr}`;
-                }
-                document.getElementById(`powerEffect${id}`).value = damage;
-            }
-
-            // Update paradox risk
-            document.getElementById(`powerRisk${id}`).value = powerLevel === 'PL1' ? 'None' : powerLevel === 'PL2' ? 'DC 18' : lvl >= 11 ? 'DC 25' : 'DC 22';
-
-            // Deduct Fate Points
-            document.getElementById('fatePointsCurrent').value = currentFatePoints - baseCost;
-            document.getElementById(`powerCost${id}`).value = baseCost;
-            document.getElementById(`powerCost${id}`).dataset.prevCost = baseCost;
-            console.log(`Deducted ${baseCost} Fate Points for power ${id}`);
-        } else {
-            document.getElementById(`powerCost${id}`).value = 0;
-            document.getElementById(`powerCost${id}`).dataset.prevCost = 0;
-        }
-    } catch (e) {
-        console.error('Error updating power cost:', e);
-        alert('Failed to update power cost.');
+    if (powerLevel !== 'none') {
+      const tierNum = parseInt(powerLevel.replace('PL', '')) || 1;
+      if (tierNum === 1 && lvl < 4) {
+        alert(`Power Level 1 requires Level 4+!`);
+        document.getElementById(`powerLevel${id}`).value = 'none';
+        document.getElementById(`powerCost${id}`).value = 0;
+        document.getElementById(`powerCost${id}`).dataset.prevCost = 0;
+        return;
+      }
+      if (tierNum === 2 && lvl < 7) {
+        alert(`Power Level 2 requires Level 7+!`);
+        document.getElementById(`powerLevel${id}`).value = 'none';
+        document.getElementById(`powerCost${id}`).value = 0;
+        document.getElementById(`powerCost${id}`).dataset.prevCost = 0;
+        return;
+      }
+      if (tierNum === 3 && lvl < 11) {
+        alert(`Power Level 3 requires Level 11+!`);
+        document.getElementById(`powerLevel${id}`).value = 'none';
+        document.getElementById(`powerCost${id}`).value = 0;
+        document.getElementById(`powerCost${id}`).dataset.prevCost = 0;
+        return;
+      }
+      baseCost = tierNum;
     }
+
+    if (prevCost > 0) {
+      document.getElementById('fatePointsCurrent').value = currentFatePoints + prevCost;
+      console.log(`Refunded ${prevCost} Fate Points for power ${id}`);
+    }
+
+    if (powerLevel !== 'none' && powerCategory !== 'none') {
+      if (currentFatePoints < baseCost) {
+        alert(`Not enough Fate Points! Need ${baseCost}, have ${currentFatePoints}.`);
+        document.getElementById(`powerLevel${id}`).value = 'none';
+        document.getElementById(`powerCost${id}`).value = 0;
+        document.getElementById(`powerCost${id}`).dataset.prevCost = 0;
+        return;
+      }
+
+      let damage = '';
+      if (['Alteration', 'Creation'].includes(powerCategory)) {
+        const attr = getClassAttribute(cls);
+        if (powerLevel === 'PL1') {
+          damage = powerCategory === 'Alteration' ? `1d6 + ${attr}` : `1d4 + ${attr}`;
+        } else if (powerLevel === 'PL2') {
+          damage = powerCategory === 'Alteration' ? `1d8 + ${attr}` : `1d6 + ${attr}`;
+        } else if (powerLevel === 'PL3') {
+          damage = powerCategory === 'Alteration' ? `1d10 + ${attr}` : `1d8 + ${attr}`;
+        }
+        document.getElementById(`powerEffect${id}`).value = damage;
+      }
+
+      document.getElementById(`powerRisk${id}`).value = powerLevel === 'PL1' ? 'None' : 
+        powerLevel === 'PL2' ? 'DC 18' : lvl >= 11 ? 'DC 25' : 'DC 22';
+
+      document.getElementById('fatePointsCurrent').value = currentFatePoints - baseCost;
+      document.getElementById(`powerCost${id}`).value = baseCost;
+      document.getElementById(`powerCost${id}`).dataset.prevCost = baseCost;
+      console.log(`Deducted ${baseCost} Fate Points for power ${id}`);
+    } else {
+      document.getElementById(`powerCost${id}`).value = 0;
+      document.getElementById(`powerCost${id}`).dataset.prevCost = 0;
+    }
+  } catch (e) {
+    console.error('Error updating power cost:', e);
+    alert('Failed to update power cost.');
+  }
 }
 
   function getClassResource(cls) {
@@ -2660,37 +3294,43 @@
 function removePowerField(button) {
   try {
     const powerDiv = button.parentElement;
-    // Find the correct id by parsing the number from the input/select IDs inside this div
-    let id = null;
-    const inputs = powerDiv.querySelectorAll('input[id^="powerCost"], select[id^="powerCost"]');
-    if (inputs.length > 0) {
-      const match = inputs[0].id.match(/powerCost(\d+)/);
-      if (match) id = parseInt(match[1]);
-    }
-    // Fallback: try to find by powerName if needed
+    // Use data-id attribute to reliably get the power ID
+    const id = powerDiv.dataset.id;
     if (!id) {
+      console.warn('Power ID not found on div, attempting fallback parsing');
+      // Fallback to parsing input IDs
+      const costInput = powerDiv.querySelector('input[id^="powerCost"]');
       const nameInput = powerDiv.querySelector('input[id^="powerName"]');
-      if (nameInput) {
-        const match = nameInput.id.match(/powerName(\d+)/);
-        if (match) id = parseInt(match[1]);
+      const match = (costInput && costInput.id.match(/powerCost(\d+)/)) || 
+                   (nameInput && nameInput.id.match(/powerName(\d+)/));
+      if (match) {
+        powerDiv.dataset.id = match[1]; // Cache for future use
+      } else {
+        throw new Error('Unable to determine power ID');
       }
     }
-    // Refund correct Fate Points if possible
-    if (id) {
-      const prevCostInput = document.getElementById(`powerCost${id}`);
-      const prevCost = prevCostInput ? parseInt(prevCostInput.dataset.prevCost || '0') : 0;
+
+    // Refund Fate Points
+    const prevCostInput = document.getElementById(`powerCost${id}`);
+    const prevCost = prevCostInput && prevCostInput.dataset.prevCost ? 
+                     parseInt(prevCostInput.dataset.prevCost) : 0;
+    if (prevCost > 0) {
       const currentFatePoints = parseInt(document.getElementById('fatePointsCurrent').value) || 0;
-      if (prevCost > 0) {
-        document.getElementById('fatePointsCurrent').value = currentFatePoints + prevCost;
-        console.log(`Power removed: id=${id}, Refunded ${prevCost} Fate Points`);
-      }
+      document.getElementById('fatePointsCurrent').value = currentFatePoints + prevCost;
+      console.log(`Power removed: id=${id}, Refunded ${prevCost} Fate Points`);
+    } else if (prevCostInput) {
+      console.log(`Power removed: id=${id}, No Fate Points to refund (prevCost=${prevCost})`);
+    } else {
+      console.warn(`Power cost input for id=${id} not found, no refund processed`);
     }
+
+    // Remove the power div and update state
     powerDiv.remove();
     powerCounter = Math.max(0, powerCounter - 1);
     updatePowers();
   } catch (e) {
     console.error('Error removing power field:', e);
-    alert('Failed to remove power field.');
+    alert(`Failed to remove power field: ${e.message}`);
   }
 }
 
@@ -4632,6 +5272,31 @@ function removePowerField(button) {
     }
 }
 
+  function copySheetText() {
+    try {
+      const textArea = document.getElementById('sheetText');
+      if (navigator.clipboard && textArea) {
+        navigator.clipboard.writeText(textArea.value)
+          .then(() => {
+            alert('Sheet text copied to clipboard!');
+          })
+          .catch(err => {
+            console.error('Clipboard write failed:', err);
+            alert('Failed to copy sheet text.');
+          });
+      } else if (textArea) {
+        textArea.select();
+        document.execCommand('copy');
+        alert('Sheet text copied to clipboard!');
+      } else {
+        alert('Sheet text area not found.');
+      }
+    } catch (e) {
+      console.error('Error copying sheet text:', e);
+      alert('Failed to copy sheet text.');
+    }
+  }
+
   function saveCharacter() {
     try {
       const charData = collectCharacterData();
@@ -4671,412 +5336,307 @@ function removePowerField(button) {
 
   function populateCharacterSheet(data) {
     try {
-    if (!data || !data.name) {
-      throw new Error('Invalid character data.');
-    }
-
-    console.log('Populating character sheet with data:', JSON.stringify(data, null, 2));
-    window.isLoadingCharacter = true;
-
-    // Helper to set input values
-    const setValue = (id, value) => {
-      const el = document.getElementById(id);
-      if (el) {
-        const oldValue = el.value;
-        el.value = value !== undefined && value !== null ? value : '';
-        if (id.startsWith('attr')) {
-          el.readOnly = true;
-        }
-        console.log(`Set ${id} from ${oldValue} to ${el.value} (intended: ${value})`);
-      } else {
-        console.warn(`Element ${id} not found`);
+      if (!data || !data.name) {
+        throw new Error('Invalid character data.');
       }
-    };
+      console.log('Populating character sheet with data:', JSON.stringify(data, null, 2));
+      window.isLoadingCharacter = true;
 
-    // Clear dynamic fields first
-    const containers = [
-      'skillsContainer', 'startingFeatsContainer', 'levelUpFeatsContainer',
-      'advantagesContainer', 'disadvantagesContainer', 'powersContainer',
-      'inventoryContainer', 'weaponsContainer', 'armorContainer',
-      'downtimeContainer', 'resourcesContainer'
-    ];
-    containers.forEach(container => {
-      const el = document.getElementById(container);
-      if (el) el.innerHTML = '';
-    });
-    skillCounter = startingFeatCounter = levelUpFeatCounter = advantageCounter =
-    disadvantageCounter = powerCounter = inventoryCounter = weaponCounter =
-    armorCounter = downtimeCounter = resourceCounter = 0;
-    rolledStats = [];
-    assignedStats = {};
-    availableStats = [];
-    skillCriticalTracker = {};
-    fatePointsUsedInEncounter = 0;
-
-    // Step 1: Set class and level first
-    const classSelect = document.getElementById('charClass');
-    const level = data.level || 1;
-    let charClass = data.class || 'Fatemarked';
-    if (level > 3 && charClass === 'Fatemarked') {
-      console.warn('Fatemarked invalid at level > 3, defaulting to Continuum Raider');
-      charClass = 'Continuum Raider';
-    }
-
-    // Update class dropdown options based on level
-    const advancedClasses = [
-      'Fatemarked', 'Biomatrix Suit', 'Continuum Raider', 'Gunrunner', 'Faterunner', 'Harlequin',
-      'Warrior', 'Mage', 'Shape', 'Masque', 'Adventurer'
-    ];
-    if (classSelect) {
-      classSelect.innerHTML = level <= 3 ? '<option value="Fatemarked">Fatemarked</option>' :
-        advancedClasses.map(cls => `<option value="${cls}">${cls}</option>`).join('');
-      const classOptions = Array.from(classSelect.options).map(opt => opt.value);
-      console.log('charClass options:', classOptions);
-      const validClass = classOptions.includes(charClass);
-      if (!validClass) {
-        console.error(`Invalid class ${charClass}, options: ${classOptions.join(', ')}`);
-        charClass = 'Continuum Raider';
-      }
-      setValue('charClass', charClass);
-      console.log(`Set charClass to ${classSelect.value}`);
-    } else {
-      console.error('charClass element not found');
-    }
-    setValue('charLevel', level);
-    setValue('charAlignment', data.alignment || (level <= 3 ? 'None' : 'Balance'));
-    console.log(`Initial DOM state: class=${document.getElementById('charClass')?.value}, level=${document.getElementById('charLevel')?.value}`);
-
-    // Step 2: Validate attrMethod
-    // When loading a character from a file, the attribute method may not match the user's current selection.
-    // To support imported characters, we add a hidden "Imported" option to the attribute method select,
-    // so that the UI can reflect that attributes were loaded from a file and not chosen by the user.
-    const attrMethodSelect = document.getElementById('attrMethod');
-    if (attrMethodSelect) {
-      if (!Array.from(attrMethodSelect.options).some(opt => opt.value === 'imported')) {
-        const opt = document.createElement('option');
-        opt.value = 'imported';
-        opt.text = 'Imported';
-        opt.hidden = true;
-        attrMethodSelect.appendChild(opt);
-      }
-      const attrOptions = Array.from(attrMethodSelect.options).map(opt => opt.value);
-      // Debug: log attrMethod options if needed
-    } else {
-      console.error('attrMethod element not found');
-    }
-
-    // Disable onchange handlers
-    const attrInputs = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(attr => document.getElementById(`attr${attr}`));
-    const originalClassOnChange = classSelect ? classSelect.onchange : null;
-    const originalAttrMethodOnChange = attrMethodSelect ? attrMethodSelect.onchange : null;
-    const originalAttrOnChanges = attrInputs.map(input => input ? input.onchange : null);
-    if (classSelect) classSelect.onchange = null;
-    if (attrMethodSelect) attrMethodSelect.onchange = null;
-    attrInputs.forEach(input => { if (input) input.onchange = null; });
-
-    // Step 3: Load attributes
-    const attributes = {};
-    if (attrMethodSelect) {
-      setValue('attrMethod', 'imported');
-    }
-    // Helper to hide and clear assignSelect elements
-    function hideAndClearAssignSelect(attr) {
-      const assignSelect = document.getElementById(`assign${attr}`);
-      if (assignSelect) {
-        assignSelect.classList.add('hidden');
-        assignSelect.value = '';
-      }
-    }
-    ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
-      const value = data.attributes && data.attributes[attr] && data.attributes[attr] >= 8 && data.attributes[attr] <= 18 ? data.attributes[attr] : 10;
-      attributes[attr] = value;
-      setValue(`attr${attr}`, value);
-      hideAndClearAssignSelect(attr);
-    });
-    const rerollButton = document.getElementById('rerollButton');
-    const randomRolls = document.getElementById('randomRolls');
-    if (randomRolls) randomRolls.classList.add('hidden');
-    // Only hide confirmAssignments if it exists
-    const confirmAssignments = document.getElementById('confirmAssignments');
-    if (confirmAssignments) confirmAssignments.classList.add('hidden');
-    const pointsRemaining = document.getElementById('pointsRemaining');
-    if (pointsRemaining) {
-      if (attrMethodSelect && attrMethodSelect.value === 'pointBuy') {
-        updatePoints();
-      } else {
-        pointsRemaining.value = 'N/A';
-      }
-    }
-    updateDerivedStats();
-    console.log(`DOM state: INT=${document.getElementById('attrINT')?.value}, STR=${document.getElementById('attrSTR')?.value}`);
-
-    // Step 4: Load basic info
-    setValue('charName', data.name);
-    setValue('playerName', data.player);
-    setValue('charBackground', data.background);
-    setValue('charAppearance', data.appearance);
-    setValue('charOccupation', data.occupation);
-    setValue('charPersonality', data.personality);
-    setValue('charMilestone', data.milestone);
-    setValue('charNotes', data.notes);
-    setValue('credits', data.wealth?.credits || 0);
-    setValue('shards', data.wealth?.shards || 0);
-    setValue('currentXP', data.progression?.currentXP || 0);
-    setValue('nextLevelXP', data.progression?.nextLevelXP || getNextLevelXP(level));
-    setValue('charLifestyle', data.lifestyle?.type || 'Squalid');
-    setValue('lifestyleCost', data.lifestyle?.cost || 0);
-    setValue('paradoxPoints', data.paradoxPoints || 0);
-    setValue('fatePointsCurrent', level <= 3 ? 0 : level);
-
-    // Step 5: Load disadvantages
-    if (data.disadvantages) {
-      data.disadvantages.forEach(dis => {
-        addDisadvantageField();
-        const i = disadvantageCounter;
-        setValue(`disadvantage${i}`, dis.name);
-        setValue(`disadvantageTier${i}`, dis.tier || 1);
-      });
-      updateDisadvantages();
-    }
-
-    // Step 6: Load advantages and feats
-    if (data.feats) {
-      data.feats.forEach(feat => {
-        if (startingFeatsList.some(f => f.value === feat.name)) {
-          addStartingFeatField();
-          const i = startingFeatCounter;
-          setValue(`startingFeat${i}`, feat.name);
-          if (feat.name === 'custom') setValue(`startingFeatDesc${i}`, feat.desc);
-        } else if (levelUpFeatsList.some(f => f.value === feat.name) || feat.name === 'custom') {
-          addLevelUpFeatField();
-          const i = levelUpFeatCounter;
-          setValue(`levelUpFeat${i}`, feat.name);
-          if (feat.name === 'custom') setValue(`levelUpFeatDesc${i}`, feat.desc);
-        } else if (advantagesList.some(a => a.name === feat.name)) {
-          addAdvantageField();
-          const i = advantageCounter;
-          setValue(`advantage${i}`, feat.name);
-          setValue(`advantageTier${i}`, feat.tier || 1);
-        }
-      });
-    }
-
-    // Step 7: Load powers
-    if (data.powers && level > 3 && !['Faterunner', 'Harlequin'].includes(charClass)) {
-      powerCounter = 0;
-      data.powers.forEach(power => {
-        addPowerField();
-        const i = powerCounter;
-        setValue(`powerCategory${i}`, power.category || 'none');
-        setValue(`powerName${i}`, power.name);
-        setValue(`powerLevel${i}`, power.level);
-        setValue(`powerCost${i}`, power.cost || 0);
-        setValue(`powerEffect${i}`, power.effect);
-        setValue(`powerDC${i}`, power.dc || 10);
-        setValue(`powerRisk${i}`, power.risk);
-      });
-    }
-
-    // Step 8: Load skills
-    if (data.skills) {
-      data.skills.forEach(skill => {
-        addSkillField();
-        const i = skillCounter;
-        setValue(`skill${i}`, skill.name);
-        setValue(`skillRank${i}`, skill.rank || 0);
-        updateSkillSpecs(i);
-        skill.specs.forEach(spec => {
-          const specCheckbox = document.getElementById(`spec${i}_${spec}`);
-          if (specCheckbox) specCheckbox.checked = true;
-        });
-      });
-    }
-
-    // Step 9: Load inventory
-    if (data.inventory) {
-      data.inventory.forEach(item => {
-        addInventoryField();
-        const i = inventoryCounter;
-        setValue(`itemName${i}`, item.name);
-        setValue(`itemSlots${i}`, item.slots || 0);
-        setValue(`itemWeight${i}`, item.weight || 0);
-        setValue(`itemDesc${i}`, item.desc);
-        setValue(`itemDurability${i}`, item.durability);
-      });
-      updateInventory();
-    }
-
-    // Step 10: Load weapons
-    if (data.weapons) {
-      data.weapons.forEach(weapon => {
-        addWeaponField();
-        const i = weaponCounter;
-        setValue(`weaponName${i}`, weapon.name);
-        setValue(`weaponDamage${i}`, weapon.damage);
-        setValue(`weaponRange${i}`, weapon.range);
-        setValue(`weaponTraits${i}`, weapon.traits);
-        setValue(`weaponCost${i}`, weapon.cost || 0);
-      });
-    }
-
-    // Step 11: Load armor
-    if (data.armors) {
-      data.armors.forEach(armor => {
-        addArmorField();
-        const i = armorCounter;
-        setValue(`armorName${i}`, armor.name);
-        setValue(`armorAC${i}`, armor.ac || 0);
-        setValue(`armorDEX${i}`, armor.dex);
-        setValue(`armorSTR${i}`, armor.str || 0);
-        setValue(`armorPenalties${i}`, armor.penalties);
-        setValue(`armorSlots${i}`, armor.slots || 0);
-        setValue(`armorCost${i}`, armor.cost || 0);
-      });
-    }
-
-    // Step 12: Load downtime
-    if (data.downtime) {
-      data.downtime.forEach(activity => {
-        addDowntimeField();
-        const i = downtimeCounter;
-        setValue(`downtimeActivity${i}`, activity.activity);
-        setValue(`downtimeTime${i}`, activity.time || 0);
-        setValue(`downtimeResources${i}`, activity.resources);
-        setValue(`downtimeSkill${i}`, activity.skill);
-        setValue(`downtimeOutcome${i}`, activity.outcome);
-        updateDowntimeOutcome(i);
-      });
-    }
-    // Step 13: Load resources
-    if (data.resources) {
-      (async () => {
-        await (function addResourcesAndSetValues(resources) {
-          return new Promise(resolve => {
-            if (!resources || !resources.length) return resolve();
-            resources.forEach(() => addResourceField());
-            // Wait for next animation frame to ensure DOM is updated
-            requestAnimationFrame(() => {
-              resources.forEach((resource, index) => {
-                const i = index + 1;
-                setValue(`resourceName${i}`, resource.name);
-                setValue(`resourceCurrent${i}`, resource.current || 0);
-                setValue(`resourceMax${i}`, resource.max || 0);
-                setValue(`resourceRecharge${i}`, resource.recharge);
-              });
-              console.log(`DOM state: resourcesContainer=${document.getElementById('resourcesContainer')?.innerHTML}`);
-              // Now that all dynamic fields are present, update the sheet and UI
-              if (classSelect) setValue('charClass', charClass);
-              ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
-                setValue(`attr${attr}`, attributes[attr]);
-              });
-              if (attrMethodSelect) setValue('attrMethod', 'imported');
-              if (attrMethodSelect) setValue('attrMethod', 'imported');
-              updateSkills();
-              debouncedUpdateFeatsSheet();
-              updateInputs();
-              updateSkillSpecOptions();
-              updateFeats();
-              console.log(`Final DOM state: class=${document.getElementById('charClass')?.value}, INT=${document.getElementById('attrINT')?.value}`);
-              // Restore onchange handlers
-              if (classSelect && originalClassOnChange) classSelect.onchange = originalClassOnChange;
-              if (attrMethodSelect && originalAttrMethodOnChange) attrMethodSelect.onchange = originalAttrMethodOnChange;
-              attrInputs.forEach((input, index) => {
-                if (input && originalAttrOnChanges[index]) input.onchange = originalAttrOnChanges[index];
-              });
-              window.isLoadingCharacter = false;
-              console.log('Character sheet populated successfully');
-              resolve();
-            });
-          });
-        })(data.resources);
-      })();
-    } else {
-      // If no resources, still restore handlers and update UI
-      if (classSelect && originalClassOnChange) classSelect.onchange = originalClassOnChange;
-      if (attrMethodSelect && originalAttrMethodOnChange) attrMethodSelect.onchange = originalAttrMethodOnChange;
-      attrInputs.forEach((input, index) => {
-        if (input && originalAttrOnChanges[index]) input.onchange = originalAttrOnChanges[index];
-      });
-      window.isLoadingCharacter = false;
-      updateSheetInputs();
-      updateSkills();
-      debouncedUpdateFeatsSheet();
-      updateInputs();
-      updateSkillSpecOptions();
-      updateFeats();
-      console.log('Character sheet populated successfully (no resources)');
-    }
-  } catch (e) {
-    console.error('Error populating character sheet:', e);
-    alert(`Failed to populate character sheet: ${e.message}`);
-    window.isLoadingCharacter = false;
-  }
-}
-
-function copySheetText() {
-  try {
-    const textArea = document.getElementById('sheetText');
-    if (navigator.clipboard && textArea) {
-      navigator.clipboard.writeText(textArea.value)
-        .then(() => {
-          alert('Sheet text copied to clipboard!');
-        })
-        .catch(err => {
-          console.error('Clipboard write failed:', err);
-          alert('Failed to copy sheet text.');
-        });
-    } else if (textArea) {
-      textArea.select();
-      document.execCommand('copy');
-      alert('Sheet text copied to clipboard!');
-    } else {
-      alert('Sheet text area not found.');
-    }
-  } catch (e) {
-    console.error('Error copying sheet text:', e);
-    alert('Failed to copy sheet text.');
-  }
-}
-
-  function closeModal() {
-    try {
-      document.getElementById('sheetModal').style.display = 'none';
-    } catch (e) {
-      console.error('Error closing modal:', e);
-      alert('Failed to close modal.');
-    }
-  }
-
-  function clearSheetFields() {
-    try {
-      const inputs = [
-        'charName', 'playerName', 'charLevel', 'charBackground', 'charAppearance', 'charOccupation',
-        'charPersonality', 'charMilestone', 'attrSTR', 'attrDEX', 'attrCON', 'attrINT', 'attrWIS',
-        'attrCHA', 'credits', 'shards', 'currentXP', 'nextLevelXP', 'charNotes', 'lifestyleCost',
-        'paradoxPoints', 'fatePointsCurrent'
-      ];
-      inputs.forEach(id => {
+      // Helper to set input values
+      const setValue = (id, value) => {
         const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-      document.getElementById('charClass').value = 'Fatemarked';
-      document.getElementById('charAlignment').value = 'None';
-      document.getElementById('attrMethod').value = 'pointBuy';
-      document.getElementById('charLifestyle').value = 'Squalid';
-      ['skillsContainer', 'startingFeatsContainer', 'levelUpFeatsContainer', 'advantagesContainer',
-       'disadvantagesContainer', 'powersContainer', 'inventoryContainer', 'weaponsContainer',
-       'armorContainer', 'downtimeContainer', 'resourcesContainer'].forEach(container => {
+        if (el) {
+          const oldValue = el.value;
+          el.value = value !== undefined && value !== null ? value : '';
+          console.log(`Set ${id} from ${oldValue} to ${el.value} (intended: ${value})`);
+        } else {
+          console.warn(`Element ${id} not found`);
+        }
+      };
+
+      // Clear dynamic fields
+      const containers = [
+        'skillsContainer', 'startingFeatsContainer', 'levelUpFeatsContainer',
+        'advantagesContainer', 'disadvantagesContainer', 'powersContainer',
+        'inventoryContainer', 'weaponsContainer', 'armorContainer',
+        'downtimeContainer', 'resourcesContainer'
+      ];
+      containers.forEach(container => {
         const el = document.getElementById(container);
         if (el) el.innerHTML = '';
       });
-      skillCounter = startingFeatCounter = levelUpFeatCounter = advantageCounter = disadvantageCounter =
-      powerCounter = inventoryCounter = weaponCounter = armorCounter = downtimeCounter = resourceCounter = 0;
+      skillCounter = startingFeatCounter = levelUpFeatCounter = advantageCounter =
+      disadvantageCounter = powerCounter = inventoryCounter = weaponCounter =
+      armorCounter = downtimeCounter = resourceCounter = 0;
       rolledStats = [];
       assignedStats = {};
       availableStats = [];
       skillCriticalTracker = {};
       fatePointsUsedInEncounter = 0;
-      updateSheetInputs();
+
+      // Step 1: Set class and level
+      const level = data.level || 1;
+      let charClass = data.class || 'Fatemarked';
+      if (level > 3 && charClass === 'Fatemarked') {
+        console.warn('Fatemarked invalid at level > 3, defaulting to Continuum Raider');
+        charClass = 'Continuum Raider';
+      }
+      const classSelect = document.getElementById('charClass');
+      if (classSelect) {
+        const advancedClasses = [
+          'Fatemarked', 'Biomatrix Suit', 'Continuum Raider', 'Gunrunner', 'Faterunner', 'Harlequin',
+          'Warrior', 'Mage', 'Shape', 'Masque', 'Adventurer'
+        ];
+        classSelect.innerHTML = level <= 3 ? '<option value="Fatemarked">Fatemarked</option>' :
+          advancedClasses.map(cls => `<option value="${cls}">${cls}</option>`).join('');
+        const classOptions = Array.from(classSelect.options).map(opt => opt.value);
+        setValue('charClass', classOptions.includes(charClass) ? charClass : 'Continuum Raider');
+      }
+      setValue('charLevel', level);
+      setValue('charAlignment', data.alignment || (level <= 3 ? 'None' : 'Balance'));
+
+      // Step 2: Set attrMethod and attributes
+      setValue('attrMethod', 'imported');
+      ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+        const value = data.attributes && data.attributes[attr] && data.attributes[attr] >= 8 && data.attributes[attr] <= 18 ? data.attributes[attr] : 10;
+        setValue(`attr${attr}`, value);
+        const input = document.getElementById(`attr${attr}`);
+        if (input) input.readOnly = true;
+        const assignSelect = document.getElementById(`assign${attr}`);
+        if (assignSelect) {
+          assignSelect.classList.add('hidden');
+          assignSelect.value = '';
+          assignSelect.disabled = true;
+        }
+      });
+      setValue('pointsRemaining', 'N/A');
+      document.getElementById('rerollButton')?.classList.add('hidden');
+      document.getElementById('randomRolls')?.classList.add('hidden');
+      document.getElementById('confirmAssignments')?.classList.add('hidden');
+
+      // Step 3: Load basic info
+      setValue('charName', data.name);
+      setValue('playerName', data.player);
+      setValue('charBackground', data.background);
+      setValue('charAppearance', data.appearance);
+      setValue('charOccupation', data.occupation);
+      setValue('charPersonality', data.personality);
+      setValue('charMilestone', data.milestone);
+      setValue('charNotes', data.notes);
+      setValue('credits', data.wealth?.credits || 0);
+      setValue('shards', data.wealth?.shards || 0);
+      setValue('currentXP', data.progression?.currentXP || 0);
+      setValue('nextLevelXP', data.progression?.nextLevelXP || getNextLevelXP(level));
+      setValue('charLifestyle', data.lifestyle?.type || 'Squalid');
+      setValue('lifestyleCost', data.lifestyle?.cost || 0);
+      setValue('paradoxPoints', data.paradoxPoints || 0);
+      setValue('fatePointsCurrent', level <= 3 ? 0 : level);
+
+      // Step 4: Load disadvantages
+      if (data.disadvantages) {
+        data.disadvantages.forEach(dis => {
+          addDisadvantageField();
+          const i = disadvantageCounter;
+          setValue(`disadvantage${i}`, dis.name);
+          setValue(`disadvantageTier${i}`, dis.tier || 1);
+        });
+      }
+
+      // Step 5: Load feats and advantages
+      if (data.feats) {
+        data.feats.forEach(feat => {
+          if (startingFeatsList.some(f => f.value === feat.name)) {
+            addStartingFeatField();
+            const i = startingFeatCounter;
+            setValue(`startingFeat${i}`, feat.name);
+            if (feat.name === 'custom') setValue(`startingFeatDesc${i}`, feat.desc);
+          } else if (levelUpFeatsList.some(f => f.value === feat.name) || feat.name === 'custom') {
+            addLevelUpFeatField();
+            const i = levelUpFeatCounter;
+            setValue(`levelUpFeat${i}`, feat.name);
+            if (feat.name === 'custom') setValue(`levelUpFeatDesc${i}`, feat.desc);
+          } else if (advantagesList.some(a => a.name === feat.name)) {
+            addAdvantageField();
+            const i = advantageCounter;
+            setValue(`advantage${i}`, feat.name);
+            setValue(`advantageTier${i}`, feat.tier || 1);
+          }
+        });
+      }
+
+      // Step 6: Load powers
+      if (data.powers && level > 3 && !['Faterunner', 'Harlequin'].includes(charClass)) {
+        powerCounter = 0;
+        data.powers.forEach(power => {
+          addPowerField();
+          const i = powerCounter;
+          setValue(`powerCategory${i}`, power.category || 'none');
+          setValue(`powerName${i}`, power.name);
+          setValue(`powerLevel${i}`, power.level);
+          setValue(`powerCost${i}`, power.cost || 0);
+          setValue(`powerEffect${i}`, power.effect);
+          setValue(`powerDC${i}`, power.dc || 10);
+          setValue(`powerRisk${i}`, power.risk);
+        });
+      }
+
+      // Step 7: Load skills
+      if (data.skills) {
+        data.skills.forEach(skill => {
+          addSkillField();
+          const i = skillCounter;
+          setValue(`skill${i}`, skill.name);
+          setValue(`skillRank${i}`, skill.rank || 0);
+          updateSkillSpecs(i);
+          skill.specs.forEach(spec => {
+            const specCheckbox = document.getElementById(`spec${i}_${spec}`);
+            if (specCheckbox) specCheckbox.checked = true;
+          });
+        });
+      }
+
+      // Step 8: Load inventory
+      if (data.inventory) {
+        data.inventory.forEach(item => {
+          addInventoryField();
+          const i = inventoryCounter;
+          setValue(`itemName${i}`, item.name);
+          setValue(`itemSlots${i}`, item.slots || 0);
+          setValue(`itemWeight${i}`, item.weight || 0);
+          setValue(`itemDesc${i}`, item.desc);
+          setValue(`itemDurability${i}`, item.durability);
+        });
+      }
+
+      // Step 9: Load weapons
+      if (data.weapons) {
+        data.weapons.forEach(weapon => {
+          addWeaponField();
+          const i = weaponCounter;
+          setValue(`weaponName${i}`, weapon.name);
+          setValue(`weaponDamage${i}`, weapon.damage);
+          setValue(`weaponRange${i}`, weapon.range);
+          setValue(`weaponTraits${i}`, weapon.traits);
+          setValue(`weaponCost${i}`, weapon.cost || 0);
+        });
+      }
+
+      // Step 10: Load armor
+      if (data.armors) {
+        data.armors.forEach(armor => {
+          addArmorField();
+          const i = armorCounter;
+          setValue(`armorName${i}`, armor.name);
+          setValue(`armorAC${i}`, armor.ac || 0);
+          setValue(`armorDEX${i}`, armor.dex);
+          setValue(`armorSTR${i}`, armor.str || 0);
+          setValue(`armorPenalties${i}`, armor.penalties);
+          setValue(`armorSlots${i}`, armor.slots || 0);
+          setValue(`armorCost${i}`, armor.cost || 0);
+        });
+      }
+
+      // Step 11: Load downtime
+      if (data.downtime) {
+        data.downtime.forEach(activity => {
+          addDowntimeField();
+          const i = downtimeCounter;
+          setValue(`downtimeActivity${i}`, activity.activity);
+          setValue(`downtimeTime${i}`, activity.time || 0);
+          setValue(`downtimeResources${i}`, activity.resources);
+          setValue(`downtimeSkill${i}`, activity.skill);
+          setValue(`downtimeOutcome${i}`, activity.outcome);
+          updateDowntimeOutcome(i);
+        });
+      }
+
+      // Step 12: Load resources
+      if (data.resources) {
+        data.resources.forEach(resource => {
+          addResourceField();
+          const i = resourceCounter;
+          setValue(`resourceName${i}`, resource.name);
+          setValue(`resourceCurrent${i}`, resource.current || 0);
+          setValue(`resourceMax${i}`, resource.max || 0);
+          setValue(`resourceRecharge${i}`, resource.recharge);
+        });
+      }
+
+      // Step 13: Finalize updates
+      updateSheetInputs({ skipPowers: false, preserveAttributes: true });
+      updateSkills();
+      debouncedUpdateFeatsSheet();
+      updateInputs();
+      updateSkillSpecOptions();
+      updateFeats();
+      updateClassAbilities();
+      console.log(`Final DOM state: class=${document.getElementById('charClass')?.value}, BAB=${document.getElementById('charBAB')?.value}`);
+      window.isLoadingCharacter = false;
+    } catch (e) {
+      console.error('Error populating character sheet:', e);
+      alert(`Failed to populate character sheet: ${e.message}`);
+      window.isLoadingCharacter = false;
+    }
+  }
+
+  function generateCharacterSheet() {
+    try {
+      const charData = collectCharacterData();
+      if (!validateCharacterData(charData)) return;
+      const html = generateSheetHTML(charData);
+      document.getElementById('sheetPreview').innerHTML = html;
+      document.getElementById('sheetText').value = htmlToText(html);
+      document.getElementById('sheetModal').style.display = 'flex';
+    } catch (e) {
+      console.error('Error generating character sheet:', e);
+      alert('Failed to generate character sheet.');
+    }
+  }
+
+    function closeModal() {
+      try {
+        document.getElementById('sheetModal').style.display = 'none';
+      } catch (e) {
+        console.error('Error closing modal:', e);
+        alert('Failed to close modal.');
+      }
+    }
+  
+  /**
+   * Clears all character sheet fields and resets the form to its default state.
+   * This function is the single source of truth for clearing the sheet.
+   */
+  function clearSheetFields() {
+    try {
+      // Reset select fields to defaults
+      const charAlignmentEl = document.getElementById('charAlignment');
+      if (charAlignmentEl) charAlignmentEl.value = 'None';
+      const attrMethodEl = document.getElementById('attrMethod');
+      if (attrMethodEl) attrMethodEl.value = 'pointBuy';
+      const charLifestyleEl = document.getElementById('charLifestyle');
+      if (charLifestyleEl) charLifestyleEl.value = 'Squalid';
+  
+      // Clear dynamic containers
+      [
+        'skillsContainer', 'startingFeatsContainer', 'levelUpFeatsContainer', 'advantagesContainer',
+        'disadvantagesContainer', 'powersContainer', 'inventoryContainer', 'weaponsContainer',
+        'armorContainer', 'downtimeContainer', 'resourcesContainer'
+      ].forEach(container => {
+        const el = document.getElementById(container);
+        if (el) el.innerHTML = '';
+      });
+  
+      // Reset counters and trackers
+      skillCounter = startingFeatCounter = levelUpFeatCounter = advantageCounter = disadvantageCounter =
+      powerCounter = inventoryCounter = weaponCounter = armorCounter = downtimeCounter = resourceCounter = 0;
+      const charClassEl = document.getElementById('charClass');
+      if (charClassEl) charClassEl.value = 'Fatemarked';
+      availableStats = [];
+      skillCriticalTracker = {};
+      fatePointsUsedInEncounter = 0;
+  
+      // Update UI and state
+      updateSheetInputs({ preserveAttributes: true });
       debouncedUpdateFeatsSheet();
       alert('Character sheet cleared!');
     } catch (e) {
@@ -5085,40 +5645,74 @@ function copySheetText() {
     }
   }
   // Initialize on page load
-  // This initialization sequence sets up the UI state, resets dynamic containers and counters,
-  // and ensures that event handlers (such as onchange) are temporarily disabled during setup
-  // to prevent unwanted side effects or premature updates while the DOM is being populated.
-  // This is especially important when loading or resetting character data, as it avoids
-  // triggering validation or update logic before all fields are correctly set.
   document.addEventListener('DOMContentLoaded', () => {
     try {
-    // Clear power fields and counter
-    const powersContainer = document.getElementById('powersContainer');
-    if (powersContainer) {
-      powersContainer.innerHTML = '';
-      powerCounter = 0;
-      console.log('Cleared powersContainer and reset powerCounter');
-    }
+      // Clear power fields
+      const powersContainer = document.getElementById('powersContainer');
+      if (powersContainer) {
+        powersContainer.innerHTML = '';
+        powerCounter = 0;
+        console.log('Cleared powersContainer and reset powerCounter');
+      }
 
-    // Initialize Roll Tool section
-    updateInputs();
-    updateSkillSpecOptions();
-    updateFeats();
-    updateClassAbilities();
-    // Initialize Character Sheet Generator section, excluding updatePowers
-    updateSheetInputs({ skipPowers: true });
-    debouncedUpdateFeatsSheet();
+      // Initialize character sheet
+      updateSheetInputs({ skipPowers: true, preserveAttributes: true });
+      debouncedUpdateFeatsSheet();
 
-    // Add onchange to charName for dynamic updates
-    document.getElementById('charName').addEventListener('change', () => {
+      // Initialize roll tool
       updateInputs();
       updateSkillSpecOptions();
-    });
-  } catch (e) {
-    console.error('Error initializing page:', e);
-    alert('Failed to initialize page.');
-   }
-});
+      updateFeats();
+      updateClassAbilities();
+
+      // Add dynamic onchange handlers
+      const inputs = [
+        { id: 'charName', handler: () => {
+          console.log('charName changed to:', document.getElementById('charName').value);
+          updateInputs();
+          updateSkillSpecOptions();
+          updateFeats();
+          updateClassAbilities();
+        }},
+        { id: 'charLevel', handler: () => {
+          console.log('charLevel changed to:', document.getElementById('charLevel').value);
+          updateSheetInputs({ preserveAttributes: true });
+          updateInputs();
+          updateSkillSpecOptions();
+          updateFeats();
+          updateClassAbilities();
+        }},
+        { id: 'charClass', handler: () => {
+          console.log('charClass changed to:', document.getElementById('charClass').value);
+          updateSheetInputs({ preserveAttributes: true });
+          updateInputs();
+          updateSkillSpecOptions();
+          updateFeats();
+          updateClassAbilities();
+        }},
+        { id: 'attrSTR', handler: () => updateSheetInputs({ preserveAttributes: true }) },
+        { id: 'attrDEX', handler: () => updateSheetInputs({ preserveAttributes: true }) },
+        { id: 'attrCON', handler: () => updateSheetInputs({ preserveAttributes: true }) },
+        { id: 'attrINT', handler: () => updateSheetInputs({ preserveAttributes: true }) },
+        { id: 'attrWIS', handler: () => updateSheetInputs({ preserveAttributes: true }) },
+        { id: 'attrCHA', handler: () => updateSheetInputs({ preserveAttributes: true }) }
+      ];
+      inputs.forEach(({ id, handler }) => {
+        const input = document.getElementById(id);
+        if (input) {
+          input.addEventListener('change', () => {
+            if (!window.isLoadingCharacter) handler();
+          });
+        } else {
+          console.warn(`Input ${id} not found`);
+        }
+      });
+    } catch (e) {
+      console.error('Error initializing page:', e);
+      alert('Failed to initialize page.');
+    }
+  });
 </script>
 </body>
 </html>
+```
