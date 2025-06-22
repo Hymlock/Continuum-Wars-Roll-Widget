@@ -7,7 +7,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>const { jsPDF } = window.jspdf;</script>
-  <style>
+<style>
     @import url('https://fonts.cdnfonts.com/css/orbitron');
     body {
       font-family: 'Orbitron', sans-serif;
@@ -47,6 +47,31 @@
     }
     .gm-reference.collapsed .gm-content, .character-sheet.collapsed .sheet-content {
       display: none;
+    }
+    #statPointAllocation {
+      position: relative;
+      z-index: 20;
+    }
+    .attributes-section, .non-attributes-section {
+      position: relative;
+      padding: 1rem 0;
+    }
+    #statCommitBanner {
+      position: relative;
+      width: 100%;
+      background: rgba(50, 50, 50, 0.9);
+      border: 2px solid #ff4444;
+      padding: 15px;
+      margin-bottom: 10px;
+      text-align: center;
+      color: #ffffff;
+      font-size: 1.5rem;
+      z-index: 1000;
+    }
+    #statCommitBanner div {
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .toggle-button {
       background: linear-gradient(90deg, #ffcc00, #ff9900);
@@ -123,7 +148,7 @@
       margin-top: 1rem;
     }
     .hidden {
-      display: none;
+      display: none !important;
     }
     ul {
       padding-left: 1.5rem;
@@ -198,7 +223,7 @@
       margin-bottom: 10px;
       display: none;
     }
-  </style>
+</style>
 </head>
 <body>
   <div class="container">
@@ -429,260 +454,279 @@
 
   <div class="character-sheet collapsed">
     <div class="toggle-button" onclick="toggleCharacterSheet()">Show Character Sheet Generator</div>
-    <div class="sheet-content">
+  <div class="sheet-content">
     <h2>Character Sheet Generator</h2>
-    <div class="grid">
-      <div>
-        <label>Character Name</label>
-        <input id="charName" type="text" placeholder="e.g., Kael Vortex" title="Your character's name" onchange="">
-      </div>
-      <div>
-        <label>Player Name</label>
-        <input id="playerName" type="text" placeholder="e.g., Alex" title="Your name as the player">
-      </div>
-      <div>
-        <label>Level</label>
-        <input id="charLevel" type="number" value="1" min="1" max="15" placeholder="Level (1-15)" title="Character's current level (1-15)" onchange="updateSheetInputs({ preserveAttributes: true }); updateInputs(); updateSkillSpecOptions(); updateFeats(); updateClassAbilities()">
-      </div>
-      <div>
-        <label>Class</label>
-        <select id="charClass" title="Character's class" onchange="updateSheetInputs({ preserveAttributes: true }); updateInputs(); updateSkillSpecOptions(); updateFeats(); updateClassAbilities()">
-          <option value="Fatemarked">Fatemarked</option>
-          <option value="Biomatrix Suit">Biomatrix Suit</option>
-          <option value="Continuum Raider">Continuum Raider</option>
-          <option value="Gunrunner">Gunrunner</option>
-          <option value="Faterunner">Faterunner</option>
-          <option value="Harlequin">Harlequin</option>
-          <option value="Warrior">Warrior</option>
-          <option value="Mage">Mage</option>
-          <option value="Shape">Shape</option>
-          <option value="Masque">Masque</option>
-          <option value="Adventurer">Adventurer</option>
-        </select>
-      </div>
-      <div>
-        <label>Primordial Alignment</label>
-        <select id="charAlignment" title="Character's alignment (None for Levels 1-3)">
-          <option value="None">None (Levels 1–3)</option>
-          <option value="Balance">Balance</option>
-          <option value="Chaos">Chaos</option>
-          <option value="Order">Order</option>
-          <option value="Neutrality">Neutrality</option>
-        </select>
-      </div>
-      <div>
-        <label>Background</label>
-        <input id="charBackground" type="text" placeholder="e.g., Rift Survivor" title="Character's backstory or origin">
-      </div>
-      <div>
-        <label>Appearance</label>
-        <input id="charAppearance" type="text" placeholder="e.g., Cybernetic eye, blue cloak" title="Physical description of the character">
-      </div>
-      <div>
-        <label>Occupation</label>
-        <input id="charOccupation" type="text" placeholder="e.g., Rift Navigator" title="Character's profession or role">
-      </div>
-      <div>
-        <label>Personality & Motivation</label>
-        <textarea id="charPersonality" placeholder="e.g., Curious, seeks to seal rifts" title="Character's personality traits and goals"></textarea>
-      </div>
-      <div>
-        <label>Narrative Milestone</label>
-        <input id="charMilestone" type="text" placeholder="e.g., Sealed first rift" title="Significant event in character's story">
-      </div>
+    <div class="attributes-section">
+      <div class="grid">
+    <div>
+      <label>Character Name</label>
+      <input id="charName" type="text" placeholder="e.g., Kael Vortex" title="Your character's name">
     </div>
-    <h2>Attributes</h2>
-    <div class="grid">
-      <div>
-        <label>Attribute Method</label>
-        <select id="attrMethod" title="Method for generating attributes" onchange="updateAttributes()">
-          <option value="pointBuy">Point Buy (15 points)</option>
-          <option value="random">Random (4d6 drop lowest)</option>
-          <option value="imported" hidden>Imported</option>
-        </select>
-      </div>
-      <div id="rerollButton" class="hidden">
-        <button class="reroll-button" onclick="rerollAttributes()">Re-roll Attributes</button>
-      </div>
-      <div>
-        <label>Points Remaining</label>
-        <input id="pointsRemaining" type="text" value="15" readonly title="Remaining points for point buy">
-      </div>
-      <div id="randomRolls" class="hidden">
-        <label>Random Rolls</label>
-        <input id="rolledStats" type="text" readonly placeholder="Rolled stats appear here" title="Results of random attribute rolls">
-      </div>
-      <div>
-        <label>Strength (STR)</label>
-        <input id="attrSTR" type="number" min="1" max="20" value="10" placeholder="STR (8-18)" title="Strength score (8-18)" onchange="updatePoints(); updateSheetInputs({ preserveAttributes: true }); updateInputs()">
-        <select id="assignSTR" class="hidden" title="Assign rolled stat to Strength" onchange="assignStat('STR')"></select>
-      </div>
-      <div>
-        <label>Dexterity (DEX)</label>
-        <input id="attrDEX" type="number" min="1" max="20" value="10" placeholder="DEX (8-18)" title="Dexterity score (8-18)" onchange="updatePoints(); updateSheetInputs({ preserveAttributes: true }); updateInputs()">
-        <select id="assignDEX" class="hidden" title="Assign rolled stat to Dexterity" onchange="assignStat('DEX')"></select>
-      </div>
-      <div>
-        <label>Constitution (CON)</label>
-        <input id="attrCON" type="number" min="1" max="20" value="10" placeholder="CON (8-18)" title="Constitution score (8-18)" onchange="updatePoints(); updateSheetInputs({ preserveAttributes: true }); updateInputs()">
-        <select id="assignCON" class="hidden" title="Assign rolled stat to Constitution" onchange="assignStat('CON')"></select>
-      </div>
-      <div>
-        <label>Intelligence (INT)</label>
-        <input id="attrINT" type="number" min="1" max="20" value="10" placeholder="INT (8-18)" title="Intelligence score (8-18)" onchange="updatePoints(); updateSheetInputs({ preserveAttributes: true }); updateInputs()">
-        <select id="assignINT" class="hidden" title="Assign rolled stat to Intelligence" onchange="assignStat('INT')"></select>
-      </div>
-      <div>
-        <label>Wisdom (WIS)</label>
-        <input id="attrWIS" type="number" min="1" max="20" value="10" placeholder="WIS (8-18)" title="Wisdom score (8-18)" onchange="updatePoints(); updateSheetInputs({ preserveAttributes: true }); updateInputs()">
-        <select id="assignWIS" class="hidden" title="Assign rolled stat to Wisdom" onchange="assignStat('WIS')"></select>
-      </div>
-      <div>
-        <label>Charisma (CHA)</label>
-        <input id="attrCHA" type="number" min="1" max="20" value="10" placeholder="CHA (8-18)" title="Charisma score (8-18)" onchange="updatePoints(); updateSheetInputs({ preserveAttributes: true }); updateInputs()">
-        <select id="assignCHA" class="hidden" title="Assign rolled stat to Charisma" onchange="assignStat('CHA')"></select>
-      </div>
-      <div id="confirmAssignments" class="hidden">
-        <button class="dynamic-button" onclick="assignStats()">Confirm Assignments</button>
-      </div>
+    <div>
+      <label>Player Name</label>
+      <input id="playerName" type="text" placeholder="e.g., Alex" title="Your name as the player">
     </div>
-    <h2>Derived Stats</h2>
-    <div class="grid">
-      <div>
-        <label>Health (Max HP)</label>
-        <input id="health" type="number" readonly title="Maximum hit points based on CON and level">
-      </div>
-      <div>
-        <label>Sanity (Mental Resilience)</label>
-        <input id="sanity" type="number" readonly title="Mental resilience based on WIS">
-      </div>
-      <div>
-        <label>Defense (AC)</label>
-        <input id="defense" type="number" readonly title="Armor Class based on DEX and armor">
-      </div>
-      <div>
-        <label>Initiative Base</label>
-        <input id="initiative" type="number" readonly title="Initiative bonus based on DEX">
-      </div>
-      <div>
-        <label>Base Attack Rating (BAB)</label>
-        <input id="charBAB" type="number" readonly title="Base Attack Bonus for attacks">
-      </div>
-      <div>
-        <label>Speed (ft/round)</label>
-        <input id="speed" type="number" value="30" readonly title="Movement speed in feet per round">
-      </div>
-      <div>
-        <label>Reflex Save</label>
-        <input id="reflex" type="number" readonly title="Reflex save based on DEX">
-      </div>
-      <div>
-        <label>Fortitude Save</label>
-        <input id="fortitude" type="number" readonly title="Fortitude save based on CON">
-      </div>
-      <div>
-        <label>Willpower Save</label>
-        <input id="willpower" type="number" readonly title="Willpower save based on WIS">
-      </div>
-      <div>
-        <label>Luck Save (Level 4+)</label>
-        <input id="luck" type="number" readonly title="Luck save based on CHA (Level 4+)">
-      </div>
-      <div>
-        <label>Fate Points</label>
-        <input id="fatePointsCurrent" type="number" readonly>
-        <button class="dynamic-button" onclick="spendFatePoint()">Spend Fate Point</button>
-        <button id="fatePointsRegenerate" class="dynamic-button hidden" onclick="regenerateFatePoints()">Regenerate</button>
-        <button id="fatePointsRest" class="dynamic-button hidden" onclick="restCharacter()">Rest (8 Hours)</button>
-      </div>
-      <div>
-        <label>Paradox Points</label>
-        <input id="paradoxPoints" type="number" value="0" readonly>
-        <button class="dynamic-button" onclick="addParadoxPoint()">Add Paradox</button>
-      </div>
+    <div>
+      <label>Level</label>
+      <input id="charLevel" type="number" value="1" min="1" max="15" placeholder="Level (1-15)" title="Character's current level (1-15)" onchange="updateSheetInputs({ preserveAttributes: true }); updateInputs(); updateSkillSpecOptions(); updateFeats(); updateClassAbilities()">
     </div>
-    <h2>Resources</h2>
-    <div id="resourcesContainer"></div>
-    <h2>Inherent Abilities</h2>
-    <div id="inherentAbilitiesContainer"></div>
-    <h2>Skills</h2>
-    <div id="skillPointsDisplay">Skill Points: 20/20</div>
-    <div id="skillsContainer"></div>
-    <button class="add-button" onclick="addSkillField()">Add Skill</button>
-    <h2>Starting Feats</h2>
-    <div id="startingFeatsContainer"></div>
-    <button class="add-button" onclick="addStartingFeatField()">Add Starting Feat</button>
-    <h2>Level-Up Feats</h2>
-    <div id="levelUpFeatsContainer"></div>
-    <button class="add-button" onclick="addLevelUpFeatField()">Add Level-Up Feat</button>
-    <h2>Advantages</h2>
-    <div id="advantageWarning" class="advantage-warning">Select at least one disadvantage before adding advantages.</div>
-    <div id="advantagesContainer"></div>
-    <button class="add-button" onclick="addAdvantageField()">Add Advantage</button>
-    <h2>Disadvantages</h2>
-    <div id="disadvantagesContainer"></div>
-    <button class="add-button" onclick="addDisadvantageField()">Add Disadvantage</button>
-    <h2>Powers/Effects</h2>
-    <div id="powersContainer"></div>
-    <button id="addPowerButton" class="add-button" onclick="addPowerField()">Add Power/Effect</button>
-    <h2>Inventory</h2>
-    <div class="grid">
-      <div>
-        <label>Credits</label>
-        <input id="credits" type="number" value="0" min="0" placeholder="Credits" title="Currency for purchases">
-      </div>
-      <div>
-        <label>Rift Shards</label>
-        <input id="shards" type="number" value="0" min="0" placeholder="Rift Shards" title="Rare magical currency">
-      </div>
+    <div>
+      <label>Class</label>
+      <select id="charClass" title="Character's class" onchange="updateSheetInputs({ preserveAttributes: true }); updateInputs(); updateSkillSpecOptions(); updateFeats(); updateClassAbilities()">
+        <option value="Fatemarked">Fatemarked</option>
+        <option value="Biomatrix Suit">Biomatrix Suit</option>
+        <option value="Continuum Raider">Continuum Raider</option>
+        <option value="Gunrunner">Gunrunner</option>
+        <option value="Faterunner">Faterunner</option>
+        <option value="Harlequin">Harlequin</option>
+        <option value="Warrior">Warrior</option>
+        <option value="Mage">Mage</option>
+        <option value="Shape">Shape</option>
+        <option value="Masque">Masque</option>
+        <option value="Adventurer">Adventurer</option>
+      </select>
     </div>
-    <div id="inventoryContainer"></div>
-    <button class="add-button" onclick="addInventoryField()">Add Item</button>
-    <h2>Combat</h2>
-    <div id="weaponsContainer"></div>
-    <button class="add-button" onclick="addWeaponField()">Add Weapon</button>
-    <div id="armorContainer"></div>
-    <button class="add-button" onclick="addArmorField()">Add Armor</button>
-    <h2>Progression</h2>
-    <div class="grid">
-      <div>
-        <label>Current XP</label>
-        <input id="currentXP" type="number" value="0" min="0" placeholder="Current XP" title="Experience points earned">
-      </div>
-      <div>
-        <label>Next Level XP</label>
-        <input id="nextLevelXP" type="number" readonly title="XP needed for next level">
-      </div>
+    <div>
+      <label>Primordial Alignment</label>
+      <select id="charAlignment" title="Character's alignment (None for Levels 1-3)">
+        <option value="None">None (Levels 1–3)</option>
+        <option value="Balance">Balance</option>
+        <option value="Chaos">Chaos</option>
+        <option value="Order">Order</option>
+        <option value="Neutrality">Neutrality</option>
+      </select>
     </div>
-    <h2>Lifestyle</h2>
-    <div class="grid">
-      <div>
-        <label>Lifestyle</label>
-        <select id="charLifestyle" title="Daily living standard">
-          <option value="Squalid">Squalid (0 Credits/day)</option>
-          <option value="Modest">Modest (1 Credit/day)</option>
-          <option value="Comfortable">Comfortable (5 Credits/day)</option>
-          <option value="Luxurious">Luxurious (20 Credits/day)</option>
-        </select>
-      </div>
-      <div>
-        <label>Cost Paid</label>
-        <input id="lifestyleCost" type="number" value="0" min="0" placeholder="Daily Cost" title="Credits spent on lifestyle">
-      </div>
+    <div>
+      <label>Background</label>
+      <input id="charBackground" type="text" placeholder="e.g., Rift Survivor" title="Character's backstory or origin">
     </div>
-    <h2>Downtime Activities</h2>
-    <div id="downtimeContainer"></div>
-    <button class="add-button" onclick="addDowntimeField()">Add Downtime Activity</button>
-    <h2>Notes</h2>
-    <textarea id="charNotes" placeholder="e.g., Faction standings, backstory details" title="Additional character notes"></textarea>
-    <div class="button-group">
-      <button onclick="generateCharacterSheet()">Generate Character Sheet</button>
-      <button onclick="saveCharacter()">Save Character</button>
-      <button onclick="document.getElementById('loadCharacterInput').click()">Load Character</button>
-      <input id="loadCharacterInput" type="file" accept=".json" onchange="loadCharacter(event)" style="display: none;">
-      <button onclick="clearSheetFields()">Clear Sheet Fields</button>
+    <div>
+      <label>Appearance</label>
+      <input id="charAppearance" type="text" placeholder="e.g., Cybernetic eye, blue cloak" title="Physical description of the character">
+    </div>
+    <div>
+      <label>Occupation</label>
+      <input id="charOccupation" type="text" placeholder="e.g., Rift Navigator" title="Character's profession or role">
+    </div>
+    <div>
+      <label>Personality & Motivation</label>
+      <textarea id="charPersonality" placeholder="e.g., Curious, seeks to seal rifts" title="Character's personality traits and goals"></textarea>
+    </div>
+    <div>
+      <label>Narrative Milestone</label>
+      <input id="charMilestone" type="text" placeholder="e.g., Sealed first rift" title="Significant event in character's story">
     </div>
   </div>
+  <h2>Attributes</h2>
+  <div id="statPointAllocation" class="dynamic-group" style="margin-bottom: 10px; display:none;">
+    <label style="margin-right: 1em;"><strong>Unspent Stat Points:</strong> <span id="statPointsAvailable">0</span></label>
+    <button id="commitStatPointsBtn" class="dynamic-button" style="padding:1px 7px; font-size:0.8em; width:auto;" onclick="commitStatPoints()" disabled>Commit</button>
+  </div>
+  <div class="grid">
+    <div>
+      <label>Attribute Method</label>
+      <select id="attrMethod" title="Method for generating attributes" onchange="updateAttributes()">
+        <option value="pointBuy">Point Buy (15 points)</option>
+        <option value="random">Random (4d6 drop lowest)</option>
+        <option value="imported" hidden>Imported</option>
+      </select>
+    </div>
+    <div>
+      <label>Points Remaining (Point Buy)</label>
+      <input id="pointsRemaining" type="text" readonly value="15" title="Remaining points for point buy">
+    </div>
+    <div id="randomRolls" class="hidden">
+      <label>Rolled Stats</label>
+      <input id="rolledStats" type="text" readonly placeholder="e.g., 15, 14, 13, 12, 10, 8" title="Rolled attribute values">
+    </div>
+    <div class="button-group">
+      <button id="rerollButton" class="dynamic-button hidden" onclick="rerollAttributes()">Reroll Stats</button>
+      <button id="confirmAssignments" class="dynamic-button hidden" onclick="assignStats()">Confirm Assignments</button>
+    </div>
+    <div>
+      <label>Strength (STR)</label>
+      <input id="attrSTR" type="number" min="1" max="20" value="10" placeholder="STR (8-18)" title="Strength score (8-18)" readonly>
+      <span id="statPointBtnsSTR"></span>
+      <select id="assignSTR" class="hidden" title="Assign rolled stat to Strength" onchange="assignStat('STR')"></select>
+    </div>
+    <div>
+      <label>Dexterity (DEX)</label>
+      <input id="attrDEX" type="number" min="1" max="20" value="10" placeholder="DEX (8-18)" title="Dexterity score (8-18)" readonly>
+      <span id="statPointBtnsDEX"></span>
+      <select id="assignDEX" class="hidden" title="Assign rolled stat to Dexterity" onchange="assignStat('DEX')"></select>
+    </div>
+    <div>
+      <label>Constitution (CON)</label>
+      <input id="attrCON" type="number" min="1" max="20" value="10" placeholder="CON (8-18)" title="Constitution score (8-18)" readonly>
+      <span id="statPointBtnsCON"></span>
+      <select id="assignCON" class="hidden" title="Assign rolled stat to Constitution" onchange="assignStat('CON')"></select>
+    </div>
+    <div>
+      <label>Intelligence (INT)</label>
+      <input id="attrINT" type="number" min="1" max="20" value="10" placeholder="INT (8-18)" title="Intelligence score (8-18)" readonly>
+      <span id="statPointBtnsINT"></span>
+      <select id="assignINT" class="hidden" title="Assign rolled stat to Intelligence" onchange="assignStat('INT')"></select>
+    </div>
+    <div>
+      <label>Wisdom (WIS)</label>
+      <input id="attrWIS" type="number" min="1" max="20" value="10" placeholder="WIS (8-18)" title="Wisdom score (8-18)" readonly>
+      <span id="statPointBtnsWIS"></span>
+      <select id="assignWIS" class="hidden" title="Assign rolled stat to Wisdom" onchange="assignStat('WIS')"></select>
+    </div>
+    <div>
+      <label>Charisma (CHA)</label>
+      <input id="attrCHA" type="number" min="1" max="20" value="10" placeholder="CHA (8-18)" title="Charisma score (8-18)" readonly>
+      <span id="statPointBtnsCHA"></span>
+      <select id="assignCHA" class="hidden" title="Assign rolled stat to Charisma" onchange="assignStat('CHA')"></select>
+    </div>
+  </div>
+</div>
+<div class="non-attributes-section" style="position: relative;">
+  <div id="statCommitBanner" class="hidden">
+    <div>
+      <strong>Allocate and Commit Stat Points Before Continuing!</strong>
+      <br />
+      <span style="font-size: 1.2rem;">You cannot edit other fields until stat points are committed.</span>
+      <button id="dismissStatCommitBannerBtn" class="dynamic-button" style="margin-left: 10px; padding: 5px 10px;">Dismiss</button>
+    </div>
+  </div>
+  <h2>Derived Stats</h2>
+  <div class="grid">
+    <div>
+      <label>Health (Max HP)</label>
+      <input id="health" type="number" readonly title="Maximum hit points based on CON and level">
+    </div>
+    <div>
+      <label>Sanity (Mental Resilience)</label>
+      <input id="sanity" type="number" readonly title="Mental resilience based on WIS">
+    </div>
+    <div>
+      <label>Defense (AC)</label>
+      <input id="defense" type="number" readonly title="Armor Class based on DEX and armor">
+    </div>
+    <div>
+      <label>Initiative Base</label>
+      <input id="initiative" type="number" readonly title="Initiative bonus based on DEX">
+    </div>
+    <div>
+      <label>Base Attack Rating (BAB)</label>
+      <input id="charBAB" type="number" readonly title="Base Attack Bonus for attacks">
+    </div>
+    <div>
+      <label>Speed (ft/round)</label>
+      <input id="speed" type="number" value="30" readonly title="Movement speed in feet per round">
+    </div>
+    <div>
+      <label>Reflex Save</label>
+      <input id="reflex" type="number" readonly title="Reflex save based on DEX">
+    </div>
+    <div>
+      <label>Fortitude Save</label>
+      <input id="fortitude" type="number" readonly title="Fortitude save based on CON">
+    </div>
+    <div>
+      <label>Willpower Save</label>
+      <input id="willpower" type="number" readonly title="Willpower save based on WIS">
+    </div>
+    <div>
+      <label>Luck Save (Level 4+)</label>
+      <input id="luck" type="number" readonly title="Luck save based on CHA (Level 4+)">
+    </div>
+    <div>
+      <label>Fate Points</label>
+      <input id="fatePointsCurrent" type="number" readonly>
+      <button class="dynamic-button" onclick="spendFatePoint()">Spend Fate Point</button>
+      <button id="fatePointsRegenerate" class="dynamic-button hidden" onclick="regenerateFatePoints()">Regenerate</button>
+      <button id="fatePointsRest" class="dynamic-button hidden" onclick="restCharacter()">Rest (8 Hours)</button>
+    </div>
+    <div>
+      <label>Paradox Points</label>
+      <input id="paradoxPoints" type="number" value="0" readonly>
+      <button class="dynamic-button" onclick="addParadoxPoint()">Add Paradox</button>
+    </div>
+  </div>
+  <h2>Resources</h2>
+  <div id="resourcesContainer"></div>
+  <h2>Inherent Abilities</h2>
+  <div id="inherentAbilitiesContainer"></div>
+  <h2>Skills</h2>
+  <div id="skillPointsDisplay">Skill Points: 20/20</div>
+  <div id="skillsContainer"></div>
+  <button class="add-button" onclick="addSkillField()">Add Skill</button>
+  <h2>Starting Feats</h2>
+  <div id="startingFeatsContainer"></div>
+  <button class="add-button" onclick="addStartingFeatField()">Add Starting Feat</button>
+  <h2>Level-Up Feats</h2>
+  <div id="levelUpFeatsContainer"></div>
+  <button class="add-button" onclick="addLevelUpFeatField()">Add Level-Up Feat</button>
+  <h2>Advantages</h2>
+  <div id="advantageWarning" class="advantage-warning">Select at least one disadvantage before adding advantages.</div>
+  <div id="advantagesContainer"></div>
+  <button class="add-button" onclick="addAdvantageField()">Add Advantage</button>
+  <h2>Disadvantages</h2>
+  <div id="disadvantagesContainer"></div>
+  <button class="add-button" onclick="addDisadvantageField()">Add Disadvantage</button>
+  <h2>Powers/Effects</h2>
+  <div id="powersContainer"></div>
+  <button id="addPowerButton" class="add-button" onclick="addPowerField()">Add Power/Effect</button>
+  <h2>Inventory</h2>
+  <div class="grid">
+    <div>
+      <label>Credits</label>
+      <input id="credits" type="number" value="0" min="0" placeholder="Credits" title="Currency for purchases">
+    </div>
+    <div>
+      <label>Rift Shards</label>
+      <input id="shards" type="number" value="0" min="0" placeholder="Rift Shards" title="Rare magical currency">
+    </div>
+  </div>
+  <div id="inventoryContainer"></div>
+  <button class="add-button" onclick="addInventoryField()">Add Item</button>
+  <h2>Combat</h2>
+  <div id="weaponsContainer"></div>
+  <button class="add-button" onclick="addWeaponField()">Add Weapon</button>
+  <div id="armorContainer"></div>
+  <button class="add-button" onclick="addArmorField()">Add Armor</button>
+  <h2>Progression</h2>
+  <div class="grid">
+    <div>
+      <label>Current XP</label>
+      <input id="currentXP" type="number" value="0" min="0" placeholder="Current XP" title="Experience points earned">
+    </div>
+    <div>
+      <label>Next Level XP</label>
+      <input id="nextLevelXP" type="number" readonly title="XP needed for next level">
+    </div>
+  </div>
+  <h2>Lifestyle</h2>
+  <div class="grid">
+    <div>
+      <label>Lifestyle</label>
+      <select id="charLifestyle" title="Daily living standard">
+        <option value="Squalid">Squalid (0 Credits/day)</option>
+        <option value="Modest">Modest (1 Credit/day)</option>
+        <option value="Comfortable">Comfortable (5 Credits/day)</option>
+        <option value="Luxurious">Luxurious (20 Credits/day)</option>
+      </select>
+    </div>
+    <div>
+      <label>Cost Paid</label>
+      <input id="lifestyleCost" type="number" value="0" min="0" placeholder="Daily Cost" title="Credits spent on lifestyle">
+    </div>
+  </div>
+  <h2>Downtime Activities</h2>
+  <div id="downtimeContainer"></div>
+  <button class="add-button" onclick="addDowntimeField()">Add Downtime Activity</button>
+  <h2>Notes</h2>
+  <textarea id="charNotes" placeholder="e.g., Faction standings, backstory details" title="Additional character notes"></textarea>
+  <div class="button-group">
+    <button onclick="generateCharacterSheet()">Generate Character Sheet</button>
+    <button onclick="saveCharacter()">Save Character</button>
+    <button onclick="document.getElementById('loadCharacterInput').click()">Load Character</button>
+    <input id="loadCharacterInput" type="file" accept=".json" onchange="loadCharacter(event)" style="display: none;">
+    <button onclick="clearSheetFields()">Clear Sheet Fields</button>
+  </div>
+</div>
 </div>
 
   <div id="results" class="results hidden" role="region" aria-live="polite">
@@ -714,7 +758,7 @@
   </div>
 
 <script>
-  let statPointsSpent = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+  let statPointsByLevel = [];
   let skillCriticalTracker = {};
   let hasParadoxSuccess = false;
   let extendedProgress = 0;
@@ -736,78 +780,511 @@
   let fatePointsUsedInEncounter = 0;
   let totalResourcesUsedInSession = 0;
 
-  // Stat point system variables
-  let statPointsAvailable = 0;
+  
   let statPointsAllocated = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+  let statPointsAvailable = 0;
+  let statPointsCommitted = true;
 
   // Calculate stat points for a given level
   function getStatPointsForLevel(level) {
-    return Math.floor(level / 3) * 2;
+    try {
+      const milestoneLevels = [3, 6, 9, 12, 15].filter(l => l <= level);
+      const totalPoints = milestoneLevels.length * 2;
+      console.log(`getStatPointsForLevel: level=${level}, totalPoints=${totalPoints}`);
+      return totalPoints;
+    } catch (e) {
+      console.error('Error calculating stat points for level:', e);
+      return 0;
+    }
   }
+// ...existing code...
 
-  // Update stat point UI and logic
-  function updateStatPointUI() {
-    const lvl = parseInt(document.getElementById('charLevel').value) || 1;
+function updateStatPointUI() {
+  try {
+    if (window.isUpdatingStatPointUI) {
+      console.log('updateStatPointUI: Skipped due to ongoing update');
+      return;
+    }
+    window.isUpdatingStatPointUI = true;
+
+    const charLevelEl = document.getElementById('charLevel');
+    if (!charLevelEl) {
+      throw new Error('charLevel input not found');
+    }
+    const lvl = parseInt(charLevelEl.value) || 1;
     const totalPoints = getStatPointsForLevel(lvl);
+    const attrMethod = document.getElementById('attrMethod').value;
+
+    // Ensure statPointsAllocated is initialized
+    if (!statPointsAllocated || typeof statPointsAllocated !== 'object') {
+      statPointsAllocated = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+    }
+    if (!statPointsByLevel || !Array.isArray(statPointsByLevel)) {
+      statPointsByLevel = [];
+    }
+
     const spent = Object.values(statPointsAllocated).reduce((a, b) => a + b, 0);
     statPointsAvailable = totalPoints - spent;
-    if (document.getElementById('statPointsAvailable')) {
-      document.getElementById('statPointsAvailable').textContent = statPointsAvailable;
-    }
-    if (document.getElementById('statPointAllocation')) {
-      document.getElementById('statPointAllocation').classList.toggle('hidden', statPointsAvailable <= 0 && spent === 0);
-    }
-  }
+    statPointsCommitted = totalPoints === 0 || spent >= totalPoints;
 
-  // Allocate or remove a stat point
-  function allocateStatPoint(stat, delta) {
-    if (delta > 0 && statPointsAvailable <= 0) return;
-    if (delta < 0 && statPointsAllocated[stat] <= 0) return;
-    const input = document.getElementById('attr' + stat);
-    if (!input) return;
+    console.log(`updateStatPointUI: lvl=${lvl}, totalPoints=${totalPoints}, spent=${spent}, statPointsAvailable=${statPointsAvailable}, statPointsCommitted=${statPointsCommitted}, statPointsByLevel=`, statPointsByLevel);
+
+    // Control visibility of allocation UI and banner
+    const shouldShowAllocation = totalPoints > 0 && !statPointsCommitted;
+    const shouldShowBanner = totalPoints > 0 && !statPointsCommitted && !window.isBannerDismissed;
+
+    const allocationDiv = document.getElementById('statPointAllocation');
+    if (allocationDiv) {
+      allocationDiv.style.display = shouldShowAllocation ? 'flex' : 'none';
+    } else {
+      console.warn('statPointAllocation element not found');
+    }
+
+    const banner = document.getElementById('statCommitBanner');
+    if (banner) {
+      if (shouldShowBanner) {
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+      console.log(`updateStatPointUI: shouldShowBanner=${shouldShowBanner}, banner.classList=${banner.classList.toString()}, display=${getComputedStyle(banner).display}`);
+    } else {
+      console.warn('statCommitBanner element not found');
+    }
+
+    // Bind dismiss button event
+    const dismissBtn = document.getElementById('dismissStatCommitBannerBtn');
+    if (dismissBtn) {
+      dismissBtn.removeEventListener('click', dismissStatCommitBanner);
+      dismissBtn.addEventListener('click', dismissStatCommitBanner);
+      dismissBtn.disabled = false;
+      console.log('updateStatPointUI: Dismiss button event bound');
+    } else {
+      console.warn('dismissStatCommitBannerBtn element not found');
+    }
+
+    // Update points display
+    const pointsDisplay = document.getElementById('statPointsAvailable');
+    if (pointsDisplay) {
+      pointsDisplay.textContent = statPointsAvailable;
+    }
+
+    // Update commit button
+    const commitBtn = document.getElementById('commitStatPointsBtn');
+    if (commitBtn) {
+      commitBtn.disabled = statPointsAvailable !== 0 || statPointsCommitted;
+      commitBtn.textContent = statPointsCommitted ? 'Committed' : 'Commit';
+    }
+
+    // Determine which stats have level-gained points at current or higher levels
+    const currentLevelAllocations = statPointsByLevel.find(entry => entry.level === lvl)?.allocations || {};
+    const hasLevelPoints = stat => (statPointsByLevel.filter(entry => entry.level <= lvl).reduce((sum, entry) => sum + (entry.allocations[stat] || 0), 0)) > 0;
+
+    // Render stat allocation buttons
+    ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+      const btnSpan = document.getElementById(`statPointBtns${attr}`);
+      if (!btnSpan) {
+        console.warn(`statPointBtns${attr} element not found`);
+        return;
+      }
+      btnSpan.innerHTML = '';
+
+      const attrInput = document.getElementById(`attr${attr}`);
+      if (!attrInput) {
+        console.warn(`attr${attr} input not found`);
+        return;
+      }
+      const currentVal = parseInt(attrInput.value) || 10;
+
+      if (!statPointsCommitted && statPointsAvailable > 0 && (attrMethod === 'imported' || currentVal < 18)) {
+        const plusBtn = document.createElement('button');
+        plusBtn.className = 'dynamic-button stat-point-btn';
+        plusBtn.style.padding = '1px 4px';
+        plusBtn.style.fontSize = '0.7em';
+        plusBtn.style.width = 'auto';
+        plusBtn.textContent = '+';
+        plusBtn.disabled = false;
+        plusBtn.addEventListener('click', () => {
+          console.log(`Plus button clicked for ${attr}`);
+          allocateStatPoint(attr, 1);
+        });
+        btnSpan.appendChild(plusBtn);
+        console.log(`updateStatPointUI: Created + button for ${attr}`);
+      }
+
+      if (!statPointsCommitted && hasLevelPoints(attr) && currentVal > 8) {
+        const minusBtn = document.createElement('button');
+        minusBtn.className = 'dynamic-button stat-point-btn';
+        minusBtn.style.padding = '1px 4px';
+        minusBtn.style.fontSize = '0.7em';
+        minusBtn.style.width = 'auto';
+        minusBtn.textContent = '-';
+        minusBtn.disabled = false;
+        minusBtn.addEventListener('click', () => {
+          console.log(`Minus button clicked for ${attr}`);
+          allocateStatPoint(attr, -1);
+        });
+        btnSpan.appendChild(minusBtn);
+        console.log(`updateStatPointUI: Created - button for ${attr}`);
+      }
+    });
+
+    // Manage input states
+    const allInteractive = document.querySelectorAll('input, select, textarea, button');
+    allInteractive.forEach(el => {
+      if (shouldShowBanner && ![
+        'attrSTR', 'attrDEX', 'attrCON', 'attrINT', 'attrWIS', 'attrCHA',
+        'commitStatPointsBtn', 'attrMethod', 'dismissStatCommitBannerBtn'
+      ].includes(el.id) && !el.classList.contains('stat-point-btn') && !el.id?.startsWith('assign')) {
+        el.dataset.wasDisabled = el.disabled.toString();
+        el.disabled = true;
+      } else {
+        el.disabled = el.dataset.wasDisabled === 'true';
+        delete el.dataset.wasDisabled;
+      }
+    });
+
+    window.isUpdatingStatPointUI = false;
+  } catch (e) {
+    console.error('Error updating stat point UI:', e);
+    alert('Failed to update stat point UI.');
+    window.isUpdatingStatPointUI = false;
+  }
+}
+
+// Dismiss the stat commit banner temporarily
+function dismissStatCommitBanner() {
+  try {
+    const banner = document.getElementById('statCommitBanner');
+    if (banner) {
+      banner.classList.add('hidden');
+      window.isBannerDismissed = true;
+      console.log('dismissStatCommitBanner: Banner dismissed, isBannerDismissed=', window.isBannerDismissed);
+    }
+  } catch (e) {
+    console.error('Error dismissing stat commit banner:', e);
+  }
+}
+
+// Allocate or remove a stat point
+function allocateStatPoint(stat, delta) {
+  try {
+    console.log(`allocateStatPoint: Attempting to change ${stat} by ${delta}, statPointsCommitted=${statPointsCommitted}, statPointsAvailable=${statPointsAvailable}`);
+    
+    if (statPointsCommitted) {
+      console.log(`allocateStatPoint: Cannot allocate, statPointsCommitted=${statPointsCommitted}`);
+      return;
+    }
+    if (delta > 0 && statPointsAvailable <= 0) {
+      console.log('allocateStatPoint: No points available');
+      return;
+    }
+    if (delta < 0 && statPointsAllocated[stat] <= 0) {
+      console.log(`allocateStatPoint: No points allocated to ${stat}`);
+      return;
+    }
+
+    const input = document.getElementById(`attr${stat}`);
+    if (!input) {
+      console.warn(`attr${stat} input not found`);
+      return;
+    }
+    const attrMethod = document.getElementById('attrMethod').value;
+    const charLevelEl = document.getElementById('charLevel');
+    const lvl = parseInt(charLevelEl.value) || 1;
     const val = parseInt(input.value) || 10;
-    if (delta > 0 && val >= 18) return;
-    if (delta < 0 && val <= 8) return;
+
+    if (delta > 0 && val >= 18 && (attrMethod === 'pointBuy' || attrMethod === 'random')) {
+      console.log(`allocateStatPoint: ${stat} at max (18) for ${attrMethod}`);
+      return;
+    }
+    if (delta < 0 && val <= 8) {
+      console.log(`allocateStatPoint: ${stat} at min (8)`);
+      return;
+    }
+
     statPointsAllocated[stat] += delta;
     input.value = val + delta;
-    updateStatPointUI();
-    updateSheetInputs({ preserveAttributes: true });
-  }
+    statPointsAvailable -= delta;
 
-  // Reset stat points when level changes
-  function resetStatPointsOnLevelChange() {
-    const lvl = parseInt(document.getElementById('charLevel').value) || 1;
-    const totalPoints = getStatPointsForLevel(lvl);
-    let spent = Object.values(statPointsAllocated).reduce((a, b) => a + b, 0);
-    // If spent > total, remove excess from stats in order
-    if (spent > totalPoints) {
-      let excess = spent - totalPoints;
-      for (const stat of ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA']) {
-        while (statPointsAllocated[stat] > 0 && excess > 0) {
-          statPointsAllocated[stat]--;
-          const input = document.getElementById('attr' + stat);
-          if (input) input.value = Math.max(8, (parseInt(input.value) || 10) - 1);
-          excess--;
-        }
+    // Update statPointsByLevel
+    if (!statPointsByLevel || !Array.isArray(statPointsByLevel)) {
+      statPointsByLevel = [];
+    }
+    let levelEntry = statPointsByLevel.find(entry => entry.level === lvl);
+    if (!levelEntry) {
+      levelEntry = { level: lvl, allocations: { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 } };
+      statPointsByLevel.push(levelEntry);
+    }
+    levelEntry.allocations[stat] = (levelEntry.allocations[stat] || 0) + delta;
+    if (levelEntry.allocations[stat] === 0) {
+      delete levelEntry.allocations[stat];
+      if (Object.keys(levelEntry.allocations).length === 0) {
+        statPointsByLevel = statPointsByLevel.filter(entry => entry.level !== lvl);
       }
     }
+
+    console.log(`allocateStatPoint: ${stat} changed by ${delta}, new value=${input.value}, statPointsAllocated=`, statPointsAllocated, `statPointsAvailable=${statPointsAvailable}, statPointsByLevel=`, statPointsByLevel);
+    
+    window.isBannerDismissed = false;
     updateStatPointUI();
+    updateSheetInputs({ preserveAttributes: true });
+  } catch (e) {
+    console.error('Error allocating stat point:', e);
+    alert('Failed to allocate stat point.');
   }
+}
+
+// Commit stat points
+function commitStatPoints() {
+  try {
+    if (statPointsAvailable !== 0) {
+      console.log(`commitStatPoints: Cannot commit, ${statPointsAvailable} points unspent`);
+      alert('Please allocate all stat points before committing.');
+      return;
+    }
+    statPointsCommitted = true;
+    window.isBannerDismissed = false; // Reset banner state
+    console.log('commitStatPoints: Committed stat points, statPointsCommitted=', statPointsCommitted);
+    updateStatPointUI();
+  } catch (e) {
+    console.error('Error committing stat points:', e);
+    alert('Failed to commit stat points.');
+  }
+}
+
+function resetStatPointsOnLevelChange() {
+  try {
+    const charLevelEl = document.getElementById('charLevel');
+    if (!charLevelEl) {
+      console.warn('charLevel input not found');
+      return;
+    }
+    const lvl = parseInt(charLevelEl.value) || 1;
+    const totalPoints = getStatPointsForLevel(lvl);
+    console.log(`resetStatPointsOnLevelChange: lvl=${lvl}, totalPoints=${totalPoints}, spent=${Object.values(statPointsAllocated).reduce((a, b) => a + b, 0)}, statPointsCommitted=${statPointsCommitted}`);
+
+    // Filter out allocations from levels higher than current
+    if (statPointsByLevel && Array.isArray(statPointsByLevel)) {
+      const oldStatPointsByLevel = [...statPointsByLevel];
+      statPointsByLevel = statPointsByLevel.filter(entry => entry.level <= lvl);
+
+      // Recalculate statPointsAllocated
+      statPointsAllocated = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+      statPointsByLevel.forEach(entry => {
+        ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+          const points = parseInt(entry.allocations[attr]) || 0;
+          if (points > 0) {
+            statPointsAllocated[attr] += points;
+          }
+        });
+      });
+
+      // Update attribute inputs
+      ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+        const input = document.getElementById(`attr${attr}`);
+        if (input) {
+          const baseVal = parseInt(input.value) - (oldStatPointsByLevel.reduce((sum, entry) => sum + (entry.allocations[attr] || 0), 0));
+          input.value = baseVal + (statPointsAllocated[attr] || 0);
+        }
+      });
+    }
+
+    const spent = Object.values(statPointsAllocated).reduce((a, b) => a + b, 0);
+    statPointsAvailable = totalPoints - spent;
+    statPointsCommitted = spent >= totalPoints;
+
+    if (statPointsAvailable < 0) {
+      const excessAttrs = Object.entries(statPointsAllocated)
+        .filter(([_, points]) => points > 0)
+        .map(([attr, points]) => `${attr}: ${points}`)
+        .join(', ');
+      alert(`Stat points exceed available (${spent}/${totalPoints})! Please remove excess points: ${excessAttrs}`);
+      statPointsCommitted = false;
+    }
+
+    console.log(`resetStatPointsOnLevelChange: After reset - statPointsAllocated=`, statPointsAllocated, `statPointsByLevel=`, statPointsByLevel, `statPointsCommitted=${statPointsCommitted}, statPointsAvailable=${statPointsAvailable}`);
+    updateStatPointUI();
+  } catch (e) {
+    console.error('Error resetting stat points:', e);
+    alert('Failed to reset stat points.');
+  }
+}
+
+  // Initialize stat points on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    const lvl = parseInt(document.getElementById('charLevel').value) || 1;
+    const totalPoints = getStatPointsForLevel(lvl);
+    statPointsAvailable = totalPoints;
+    updateStatPointUI();
+  });
+
+// ...existing code...
 
   // Save/load stat points with character sheet
   function saveStatPointsToData(data) {
-    data.statPointsAllocated = { ...statPointsAllocated };
-  }
-  function loadStatPointsFromData(data) {
-    if (data.statPointsAllocated) {
-      statPointsAllocated = { ...data.statPointsAllocated };
-      for (const stat of ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA']) {
-        const input = document.getElementById('attr' + stat);
-        if (input) input.value = 10 + statPointsAllocated[stat];
-      }
-      updateStatPointUI();
+    try {
+      data.statPointsAllocated = { ...statPointsAllocated };
+      data.statPointsByLevel = statPointsByLevel ? [...statPointsByLevel] : [];
+      data.statPointsCommitted = statPointsCommitted;
+      console.log('saveStatPointsToData: Saved statPointsAllocated=', data.statPointsAllocated, 'statPointsByLevel=', data.statPointsByLevel, 'statPointsCommitted=', data.statPointsCommitted);
+    } catch (e) {
+      console.error('Error saving stat points to data:', e);
     }
   }
+  function loadStatPointsFromData(data) {
+    try {
+    console.log('loadStatPointsFromData: Starting with data=', data);
+    const charLevelEl = document.getElementById('charLevel');
+    if (!charLevelEl) {
+      throw new Error('charLevel input not found');
+    }
+    const lvl = parseInt(data.level) || parseInt(charLevelEl.value) || 1;
+    const totalPoints = getStatPointsForLevel(lvl);
+    charLevelEl.value = lvl;
+
+    // Prevent multiple prompts during a single load
+    if (window.isLoadingStatPoints) return;
+    window.isLoadingStatPoints = true;
+
+    statPointsAllocated = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+    statPointsByLevel = [];
+
+    // Handle statPointsByLevel
+    if (data.statPointsByLevel && Array.isArray(data.statPointsByLevel)) {
+      statPointsByLevel = data.statPointsByLevel.filter(entry => entry.level <= lvl);
+      statPointsByLevel.forEach(entry => {
+        ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+          const points = parseInt(entry.allocations[attr]) || 0;
+          if (points > 0) {
+            statPointsAllocated[attr] += points;
+          }
+        });
+      });
+    } else {
+      // Handle statPoints or statPointsAllocated for backward compatibility
+      const sourcePoints = data.statPoints || data.statPointsAllocated || {};
+      const pointsToAllocate = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+      ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+        pointsToAllocate[attr] = parseInt(sourcePoints[attr]) || 0;
+      });
+      let totalAllocated = Object.values(pointsToAllocate).reduce((a, b) => a + b, 0);
+
+      // Distribute points to milestone levels
+      const milestoneLevels = [3, 6, 9, 12, 15].filter(l => l <= lvl);
+      let remainingPoints = totalAllocated;
+      for (let milestone of milestoneLevels.reverse()) {
+        if (remainingPoints <= 0) break;
+        const pointsAtLevel = Math.min(remainingPoints, 2);
+        const levelEntry = { level: milestone, allocations: { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 } };
+        ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+          if (remainingPoints > 0 && pointsToAllocate[attr] > 0) {
+            const points = Math.min(pointsToAllocate[attr], pointsAtLevel);
+            levelEntry.allocations[attr] = points;
+            pointsToAllocate[attr] -= points;
+            remainingPoints -= points;
+          }
+        });
+        if (Object.values(levelEntry.allocations).some(v => v > 0)) {
+          statPointsByLevel.push(levelEntry);
+        }
+      }
+      statPointsAllocated = { ...pointsToAllocate };
+      // Restore statPointsAllocated
+      statPointsByLevel.forEach(entry => {
+        ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+          statPointsAllocated[attr] += parseInt(entry.allocations[attr]) || 0;
+        });
+      });
+    }
+
+    // Prompt user for additional stat gains
+    const milestoneLevels = [3, 6, 9, 12, 15].filter(l => l <= lvl);
+    const existingLevels = statPointsByLevel.map(entry => entry.level);
+    const missingLevels = milestoneLevels.filter(l => !existingLevels.includes(l));
+    if (missingLevels.length > 0) {
+      const modal = document.createElement('div');
+      modal.style.position = 'fixed';
+      modal.style.top = '50%';
+      modal.style.left = '50%';
+      modal.style.transform = 'translate(-50%, -50%)';
+      modal.style.backgroundColor = '#fff';
+      modal.style.padding = '20px';
+      modal.style.border = '1px solid #000';
+      modal.style.zIndex = '1000';
+      modal.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+      modal.id = 'statGainModal';
+
+      const promptUserForLevel = (index) => {
+        if (index >= missingLevels.length) {
+          document.body.removeChild(modal);
+          finalizeStatPoints();
+          return;
+        }
+        const level = missingLevels[index];
+        modal.innerHTML = `
+          <p>Assign Level Stat gains for level ${level}?</p>
+          <button id="statGainYes">Yes</button>
+          <button id="statGainNo">No</button>
+        `;
+        document.body.appendChild(modal);
+
+        document.getElementById('statGainYes').onclick = () => {
+          const levelEntry = { level, allocations: { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 } };
+          statPointsByLevel.push(levelEntry);
+          promptUserForLevel(index + 1);
+        };
+        document.getElementById('statGainNo').onclick = () => {
+          document.body.removeChild(modal);
+          finalizeStatPoints();
+        };
+      };
+
+      const finalizeStatPoints = () => {
+        statPointsByLevel.sort((a, b) => a.level - b.level);
+        const spent = Object.values(statPointsAllocated).reduce((a, b) => a + b, 0);
+        statPointsAvailable = totalPoints - spent;
+        statPointsCommitted = spent >= totalPoints;
+
+        ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+          const input = document.getElementById(`attr${attr}`);
+          if (input) {
+            const baseVal = data.attributes && data.attributes[attr] ? parseInt(data.attributes[attr]) - (statPointsAllocated[attr] || 0) : 10;
+            input.value = baseVal + (statPointsAllocated[attr] || 0);
+            console.log(`loadStatPointsFromData: Set attr${attr} to ${input.value} (base=${baseVal}, allocated=${statPointsAllocated[attr]})`);
+          }
+        });
+
+        console.log(`loadStatPointsFromData: Loaded statPointsAllocated=`, statPointsAllocated, `statPointsByLevel=`, statPointsByLevel, `statPointsCommitted=${statPointsCommitted}, totalPoints=${totalPoints}, spent=${spent}, statPointsAvailable=${statPointsAvailable}`);
+        updateStatPointUI();
+        window.isLoadingStatPoints = false;
+      };
+
+      promptUserForLevel(0);
+    } else {
+      const spent = Object.values(statPointsAllocated).reduce((a, b) => a + b, 0);
+      statPointsAvailable = totalPoints - spent;
+      statPointsCommitted = spent >= totalPoints;
+
+      ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+        const input = document.getElementById(`attr${attr}`);
+        if (input) {
+          const baseVal = data.attributes && data.attributes[attr] ? parseInt(data.attributes[attr]) - (statPointsAllocated[attr] || 0) : 10;
+          input.value = baseVal + (statPointsAllocated[attr] || 0);
+          console.log(`loadStatPointsFromData: Set attr${attr} to ${input.value} (base=${baseVal}, allocated=${statPointsAllocated[attr]})`);
+        }
+      });
+
+      console.log(`loadStatPointsFromData: Loaded statPointsAllocated=`, statPointsAllocated, `statPointsByLevel=`, statPointsByLevel, `statPointsCommitted=${statPointsCommitted}, totalPoints=${totalPoints}, spent=${spent}, statPointsAvailable=${statPointsAvailable}`);
+      updateStatPointUI();
+      window.isLoadingStatPoints = false;
+    }
+  } catch (e) {
+    console.error('Error loading stat points:', e);
+    alert('Failed to load stat points.');
+    window.isLoadingStatPoints = false;
+  }
+}
 
   // Hook into level change and character load
   const origUpdateSheetInputs = updateSheetInputs;
@@ -1001,7 +1478,7 @@
   function getCharacterData() {
   try {
     const charName = document.getElementById('charName').value.trim();
-    console.log('getCharacterData: charName=', charName); // Debug: Log character name
+    console.log('getCharacterData: charName=', charName);
     if (!charName) {
       console.warn('No character name provided, returning null');
       return null;
@@ -1009,13 +1486,12 @@
 
     const lvl = parseInt(document.getElementById('charLevel').value) || 1;
     const cls = document.getElementById('charClass').value || 'Fatemarked';
-    // Validate class
     const validClasses = [
       'Fatemarked', 'Biomatrix Suit', 'Continuum Raider', 'Gunrunner', 'Faterunner',
       'Harlequin', 'Warrior', 'Mage', 'Shape', 'Masque', 'Adventurer'
     ];
     const validatedCls = validClasses.includes(cls) ? cls : 'Fatemarked';
-    console.log(`getCharacterData: level=${lvl}, class=${validatedCls}`); // Debug: Log level and class
+    console.log(`getCharacterData: level=${lvl}, class=${validatedCls}`);
 
     // Collect attributes
     const attributes = {
@@ -1026,8 +1502,8 @@
       WIS: parseInt(document.getElementById('attrWIS').value) || 10,
       CHA: parseInt(document.getElementById('attrCHA').value) || 10
     };
-    // Add statPointsSpent to character data for saving/loading
-    const statPoints = { ...statPointsSpent };
+    // Use statPointsAllocated instead of statPointsSpent
+    const statPoints = { ...statPointsAllocated };
 
     const skills = [];
     const advantages = [];
@@ -1036,7 +1512,7 @@
 
     // Collect skills
     const skillElements = document.querySelectorAll('[id^="skill"]:not([id*="Rank"]):not([id*="spec"])');
-    console.log('getCharacterData: Found', skillElements.length, 'skill elements'); // Debug
+    console.log('getCharacterData: Found', skillElements.length, 'skill elements');
     skillElements.forEach((el) => {
       const idMatch = el.id.match(/skill(\d+)/);
       if (idMatch && el.tagName === 'SELECT') {
@@ -1052,7 +1528,7 @@
               rank: parseInt(rankInput?.value) || 0,
               specs: specs
             });
-            console.log(`getCharacterData: Added skill ${skillElement.value} (Rank ${rankInput?.value}, Specs: ${specs.join(', ')})`); // Debug
+            console.log(`getCharacterData: Added skill ${skillElement.value} (Rank ${rankInput?.value}, Specs: ${specs.join(', ')})`);
           }
         }
       }
@@ -1060,7 +1536,7 @@
 
     // Collect advantages (starting feats, level-up feats, and advantages)
     const startingFeatElements = document.querySelectorAll('[id^="startingFeat"]:not([id*="Desc"])');
-    console.log('getCharacterData: Found', startingFeatElements.length, 'starting feat elements'); // Debug
+    console.log('getCharacterData: Found', startingFeatElements.length, 'starting feat elements');
     startingFeatElements.forEach((el) => {
       const idMatch = el.id.match(/startingFeat(\d+)/);
       if (idMatch && el.tagName === 'SELECT') {
@@ -1072,13 +1548,13 @@
             tier: 1,
             desc: document.getElementById(`startingFeatDesc${i}`)?.value || ''
           });
-          console.log(`getCharacterData: Added starting feat ${featElement.value}`); // Debug
+          console.log(`getCharacterData: Added starting feat ${featElement.value}`);
         }
       }
     });
 
     const levelUpFeatElements = document.querySelectorAll('[id^="levelUpFeat"]:not([id*="Desc"])');
-    console.log('getCharacterData: Found', levelUpFeatElements.length, 'level-up feat elements'); // Debug
+    console.log('getCharacterData: Found', levelUpFeatElements.length, 'level-up feat elements');
     levelUpFeatElements.forEach((el) => {
       const idMatch = el.id.match(/levelUpFeat(\d+)/);
       if (idMatch && el.tagName === 'SELECT') {
@@ -1090,13 +1566,13 @@
             tier: 1,
             desc: document.getElementById(`levelUpFeatDesc${i}`)?.value || ''
           });
-          console.log(`getCharacterData: Added level-up feat ${featElement.value}`); // Debug
+          console.log(`getCharacterData: Added level-up feat ${featElement.value}`);
         }
       }
     });
 
     const advantageElements = document.querySelectorAll('[id^="advantage"]:not([id*="Tier"])');
-    console.log('getCharacterData: Found', advantageElements.length, 'advantage elements'); // Debug
+    console.log('getCharacterData: Found', advantageElements.length, 'advantage elements');
     advantageElements.forEach((el) => {
       const idMatch = el.id.match(/advantage(\d+)/);
       if (idMatch && el.tagName === 'SELECT') {
@@ -1108,14 +1584,14 @@
             name: advElement.value,
             tier: parseInt(tierInput?.value) || 1
           });
-          console.log(`getCharacterData: Added advantage ${advElement.value} (Tier ${tierInput?.value})`); // Debug
+          console.log(`getCharacterData: Added advantage ${advElement.value} (Tier ${tierInput?.value})`);
         }
       }
     });
 
     // Collect disadvantages
     const disadvantageElements = document.querySelectorAll('[id^="disadvantage"]:not([id*="Tier"])');
-    console.log('getCharacterData: Found', disadvantageElements.length, 'disadvantage elements'); // Debug
+    console.log('getCharacterData: Found', disadvantageElements.length, 'disadvantage elements');
     disadvantageElements.forEach((el) => {
       const idMatch = el.id.match(/disadvantage(\d+)/);
       if (idMatch && el.tagName === 'SELECT') {
@@ -1127,7 +1603,7 @@
             name: disElement.value,
             tier: parseInt(tierInput?.value) || 1
           });
-          console.log(`getCharacterData: Added disadvantage ${disElement.value} (Tier ${tierInput?.value})`); // Debug
+          console.log(`getCharacterData: Added disadvantage ${disElement.value} (Tier ${tierInput?.value})`);
         }
       }
     });
@@ -1137,10 +1613,10 @@
       if (lvl >= 1) powers.push({ name: 'Fate’s Edge', level: 'PL1', cost: 0, dc: 15, risk: 'INT DC 15, -1 penalty' });
       if (lvl >= 2) powers.push({ name: 'Fate’s Influence', level: 'PL1', cost: 0, dc: 15, risk: 'INT DC 15, -1 or anomaly' });
       if (lvl >= 3) powers.push({ name: 'Fate’s Reach', level: 'PL1', cost: 0, dc: 15, risk: 'INT DC 15, -2 or rift' });
-      console.log('getCharacterData: Added Fatemarked powers for Level', lvl); // Debug
+      console.log('getCharacterData: Added Fatemarked powers for Level', lvl);
     } else if (lvl > 3 && !['Faterunner', 'Harlequin'].includes(validatedCls)) {
       const powerElements = document.querySelectorAll('[id^="powerName"]');
-      console.log('getCharacterData: Found', powerElements.length, 'power elements'); // Debug
+      console.log('getCharacterData: Found', powerElements.length, 'power elements');
       powerElements.forEach((el) => {
         const idMatch = el.id.match(/powerName(\d+)/);
         if (idMatch) {
@@ -1154,14 +1630,14 @@
               dc: parseInt(document.getElementById(`powerDC${i}`)?.value) || 10,
               risk: document.getElementById(`powerRisk${i}`)?.value || 'None'
             });
-            console.log(`getCharacterData: Added power ${nameInput.value} (Level ${document.getElementById(`powerLevel${i}`)?.value})`); // Debug
+            console.log(`getCharacterData: Added power ${nameInput.value} (Level ${document.getElementById(`powerLevel${i}`)?.value})`);
           }
         }
       });
     }
 
     const charData = { skills, advantages, disadvantages, powers, level: lvl, class: validatedCls, attributes, statPoints };
-    console.log('getCharacterData: Returning data:', JSON.stringify(charData, null, 2)); // Debug
+    console.log('getCharacterData: Returning data:', JSON.stringify(charData, null, 2));
     return charData;
   } catch (error) {
     console.error('Error getting character data:', error);
@@ -1209,6 +1685,18 @@
     document.getElementById('advantage').value = 'none';
     document.getElementById('featContainer').innerHTML = '';
     featCounter = 0;
+
+    // Explicitly reset skill-related inputs
+    const skillNameInput = document.getElementById('skillName');
+    if (skillNameInput) {
+      skillNameInput.value = 'none';
+      console.log('resetInputs: Set skillName to none');
+    }
+    const skillSpecInput = document.getElementById('skillSpec');
+    if (skillSpecInput) {
+      skillSpecInput.value = 'none';
+      console.log('resetInputs: Set skillSpec to none');
+    }
 
     if (!['skill', 'extended', 'opposed', 'extendedOpposed'].includes(type)) {
       if (modifierInput) modifierInput.value = 0;
@@ -1413,7 +1901,7 @@
     const babInput = document.getElementById('bab');
     const rollFormulaInput = document.getElementById('rollFormula');
 
-    console.log('updateInputs: charData=', JSON.stringify(charData, null, 2)); // Debug
+    console.log('updateInputs: charData=', JSON.stringify(charData, null, 2));
 
     // Update level and class
     const levelInput = document.getElementById('characterLevel');
@@ -1554,6 +2042,9 @@
           modifier = getModifierValue(attrs[attr] || 10);
           modifierInput.value = modifier;
           console.log(`updateInputs: Set modifier to ${modifier} for ${selectedSkill} (${attr})`);
+          const specSelect = document.getElementById('skillSpec');
+          const synergyBonus = document.getElementById('synergyBonus')?.checked ? 2 : 0;
+          rollFormula = `d20 + ${modifier} (${attr}) + ${skillRankInput?.value || 0} (Rank)${specSelect?.value !== 'none' ? ' + 2 (Spec)' : ''}${synergyBonus ? ' + 2 (Synergy)' : ''}`;
         }
         if (charSkill && skillRankInput) {
           skillRankInput.value = charSkill.rank || 0;
@@ -1562,9 +2053,11 @@
           skillRankInput.value = 0;
           console.log(`updateInputs: Set skillRank to 0 for ${selectedSkill} (no charSkill)`);
         }
-        const specSelect = document.getElementById('skillSpec');
-        const synergyBonus = document.getElementById('synergyBonus')?.checked ? 2 : 0;
-        rollFormula = `d20 + ${modifier} (${attr}) + ${skillRankInput?.value || 0} (Rank)${specSelect?.value !== 'none' ? ' + 2 (Spec)' : ''}${synergyBonus ? ' + 2 (Synergy)' : ''}`;
+      } else {
+        if (modifierInput) modifierInput.value = 0;
+        if (skillRankInput) skillRankInput.value = 0;
+        rollFormula = 'd20';
+        console.log(`updateInputs: No skill selected, set rollFormula to 'd20'`);
       }
     } else if (['attack', 'disarm', 'trip'].includes(type)) {
       if (modifierInput) {
@@ -1878,12 +2371,14 @@
 
   function toggleCharacterSheet() {
     try {
-      const sheetSection = document.querySelector('.character-sheet');
-      sheetSection.classList.toggle('collapsed');
-      const toggleButton = sheetSection.querySelector('.toggle-button');
-      toggleButton.textContent = sheetSection.classList.contains('collapsed') ? 'Show Character Sheet Generator' : 'Hide Character Sheet Generator';
-    } catch (error) {
-      console.error('Error toggling character sheet:', error);
+      const sheet = document.querySelector('.character-sheet');
+      sheet.classList.toggle('collapsed');
+      if (!sheet.classList.contains('collapsed')) {
+        resetStatPointsOnLevelChange();
+        updateStatPointUI();
+      }
+    } catch (e) {
+      console.error('Error toggling character sheet:', e);
       alert('Failed to toggle character sheet.');
     }
   }
@@ -2151,165 +2646,177 @@
 
   function updateSheetInputs(options = {}) {
     try {
-      if (window.isLoadingCharacter && !options.preserveAttributes) {
-        console.log('Skipping updateSheetInputs during loading unless preserveAttributes is set');
-        return;
+    if (window.isLoadingCharacter && !options.preserveAttributes) {
+      console.log('Skipping updateSheetInputs during loading unless preserveAttributes is set');
+      return;
+    }
+    const lvl = parseInt(document.getElementById('charLevel').value) || 1;
+    const prevLvl = parseInt(document.getElementById('charLevel').dataset.prevLevel || '1');
+    const cls = document.getElementById('charClass').value || 'Fatemarked';
+    if (lvl > prevLvl && parseInt(document.getElementById('fatePointsCurrent').value) >= lvl) {
+      if (powerCounter >= lvl) {
+        alert('Power limit reached! Sacrifice a power to gain 1 Fate Point.');
+        const sacrifice = confirm('Sacrifice a power to regain 1 Fate Point?');
+        if (sacrifice) removePowerField();
       }
-      const lvl = parseInt(document.getElementById('charLevel').value) || 1;
-      const prevLvl = parseInt(document.getElementById('charLevel').dataset.prevLevel || '1');
-      const cls = document.getElementById('charClass').value || 'Fatemarked';
-      if (lvl > prevLvl && parseInt(document.getElementById('fatePointsCurrent').value) >= lvl) {
-        if (powerCounter >= lvl) {
-          alert('Power limit reached! Sacrifice a power to gain 1 Fate Point.');
-          const sacrifice = confirm('Sacrifice a power to regain 1 Fate Point?');
-          if (sacrifice) removePowerField();
-        }
-      }
-      document.getElementById('charLevel').dataset.prevLevel = lvl;
-      document.getElementById('charAlignment').value = lvl <= 3 ? 'None' : document.getElementById('charAlignment').value || 'Balance';
-      document.getElementById('nextLevelXP').value = getNextLevelXP(lvl);
+    }
+    document.getElementById('charLevel').dataset.prevLevel = lvl;
+    document.getElementById('charAlignment').value = lvl <= 3 ? 'None' : document.getElementById('charAlignment').value || 'Balance';
+    document.getElementById('nextLevelXP').value = getNextLevelXP(lvl);
 
-      // Update BAB and other derived stats
-      const babInput = document.getElementById('bab');
-      const charBABInput = document.getElementById('charBAB');
-      const healthInput = document.getElementById('health');
-      const sanityInput = document.getElementById('sanity');
-      const defenseInput = document.getElementById('defense');
-      const initiativeInput = document.getElementById('initiative');
-      const reflexInput = document.getElementById('reflex');
-      const fortitudeInput = document.getElementById('fortitude');
-      const willpowerInput = document.getElementById('willpower');
-      const luckInput = document.getElementById('luck');
-      const fatePointsInput = document.getElementById('fatePointsCurrent');
+    // Update BAB and other derived stats
+    const babInput = document.getElementById('bab');
+    const charBABInput = document.getElementById('charBAB');
+    const healthInput = document.getElementById('health');
+    const sanityInput = document.getElementById('sanity');
+    const defenseInput = document.getElementById('defense');
+    const initiativeInput = document.getElementById('initiative');
+    const reflexInput = document.getElementById('reflex');
+    const fortitudeInput = document.getElementById('fortitude');
+    const willpowerInput = document.getElementById('willpower');
+    const luckInput = document.getElementById('luck');
+    const fatePointsInput = document.getElementById('fatePointsCurrent');
 
-      // Get attributes
-      const attrs = {
-        STR: parseInt(document.getElementById('attrSTR')?.value) || 10,
-        DEX: parseInt(document.getElementById('attrDEX')?.value) || 10,
-        CON: parseInt(document.getElementById('attrCON')?.value) || 10,
-        INT: parseInt(document.getElementById('attrINT')?.value) || 10,
-        WIS: parseInt(document.getElementById('attrWIS')?.value) || 10,
-        CHA: parseInt(document.getElementById('attrCHA')?.value) || 10
-      };
-      const charData = getCharacterData();
-      if (charData && charData.attributes) {
-        Object.assign(attrs, charData.attributes);
-      }
+    // Get attributes
+    const attrs = {
+      STR: parseInt(document.getElementById('attrSTR')?.value) || 10,
+      DEX: parseInt(document.getElementById('attrDEX')?.value) || 10,
+      CON: parseInt(document.getElementById('attrCON')?.value) || 10,
+      INT: parseInt(document.getElementById('attrINT')?.value) || 10,
+      WIS: parseInt(document.getElementById('attrWIS')?.value) || 10,
+      CHA: parseInt(document.getElementById('attrCHA')?.value) || 10
+    };
+    const charData = getCharacterData();
+    if (charData && charData.attributes) {
+      Object.assign(attrs, charData.attributes);
+    }
 
-      const getModifierValue = (score) => {
-        if (score <= 2) return -4;
-        if (score <= 4) return -3;
-        if (score <= 6) return -2;
-        if (score <= 8) return -1;
-        if (score <= 10) return 0;
-        if (score <= 12) return 1;
-        if (score <= 14) return 2;
-        if (score <= 16) return 3;
-        if (score <= 18) return 4;
-        return 5;
-      };
+    const getModifierValue = (score) => {
+      if (score <= 2) return -4;
+      if (score <= 4) return -3;
+      if (score <= 6) return -2;
+      if (score <= 8) return -1;
+      if (score <= 10) return 0;
+      if (score <= 12) return 1;
+      if (score <= 14) return 2;
+      if (score <= 16) return 3;
+      if (score <= 18) return 4;
+      return 5;
+    };
 
-      // Populate BAB
-      const babValue = getBAB(lvl, cls);
-      if (babInput) {
-        babInput.value = babValue;
-        console.log(`updateSheetInputs: Set bab to ${babInput.value} for Level ${lvl}, Class ${cls}`);
-      } else {
-        console.warn('updateSheetInputs: bab element not found');
-      }
-      if (charBABInput) {
-        charBABInput.value = babValue;
-        console.log(`updateSheetInputs: Set charBAB to ${charBABInput.value} for Level ${lvl}, Class ${cls}`);
-      } else {
-        console.warn('updateSheetInputs: charBAB element not found');
-      }
+    // Populate BAB
+    const babValue = getBAB(lvl, cls);
+    if (babInput) {
+      babInput.value = babValue;
+      console.log(`updateSheetInputs: Set bab to ${babInput.value} for Level ${lvl}, Class ${cls}`);
+    } else {
+      console.warn('updateSheetInputs: bab element not found');
+    }
+    if (charBABInput) {
+      charBABInput.value = babValue;
+      console.log(`updateSheetInputs: Set charBAB to ${charBABInput.value} for Level ${lvl}, Class ${cls}`);
+    } else {
+      console.warn('updateSheetInputs: charBAB element not found');
+    }
 
-      // Populate other derived stats
-      if (healthInput) {
-        const conMod = getModifierValue(attrs.CON);
-        healthInput.value = (cls === 'Warrior' ? 10 : 8) + conMod + (lvl - 1) * (cls === 'Warrior' ? 6 : 4);
-        console.log(`updateSheetInputs: Set health to ${healthInput.value}`);
-      }
-      if (sanityInput) {
-        sanityInput.value = attrs.WIS + getModifierValue(attrs.WIS);
-        console.log(`updateSheetInputs: Set sanity to ${sanityInput.value}`);
-      }
-      if (defenseInput) {
-        defenseInput.value = 10 + getModifierValue(attrs.DEX);
-        console.log(`updateSheetInputs: Set defense to ${defenseInput.value}`);
-      }
-      if (initiativeInput) {
-        initiativeInput.value = getModifierValue(attrs.DEX);
-        console.log(`updateSheetInputs: Set initiative to ${initiativeInput.value}`);
-      }
-      if (reflexInput) {
-        reflexInput.value = getModifierValue(attrs.DEX) + (cls === 'Faterunner' ? 2 : 0);
-        console.log(`updateSheetInputs: Set reflex to ${reflexInput.value}`);
-      }
-      if (fortitudeInput) {
-        fortitudeInput.value = getModifierValue(attrs.CON) + (cls === 'Warrior' ? 2 : 0);
-        console.log(`updateSheetInputs: Set fortitude to ${fortitudeInput.value}`);
-      }
-      if (willpowerInput) {
-        willpowerInput.value = getModifierValue(attrs.WIS) + (cls === 'Mage' ? 2 : 0);
-        console.log(`updateSheetInputs: Set willpower to ${willpowerInput.value}`);
-      }
-      if (luckInput) {
-        luckInput.value = lvl >= 4 ? getModifierValue(attrs.CHA) : 0;
-        console.log(`updateSheetInputs: Set luck to ${luckInput.value}`);
-      }
-      if (fatePointsInput) {
-        fatePointsInput.value = lvl <= 3 ? 0 : lvl;
-        console.log(`updateSheetInputs: Set fatePointsCurrent to ${fatePointsInput.value}`);
-      }
+    // Populate other derived stats
+    if (healthInput) {
+      const conMod = getModifierValue(attrs.CON);
+      healthInput.value = (cls === 'Warrior' ? 10 : 8) + conMod + (lvl - 1) * (cls === 'Warrior' ? 6 : 4);
+      console.log(`updateSheetInputs: Set health to ${healthInput.value}`);
+    }
+    if (sanityInput) {
+      sanityInput.value = attrs.WIS + getModifierValue(attrs.WIS);
+      console.log(`updateSheetInputs: Set sanity to ${sanityInput.value}`);
+    }
+    if (defenseInput) {
+      defenseInput.value = 10 + getModifierValue(attrs.DEX);
+      console.log(`updateSheetInputs: Set defense to ${defenseInput.value}`);
+    }
+    if (initiativeInput) {
+      initiativeInput.value = getModifierValue(attrs.DEX);
+      console.log(`updateSheetInputs: Set initiative to ${initiativeInput.value}`);
+    }
+    if (reflexInput) {
+      reflexInput.value = getModifierValue(attrs.DEX) + (cls === 'Faterunner' ? 2 : 0);
+      console.log(`updateSheetInputs: Set reflex to ${reflexInput.value}`);
+    }
+    if (fortitudeInput) {
+      fortitudeInput.value = getModifierValue(attrs.CON) + (cls === 'Warrior' ? 2 : 0);
+      console.log(`updateSheetInputs: Set fortitude to ${fortitudeInput.value}`);
+    }
+    if (willpowerInput) {
+      willpowerInput.value = getModifierValue(attrs.WIS) + (cls === 'Mage' ? 2 : 0);
+      console.log(`updateSheetInputs: Set willpower to ${willpowerInput.value}`);
+    }
+    if (luckInput) {
+      luckInput.value = lvl >= 4 ? getModifierValue(attrs.CHA) : 0;
+      console.log(`updateSheetInputs: Set luck to ${luckInput.value}`);
+    }
+    if (fatePointsInput) {
+      fatePointsInput.value = lvl <= 3 ? 0 : lvl;
+      console.log(`updateSheetInputs: Set fatePointsCurrent to ${fatePointsInput.value}`);
+    }
 
-      // Update attributes only if not preserving or not imported
-      const attrMethod = document.getElementById('attrMethod').value;
-      if (!options.preserveAttributes && attrMethod !== 'imported') {
-        updateAttributes();
-        const pointsRemaining = document.getElementById('pointsRemaining');
-        if (pointsRemaining && attrMethod === 'pointBuy') {
-          updatePoints();
-        }
-      } else {
-        console.log('Preserving attributes during updateSheetInputs');
+    // Update attributes only if not preserving or not imported
+    const attrMethod = document.getElementById('attrMethod').value;
+    if (!options.preserveAttributes && attrMethod !== 'imported') {
+      updateAttributes();
+      const pointsRemaining = document.getElementById('pointsRemaining');
+      if (pointsRemaining && attrMethod === 'pointBuy') {
+        updatePoints();
       }
+    } else {
+      console.log('Preserving attributes during updateSheetInputs');
+    }
 
-      updateDerivedStats();
+    // Update derived stats, skills, and feats
+    updateDerivedStats();
+    try {
       updateSkills();
+    } catch (e) {
+      console.error('Failed to update skills:', e);
+      alert('Skills adjusted due to level change. Please review.');
+    }
+    try {
       debouncedUpdateFeatsSheet();
-      if (!options.skipPowers) {
-        updatePowers();
-      } else {
-        console.log('Skipped updatePowers during initialization');
+    } catch (e) {
+      console.error('Failed to update feats:', e);
+      alert('Feats adjusted due to level change. Please review.');
+    }
+    if (!options.skipPowers) {
+      updatePowers();
+    } else {
+      console.log('Skipped updatePowers during initialization');
+    }
+
+    // Update class dropdown
+    const classSelect = document.getElementById('charClass');
+    const currentClass = classSelect.value || 'Fatemarked';
+    const advancedClasses = [
+      'Fatemarked', 'Biomatrix Suit', 'Continuum Raider', 'Gunrunner', 'Faterunner', 'Harlequin',
+      'Warrior', 'Mage', 'Shape', 'Masque', 'Adventurer'
+    ];
+    if (!window.isLoadingCharacter) {
+      classSelect.innerHTML = lvl <= 3 ? '<option value="Fatemarked">Fatemarked</option>' :
+        advancedClasses.map(cls => `<option value="${cls}" ${cls === currentClass ? 'selected' : ''}>${cls}</option>`).join('');
+      if (lvl <= 3 && currentClass !== 'Fatemarked') {
+        classSelect.value = 'Fatemarked';
+      } else if (lvl > 3 && !advancedClasses.includes(currentClass)) {
+        classSelect.value = 'Continuum Raider';
+        console.warn(`Invalid class ${currentClass} for Level ${lvl}, setting to Continuum Raider`);
       }
+    }
+    classSelect.disabled = false;
 
-      // Update class dropdown
-      const classSelect = document.getElementById('charClass');
-      const currentClass = classSelect.value || 'Fatemarked';
-      const advancedClasses = [
-        'Fatemarked', 'Biomatrix Suit', 'Continuum Raider', 'Gunrunner', 'Faterunner', 'Harlequin',
-        'Warrior', 'Mage', 'Shape', 'Masque', 'Adventurer'
-      ];
-      if (!window.isLoadingCharacter) {
-        classSelect.innerHTML = lvl <= 3 ? '<option value="Fatemarked">Fatemarked</option>' :
-          advancedClasses.map(cls => `<option value="${cls}" ${cls === currentClass ? 'selected' : ''}>${cls}</option>`).join('');
-        if (lvl <= 3 && currentClass !== 'Fatemarked') {
-          classSelect.value = 'Fatemarked';
-        } else if (lvl > 3 && !advancedClasses.includes(currentClass)) {
-          classSelect.value = 'Continuum Raider';
-          console.warn(`Invalid class ${currentClass} for Level ${lvl}, setting to Continuum Raider`);
-        }
-      }
-      classSelect.disabled = false;
+    // Update UI elements
+    document.getElementById('fatePointsRegenerate').classList.toggle('hidden', !['Faterunner', 'Harlequin'].includes(cls));
+    document.getElementById('fatePointsRest').classList.toggle('hidden', !['Faterunner', 'Harlequin'].includes(cls));
+    document.getElementById('addPowerButton').classList.toggle('hidden', lvl <= 3 || ['Faterunner', 'Harlequin'].includes(cls));
 
-      // Update UI elements
-      document.getElementById('fatePointsRegenerate').classList.toggle('hidden', !['Faterunner', 'Harlequin'].includes(cls));
-      document.getElementById('fatePointsRest').classList.toggle('hidden', !['Faterunner', 'Harlequin'].includes(cls));
-      document.getElementById('addPowerButton').classList.toggle('hidden', lvl <= 3 || ['Faterunner', 'Harlequin'].includes(cls));
-
-      // Update inherent abilities
-      const inherentAbilitiesContainer = document.getElementById('inherentAbilitiesContainer');
+    // Update inherent abilities
+    const inherentAbilitiesContainer = document.getElementById('inherentAbilitiesContainer');
+    if (inherentAbilitiesContainer) {
       inherentAbilitiesContainer.innerHTML = '';
       const inherentAbilities = {
         'Biomatrix Suit': '+2 to INT-based checks',
@@ -2330,9 +2837,11 @@
         div.innerHTML = `<p><strong>Inherent Ability:</strong> ${inherentAbilities[cls]}</p>`;
         inherentAbilitiesContainer.appendChild(div);
       }
+    }
 
-      // Update powers section
-      const powersContainer = document.getElementById('powersContainer');
+    // Update powers section
+    const powersContainer = document.getElementById('powersContainer');
+    if (powersContainer) {
       if (cls === 'Fatemarked' && lvl <= 3) {
         powersContainer.innerHTML = '';
         powerCounter = 0;
@@ -2369,21 +2878,22 @@
         powersContainer.innerHTML = '<p>No powers for Faterunner/Harlequin.</p>';
         powerCounter = 0;
       }
-
-      skillCriticalTracker = {};
-      if (!['Faterunner', 'Harlequin', 'Fatemarked', 'Adventurer'].includes(cls)) {
-        document.getElementById('resourcesContainer').innerHTML = '';
-        resourceCounter = 0;
-        addResourceField();
-      } else {
-        document.getElementById('resourcesContainer').innerHTML = '';
-        resourceCounter = 0;
-      }
-    } catch (error) {
-      console.error('Error updating sheet inputs:', error);
-      alert('Failed to update sheet inputs.');
     }
+
+    skillCriticalTracker = {};
+    if (!['Faterunner', 'Harlequin', 'Fatemarked', 'Adventurer'].includes(cls)) {
+      document.getElementById('resourcesContainer').innerHTML = '';
+      resourceCounter = 0;
+      addResourceField();
+    } else {
+      document.getElementById('resourcesContainer').innerHTML = '';
+      resourceCounter = 0;
+    }
+  } catch (error) {
+    console.error('Error updating sheet inputs:', error);
+    alert(`Failed to update sheet inputs: ${error.message}`);
   }
+}
 
   function getNextLevelXP(level) {
     if (level < 3) return 100 * level;
@@ -2394,55 +2904,82 @@
 
   function updateAttributes() {
     try {
-      const method = document.getElementById('attrMethod').value;
-      document.getElementById('rerollButton').classList.toggle('hidden', method !== 'random');
-      document.getElementById('randomRolls').classList.toggle('hidden', method !== 'random');
-      document.getElementById('confirmAssignments').classList.toggle('hidden', method !== 'random');
-      const attrs = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+    const method = document.getElementById('attrMethod').value;
+    const rerollButton = document.getElementById('rerollButton');
+    if (rerollButton) {
+      rerollButton.classList.toggle('hidden', method !== 'random');
+    } else {
+      console.warn('rerollButton element not found');
+    }
+    const randomRolls = document.getElementById('randomRolls');
+    if (randomRolls) {
+      randomRolls.classList.toggle('hidden', method !== 'random');
+    } else {
+      console.warn('randomRolls element not found');
+    }
+    const confirmAssignments = document.getElementById('confirmAssignments');
+    if (confirmAssignments) {
+      confirmAssignments.classList.toggle('hidden', method !== 'random');
+    } else {
+      console.warn('confirmAssignments element not found');
+    }
+    const pointsRemaining = document.getElementById('pointsRemaining');
+    if (pointsRemaining) {
+      pointsRemaining.value = method === 'pointBuy' ? '15' : 'N/A';
+    } else {
+      console.warn('pointsRemaining element not found');
+    }
 
-      if (method === 'imported') {
-        console.log('Skipping attribute reset for imported method');
-        attrs.forEach(attr => {
-          const input = document.getElementById(`attr${attr}`);
-          if (input) input.readOnly = true;
-          const assignSelect = document.getElementById(`assign${attr}`);
-          if (assignSelect) assignSelect.classList.add('hidden');
-        });
-        document.getElementById('pointsRemaining').value = 'N/A';
-        return;
-      }
+    const attrs = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
 
-      if (method === 'random') {
-        attrs.forEach(attr => {
-          const input = document.getElementById(`attr${attr}`);
-          input.readOnly = true;
-          const assignSelect = document.getElementById(`assign${attr}`);
-          assignSelect.classList.remove('hidden');
-        });
-        if (rolledStats.length === 0) rerollAttributes();
-        document.getElementById('rolledStats').value = rolledStats.join(', ');
-        document.getElementById('pointsRemaining').value = 'N/A';
-      } else {
-        attrs.forEach(attr => {
-          document.getElementById(`attr${attr}`).value = 10;
-          document.getElementById(`attr${attr}`).readOnly = false;
-          const assignSelect = document.getElementById(`assign${attr}`);
+    if (method === 'imported') {
+      console.log('Skipping attribute reset for imported method');
+      attrs.forEach(attr => {
+        const input = document.getElementById(`attr${attr}`);
+        if (input) input.readOnly = true;
+        const assignSelect = document.getElementById(`assign${attr}`);
+        if (assignSelect) assignSelect.classList.add('hidden');
+      });
+      return;
+    }
+
+    if (method === 'random') {
+      attrs.forEach(attr => {
+        const input = document.getElementById(`attr${attr}`);
+        if (input) input.readOnly = true;
+        const assignSelect = document.getElementById(`assign${attr}`);
+        if (assignSelect) assignSelect.classList.remove('hidden');
+      });
+      if (rolledStats.length === 0) rerollAttributes();
+      const rolledStatsInput = document.getElementById('rolledStats');
+      if (rolledStatsInput) rolledStatsInput.value = rolledStats.join(', ');
+    } else {
+      attrs.forEach(attr => {
+        const input = document.getElementById(`attr${attr}`);
+        if (input) {
+          input.value = 10;
+          input.readOnly = false;
+        }
+        const assignSelect = document.getElementById(`assign${attr}`);
+        if (assignSelect) {
           assignSelect.classList.add('hidden');
           assignSelect.innerHTML = '<option value="">Select Stat</option>';
           assignSelect.value = '';
-          delete assignedStats[attr];
-        });
-        rolledStats = [];
-        availableStats = [];
-        document.getElementById('rolledStats').value = '';
-        updatePoints();
-      }
-      updateDerivedStats();
-    } catch (e) {
-      console.error('Error updating attributes:', e);
-      alert(`Failed to update attributes: ${e.message}`);
+        }
+        delete assignedStats[attr];
+      });
+      rolledStats = [];
+      availableStats = [];
+      const rolledStatsInput = document.getElementById('rolledStats');
+      if (rolledStatsInput) rolledStatsInput.value = '';
+      updatePoints();
     }
+    updateDerivedStats();
+  } catch (e) {
+    console.error('Error updating attributes:', e);
+    alert(`Failed to update attributes: ${e.message}`);
   }
+}
 
   function roll4d6DropLowest() {
     const rolls = Array(4).fill().map(() => Math.floor(Math.random() * 6) + 1);
@@ -2621,15 +3158,24 @@
         if (armorAC) acBonus += parseInt(armorAC.value) || 0;
       }
 
-      document.getElementById('health').value = lvl === 1 ? 10 + conMod : 10 + conMod + 5 * (lvl - 1);
-      document.getElementById('sanity').value = lvl === 1 ? 10 + wisMod : 10 + wisMod + 2 * (lvl - 1);
-      document.getElementById('defense').value = 10 + dexMod + acBonus;
-      document.getElementById('initiative').value = dexMod;
-      document.getElementById('bab').value = getBAB(lvl, cls);
-      document.getElementById('reflex').value = 1 + dexMod;
-      document.getElementById('fortitude').value = 1 + conMod;
-      document.getElementById('willpower').value = 1 + wisMod;
-      document.getElementById('luck').value = lvl >= 4 ? chaMod + 2 : 0;
+      const healthEl = document.getElementById('health');
+      if (healthEl) healthEl.value = lvl === 1 ? 10 + conMod : 10 + conMod + 5 * (lvl - 1);
+      const sanityEl = document.getElementById('sanity');
+      if (sanityEl) sanityEl.value = lvl === 1 ? 10 + wisMod : 10 + wisMod + 2 * (lvl - 1);
+      const defenseEl = document.getElementById('defense');
+      if (defenseEl) defenseEl.value = 10 + dexMod + acBonus;
+      const initiativeEl = document.getElementById('initiative');
+      if (initiativeEl) initiativeEl.value = dexMod;
+      const babEl = document.getElementById('bab');
+      if (babEl) babEl.value = getBAB(lvl, cls);
+      const reflexEl = document.getElementById('reflex');
+      if (reflexEl) reflexEl.value = 1 + dexMod;
+      const fortitudeEl = document.getElementById('fortitude');
+      if (fortitudeEl) fortitudeEl.value = 1 + conMod;
+      const willpowerEl = document.getElementById('willpower');
+      if (willpowerEl) willpowerEl.value = 1 + wisMod;
+      const luckEl = document.getElementById('luck');
+      if (luckEl) luckEl.value = lvl >= 4 ? chaMod + 2 : 0;
     } catch (e) {
       console.error('Error updating derived stats:', e);
       alert('Failed to update derived stats.');
@@ -2652,6 +3198,7 @@
   function updateSkills() {
     try {
     const lvl = parseInt(document.getElementById('charLevel').value) || 1;
+    const prevLvl = parseInt(document.getElementById('charLevel').dataset.prevLevel || lvl);
     const int = parseInt(document.getElementById('attrINT').value) || 10;
     const cls = document.getElementById('charClass').value || 'Fatemarked';
     const background = document.getElementById('charBackground').value.toLowerCase();
@@ -2661,6 +3208,7 @@
     const skillPoints = lvl === 1 ? baseSkillPoints * 4 : baseSkillPoints * 4 + (2 + intMod + (cls === 'Adventurer' ? 1 : 0)) * (lvl - 1);
     let usedPoints = 0;
     const selectedSkills = new Set();
+    const adjustments = [];
 
     const alignedSkills = {
       'Fatemarked': ['Insight', 'Knowledge'],
@@ -2676,39 +3224,123 @@
       'Adventurer': ['Knowledge', 'Survival']
     };
 
+    // Collect current skill data
+    const skillDataList = [];
     for (let i = 1; i <= skillCounter; i++) {
       const skillFieldSelect = document.getElementById(`skill${i}`);
       const rankInput = document.getElementById(`skillRank${i}`);
       if (skillFieldSelect && skillFieldSelect.value) {
         if (selectedSkills.has(skillFieldSelect.value)) {
           skillFieldSelect.value = '';
+          adjustments.push(`Removed duplicate skill ${skillFieldSelect.value}`);
           continue;
         }
         selectedSkills.add(skillFieldSelect.value);
-        let rank = parseInt(rankInput.value) || 0;
-        if (rank > maxRank) {
-          rankInput.value = maxRank;
-          rank = maxRank;
-        }
-        usedPoints += rank;
         const skillData = skillsList.find(s => s.name === skillFieldSelect.value);
-        if (skillData && skillData.specs.length) {
+        if (skillData) {
+          const rank = parseInt(rankInput.value) || 0;
           const checkedSpecs = skillData.specs.filter(spec => document.getElementById(`spec${i}_${spec}`)?.checked);
-          const specCost = (skillData.name === 'Knowledge' && checkedSpecs.includes('Arcana') && 
+          const specCost = (skillData.name === 'Knowledge' && checkedSpecs.includes('Arcana') &&
                            (alignedSkills[cls].includes('Knowledge') || background.includes('arcane'))) ? 1 : 2;
-          usedPoints += checkedSpecs.length * specCost;
+          skillDataList.push({
+            id: i,
+            name: skillFieldSelect.value,
+            rank,
+            specs: checkedSpecs,
+            specCost,
+            totalCost: rank + checkedSpecs.length * specCost
+          });
         }
       }
     }
 
-    const remainingPoints = skillPoints - usedPoints;
-    document.getElementById('skillPointsDisplay').innerHTML = `Skill Points: ${remainingPoints}/${skillPoints}`;
-    if (remainingPoints < 0) {
-      alert(`Skill points exceeded! Available: ${skillPoints}, Used: ${usedPoints}. Reduce ranks or specializations.`);
+    // Handle level reduction
+    if (lvl < prevLvl) {
+      console.log(`updateSkills: Level reduced from ${prevLvl} to ${lvl}, adjusting skills`);
+      let excessPoints = 0;
+      // Calculate current total cost
+      skillDataList.forEach(skill => {
+        usedPoints += skill.totalCost;
+        if (skill.rank > maxRank) {
+          excessPoints += skill.rank - maxRank;
+          skill.rank = maxRank;
+          skill.totalCost = skill.rank + skill.specs.length * skill.specCost;
+          adjustments.push(`Reduced ${skill.name} rank from ${skill.rank + excessPoints} to ${maxRank}`);
+        }
+      });
+
+      // Reduce points if exceeded
+      if (usedPoints > skillPoints) {
+        excessPoints = usedPoints - skillPoints;
+        // Sort skills by rank (descending) to prioritize reducing higher ranks
+        skillDataList.sort((a, b) => b.rank - a.rank);
+        for (let skill of skillDataList) {
+          while (excessPoints > 0 && skill.rank > 0) {
+            skill.rank--;
+            skill.totalCost--;
+            excessPoints--;
+            adjustments.push(`Reduced ${skill.name} rank to ${skill.rank}`);
+          }
+          // Remove specializations if still over
+          while (excessPoints > 0 && skill.specs.length > 0) {
+            const removedSpec = skill.specs.pop();
+            skill.totalCost -= skill.specCost;
+            excessPoints -= skill.specCost;
+            adjustments.push(`Removed specialization ${removedSpec} from ${skill.name}`);
+          }
+          if (excessPoints <= 0) break;
+        }
+      }
+
+      // Apply adjustments
+      skillDataList.forEach(skill => {
+        const rankInput = document.getElementById(`skillRank${skill.id}`);
+        if (rankInput) rankInput.value = skill.rank;
+        skill.specs.forEach(spec => {
+          const specCheckbox = document.getElementById(`spec${skill.id}_${spec}`);
+          if (specCheckbox) specCheckbox.checked = true;
+        });
+        skillsList.find(s => s.name === skill.name).specs.forEach(spec => {
+          const specCheckbox = document.getElementById(`spec${skill.id}_${spec}`);
+          if (specCheckbox && !skill.specs.includes(spec)) specCheckbox.checked = false;
+        });
+      });
+
+      // Recalculate used points
+      usedPoints = skillDataList.reduce((sum, skill) => sum + skill.totalCost, 0);
+    } else {
+      // Normal skill point calculation
+      skillDataList.forEach(skill => {
+        let rank = skill.rank;
+        if (rank > maxRank) {
+          rankInput.value = maxRank;
+          rank = maxRank;
+          adjustments.push(`Capped ${skill.name} rank at ${maxRank}`);
+        }
+        usedPoints += skill.totalCost;
+      });
     }
+
+    const remainingPoints = skillPoints - usedPoints;
+    const skillPointsDisplay = document.getElementById('skillPointsDisplay');
+    if (skillPointsDisplay) {
+      skillPointsDisplay.innerHTML = `Skill Points: ${remainingPoints}/${skillPoints}`;
+    } else {
+      console.warn('skillPointsDisplay element not found');
+    }
+
+    if (remainingPoints < 0) {
+      alert(`Skill points exceeded! Available: ${skillPoints}, Used: ${usedPoints}. Adjust ranks or specializations.`);
+    }
+
+    if (adjustments.length > 0) {
+      console.log(`updateSkills: Adjustments made: ${adjustments.join('; ')}`);
+    }
+
+    console.log(`updateSkills: Level=${lvl}, SkillPoints=${skillPoints}, UsedPoints=${usedPoints}, Remaining=${remainingPoints}`);
   } catch (e) {
     console.error('Error updating skills:', e);
-    alert('Failed to update skills.');
+    alert(`Failed to update skills: ${e.message}`);
   }
 }
 
@@ -2783,105 +3415,191 @@
 
   function updateFeatsSheet() {
     try {
-      const lvl = parseInt(document.getElementById('charLevel').value) || 1;
-      const cls = document.getElementById('charClass').value || 'Fatemarked';
-      const int = parseInt(document.getElementById('attrINT').value) || 10;
-      const maxFeats = cls === 'Adventurer' ? Math.floor(lvl / 2) + 2 : Math.floor(lvl / 2) + 1;
-      let usedFeats = 0;
-      const selectedFeats = [];
-      const selectedAdvantages = [];
+    const lvl = parseInt(document.getElementById('charLevel').value) || 1;
+    const prevLvl = parseInt(document.getElementById('charLevel').dataset.prevLevel || lvl);
+    const cls = document.getElementById('charClass').value || 'Fatemarked';
+    const int = parseInt(document.getElementById('attrINT').value) || 10;
+    const maxFeats = cls === 'Adventurer' ? Math.floor(lvl / 2) + 2 : Math.floor(lvl / 2) + 1;
+    let usedFeats = 0;
+    const selectedFeats = [];
+    const selectedAdvantages = [];
+    const adjustments = [];
 
-      let hasDisadvantages = false;
-      for (let i = 1; i <= disadvantageCounter; i++) {
-        const disSelect = document.getElementById(`disadvantage${i}`);
-        if (disSelect && disSelect.value !== 'none') {
-          hasDisadvantages = true;
-          break;
-        }
+    let hasDisadvantages = false;
+    for (let i = 1; i <= disadvantageCounter; i++) {
+      const disSelect = document.getElementById(`disadvantage${i}`);
+      if (disSelect && disSelect.value !== 'none') {
+        hasDisadvantages = true;
+        break;
       }
-      document.getElementById('advantageWarning').style.display = hasDisadvantages ? 'none' : 'block';
+    }
+    const advantageWarning = document.getElementById('advantageWarning');
+    if (advantageWarning) {
+      advantageWarning.style.display = hasDisadvantages ? 'none' : 'block';
+    }
 
+    // Handle level reduction
+    if (lvl < prevLvl) {
+      console.log(`updateFeatsSheet: Level reduced from ${prevLvl} to ${lvl}, adjusting feats`);
+
+      // Collect current feats
+      const featDataList = [];
       for (let i = 1; i <= startingFeatCounter; i++) {
         const featSelect = document.getElementById(`startingFeat${i}`);
         if (featSelect && featSelect.value !== 'none') {
-          if (selectedFeats.includes(featSelect.value) || selectedAdvantages.includes(featSelect.value)) {
-            featSelect.value = 'none';
-            alert(`Feat ${featSelect.value} already selected!`);
-            continue;
-          }
-          selectedFeats.push(featSelect.value);
-          usedFeats++;
-          const descInput = document.getElementById(`startingFeatDesc${i}`);
-          descInput.classList.toggle('hidden', featSelect.value !== 'custom');
-          if (featSelect.value === 'Jack of All Trades' && int < 13) {
-            featSelect.value = 'none';
-            alert('Jack of All Trades requires INT 13+');
-          }
+          featDataList.push({ type: 'starting', id: i, name: featSelect.value, cost: 1 });
         }
       }
-
       for (let i = 1; i <= levelUpFeatCounter; i++) {
         const featSelect = document.getElementById(`levelUpFeat${i}`);
         if (featSelect && featSelect.value !== 'none') {
-          if (selectedFeats.includes(featSelect.value) || selectedAdvantages.includes(featSelect.value)) {
-            featSelect.value = 'none';
-            alert(`Feat ${featSelect.value} already selected!`);
-            continue;
-          }
-          const featCost = (cls === 'Adventurer' && featSelect.value !== 'custom' && 
-                           !startingFeatsList.some(f => f.value === featSelect.value) && 
+          const featCost = (cls === 'Adventurer' && featSelect.value !== 'custom' &&
+                           !startingFeatsList.some(f => f.value === featSelect.value) &&
                            !levelUpFeatsList.some(f => f.value === featSelect.value && f.prereq)) ? 0.5 : 1;
-          selectedFeats.push(featSelect.value);
-          usedFeats += featCost;
-          const descInput = document.getElementById(`levelUpFeatDesc${i}`);
-          descInput.classList.toggle('hidden', featSelect.value !== 'custom');
-          const featData = levelUpFeatsList.find(f => f.value === featSelect.value);
-          if (featData && featData.level > lvl) {
-            featSelect.value = 'none';
-            alert(`${featSelect.value} requires level ${featData.level}+`);
-          }
+          featDataList.push({ type: 'levelUp', id: i, name: featSelect.value, cost: featCost });
         }
       }
-
       for (let i = 1; i <= advantageCounter; i++) {
         const advSelect = document.getElementById(`advantage${i}`);
         if (advSelect && advSelect.value !== 'none') {
-          if (!hasDisadvantages) {
-            advSelect.value = 'none';
-            alert('Select at least one disadvantage before adding advantages.');
-            continue;
-          }
-          if (selectedFeats.includes(advSelect.value) || selectedAdvantages.includes(advSelect.value)) {
-            advSelect.value = 'none';
-            alert(`Advantage ${advSelect.value} already selected!`);
-            continue;
-          }
-          selectedAdvantages.push(advSelect.value);
-          const tierInput = document.getElementById(`advantageTier${i}`);
-          const advantage = advantagesList.find(a => a.name === advSelect.value);
-          const tier = parseInt(tierInput.value) || 1;
-          if (tier > advantage.maxTier) {
-            tierInput.value = advantage.maxTier;
-            alert(`Max tier for ${advSelect.value} is ${advantage.maxTier}`);
-          }
-          tierInput.classList.toggle('hidden', advantage.maxTier === 1);
-          if (advSelect.value === 'Jack of All Trades' && int < 13) {
-            advSelect.value = 'none';
-            alert('Jack of All Trades requires INT 13+');
-          }
+          featDataList.push({ type: 'advantage', id: i, name: advSelect.value, cost: 1 });
         }
       }
 
-      if (usedFeats > maxFeats) {
-        alert(`Too many feats! Max: ${maxFeats}`);
-      }
+      // Check prerequisites and level requirements
+      featDataList.forEach(feat => {
+        const featData = levelUpFeatsList.find(f => f.value === feat.name);
+        if (featData && (featData.level > lvl || !checkFeatPrereq(featData.prereq || '', lvl))) {
+          const select = document.getElementById(`${feat.type}Feat${feat.id}`) || document.getElementById(`advantage${feat.id}`);
+          if (select) {
+            select.value = 'none';
+            adjustments.push(`Removed ${feat.name} (requires Level ${featData.level}+ or ${featData.prereq})`);
+          }
+        }
+        if (feat.name === 'Jack of All Trades' && int < 13) {
+          const select = document.getElementById(`${feat.type}Feat${feat.id}`) || document.getElementById(`advantage${feat.id}`);
+          if (select) {
+            select.value = 'none';
+            adjustments.push(`Removed Jack of All Trades (requires INT 13+)`);
+          }
+        }
+      });
 
-      updateDisadvantages();
-    } catch (e) {
-      console.error('Error updating feats:', e);
-      alert('Failed to update feats.');
+      // Recalculate used feats
+      usedFeats = featDataList.reduce((sum, feat) => {
+        if (document.getElementById(`${feat.type}Feat${feat.id}`)?.value !== 'none' ||
+            document.getElementById(`advantage${feat.id}`)?.value !== 'none') {
+          return sum + feat.cost;
+        }
+        return sum;
+      }, 0);
+
+      // Remove excess feats if necessary
+      if (usedFeats > maxFeats) {
+        // Prioritize removing level-up feats, then advantages, then starting feats
+        featDataList.sort((a, b) => {
+          const typeOrder = { levelUp: 1, advantage: 2, starting: 3 };
+          return typeOrder[a.type] - typeOrder[b.type];
+        });
+        for (let feat of featDataList) {
+          if (usedFeats <= maxFeats) break;
+          const select = document.getElementById(`${feat.type}Feat${feat.id}`) || document.getElementById(`advantage${feat.id}`);
+          if (select && select.value !== 'none') {
+            select.value = 'none';
+            usedFeats -= feat.cost;
+            adjustments.push(`Removed ${feat.name} (exceeds max feats: ${maxFeats})`);
+          }
+        }
+      }
     }
+
+    // Normal feat validation
+    for (let i = 1; i <= startingFeatCounter; i++) {
+      const featSelect = document.getElementById(`startingFeat${i}`);
+      if (featSelect && featSelect.value !== 'none') {
+        if (selectedFeats.includes(featSelect.value) || selectedAdvantages.includes(featSelect.value)) {
+          featSelect.value = 'none';
+          adjustments.push(`Removed duplicate starting feat ${featSelect.value}`);
+          continue;
+        }
+        selectedFeats.push(featSelect.value);
+        usedFeats++;
+        const descInput = document.getElementById(`startingFeatDesc${i}`);
+        if (descInput) descInput.classList.toggle('hidden', featSelect.value !== 'custom');
+        if (featSelect.value === 'Jack of All Trades' && int < 13) {
+          featSelect.value = 'none';
+          adjustments.push(`Removed Jack of All Trades (requires INT 13+)`);
+        }
+      }
+    }
+
+    for (let i = 1; i <= levelUpFeatCounter; i++) {
+      const featSelect = document.getElementById(`levelUpFeat${i}`);
+      if (featSelect && featSelect.value !== 'none') {
+        if (selectedFeats.includes(featSelect.value) || selectedAdvantages.includes(featSelect.value)) {
+          featSelect.value = 'none';
+          adjustments.push(`Removed duplicate level-up feat ${featSelect.value}`);
+          continue;
+        }
+        const featCost = (cls === 'Adventurer' && featSelect.value !== 'custom' &&
+                         !startingFeatsList.some(f => f.value === featSelect.value) &&
+                         !levelUpFeatsList.some(f => f.value === featSelect.value && f.prereq)) ? 0.5 : 1;
+        selectedFeats.push(featSelect.value);
+        usedFeats += featCost;
+        const descInput = document.getElementById(`levelUpFeatDesc${i}`);
+        if (descInput) descInput.classList.toggle('hidden', featSelect.value !== 'custom');
+        const featData = levelUpFeatsList.find(f => f.value === featSelect.value);
+        if (featData && featData.level > lvl) {
+          featSelect.value = 'none';
+          adjustments.push(`Removed ${featSelect.value} (requires Level ${featData.level}+)`);
+        }
+      }
+    }
+
+    for (let i = 1; i <= advantageCounter; i++) {
+      const advSelect = document.getElementById(`advantage${i}`);
+      if (advSelect && advSelect.value !== 'none') {
+        if (!hasDisadvantages) {
+          advSelect.value = 'none';
+          adjustments.push(`Removed advantage ${advSelect.value} (requires at least one disadvantage)`);
+          continue;
+        }
+        if (selectedFeats.includes(advSelect.value) || selectedAdvantages.includes(advSelect.value)) {
+          advSelect.value = 'none';
+          adjustments.push(`Removed duplicate advantage ${advSelect.value}`);
+          continue;
+        }
+        selectedAdvantages.push(advSelect.value);
+        const tierInput = document.getElementById(`advantageTier${i}`);
+        const advantage = advantagesList.find(a => a.name === advSelect.value);
+        const tier = parseInt(tierInput.value) || 1;
+        if (tier > advantage.maxTier) {
+          tierInput.value = advantage.maxTier;
+          adjustments.push(`Capped ${advSelect.value} tier at ${advantage.maxTier}`);
+        }
+        tierInput.classList.toggle('hidden', advantage.maxTier === 1);
+        if (advSelect.value === 'Jack of All Trades' && int < 13) {
+          advSelect.value = 'none';
+          adjustments.push(`Removed Jack of All Trades (requires INT 13+)`);
+        }
+      }
+    }
+
+    if (usedFeats > maxFeats) {
+      alert(`Too many feats! Max: ${maxFeats}`);
+    }
+
+    if (adjustments.length > 0) {
+      console.log(`updateFeatsSheet: Adjustments made: ${adjustments.join('; ')}`);
+    }
+
+    updateDisadvantages();
+    console.log(`updateFeatsSheet: Level=${lvl}, MaxFeats=${maxFeats}, UsedFeats=${usedFeats}`);
+  } catch (e) {
+    console.error('Error updating feats:', e);
+    alert(`Failed to update feats: ${e.message}`);
   }
+}
 
   function addStartingFeatField() {
     try {
@@ -3093,7 +3811,7 @@
     const div = document.createElement('div');
     div.className = 'dynamic-group';
     div.style.display = 'flex';
-    div.dataset.id = powerCounter; // Add data-id
+    div.dataset.id = powerCounter;
     div.innerHTML = `
       <select id="powerCategory${powerCounter}" title="Power category" onchange="updatePowerCost(${powerCounter})">
         <option value="none">Select Category</option>
@@ -4432,273 +5150,257 @@ function removePowerField(button) {
     }
   }
 
-  function generateCharacterSheet() {
-    try {
-      const charData = collectCharacterData();
-      if (!validateCharacterData(charData)) return;
-      const html = generateSheetHTML(charData);
-      document.getElementById('sheetPreview').innerHTML = html;
-      document.getElementById('sheetText').value = htmlToText(html);
-      document.getElementById('sheetModal').style.display = 'flex';
-    } catch (e) {
-      console.error('Error generating character sheet:', e);
-      alert('Failed to generate character sheet.');
-    }
-  }
+  // Duplicate generateCharacterSheet function removed to prevent errors.
 
   function collectCharacterData() {
     try {
-        const lvl = parseInt(document.getElementById('charLevel').value) || 1;
-        const cls = document.getElementById('charClass').value || 'Fatemarked';
-        const str = parseInt(document.getElementById('attrSTR').value) || 10;
-        const dex = parseInt(document.getElementById('attrDEX').value) || 10;
-        const con = parseInt(document.getElementById('attrCON').value) || 10;
-        const int = parseInt(document.getElementById('attrINT').value) || 10;
-        const wis = parseInt(document.getElementById('attrWIS').value) || 10;
-        const cha = parseInt(document.getElementById('attrCHA').value) || 10;
+    const lvl = parseInt(document.getElementById('charLevel').value) || 1;
+    const cls = document.getElementById('charClass').value || 'Fatemarked';
+    const str = parseInt(document.getElementById('attrSTR').value) || 10;
+    const dex = parseInt(document.getElementById('attrDEX').value) || 10;
+    const con = parseInt(document.getElementById('attrCON').value) || 10;
+    const int = parseInt(document.getElementById('attrINT').value) || 10;
+    const wis = parseInt(document.getElementById('attrWIS').value) || 10;
+    const cha = parseInt(document.getElementById('attrCHA').value) || 10;
 
-        const inherentAbilities = {
-            'Biomatrix Suit': '+2 to INT-based checks',
-            'Continuum Raider': '+2 to Survival and Navigate checks',
-            'Gunrunner': '+2 to Ranged Weapons checks',
-            'Faterunner': 'Tier 1 effects have no paradox risk',
-            'Harlequin': '+2 to Deception checks',
-            'Warrior': '+2 to Melee Weapon checks',
-            'Mage': '+2 to Knowledge and Perform checks',
-            'Shape': '+2 to Stealth checks',
-            'Masque': '+2 to Disguise checks',
-            'Adventurer': '+1 skill point per level, reduced cost for cross-class feats',
-            'Fatemarked': 'None'
-        };
+    const inherentAbilities = {
+      'Biomatrix Suit': '+2 to INT-based checks',
+      'Continuum Raider': '+2 to Survival and Navigate checks',
+      'Gunrunner': '+2 to Ranged Weapons checks',
+      'Faterunner': 'Tier 1 effects have no paradox risk',
+      'Harlequin': '+2 to Deception checks',
+      'Warrior': '+2 to Melee Weapon checks',
+      'Mage': '+2 to Knowledge and Perform checks',
+      'Shape': '+2 to Stealth checks',
+      'Masque': '+2 to Disguise checks',
+      'Adventurer': '+1 skill point per level, reduced cost for cross-class feats',
+      'Fatemarked': 'None'
+    };
 
-        const skills = [];
-        for (let i = 1; i <= skillCounter; i++) {
-            const skillSelect = document.getElementById(`skill${i}`);
-            const rankInput = document.getElementById(`skillRank${i}`);
-            if (skillSelect && skillSelect.value) {
-                const skillData = skillsList.find(s => s.name === skillSelect.value);
-                const specs = skillData.specs.map(spec => ({
-                    name: spec,
-                    checked: document.getElementById(`spec${i}_${spec}`)?.checked || false
-                }));
-                skills.push({
-                    name: skillSelect.value,
-                    attr: skillData.attr,
-                    rank: parseInt(rankInput.value) || 0,
-                    specs: specs.filter(s => s.checked).map(s => s.name)
-                });
-            }
-        }
-
-        const feats = [];
-        for (let i = 1; i <= startingFeatCounter; i++) {
-            const featSelect = document.getElementById(`startingFeat${i}`);
-            if (featSelect && featSelect.value !== 'none') {
-                feats.push({
-                    name: featSelect.value,
-                    tier: 1,
-                    desc: document.getElementById(`startingFeatDesc${i}`).value || ''
-                });
-            }
-        }
-        for (let i = 1; i <= levelUpFeatCounter; i++) {
-            const featSelect = document.getElementById(`levelUpFeat${i}`);
-            if (featSelect && featSelect.value !== 'none') {
-                feats.push({
-                    name: featSelect.value,
-                    tier: 1,
-                    desc: document.getElementById(`levelUpFeatDesc${i}`).value || ''
-                });
-            }
-        }
-        for (let i = 1; i <= advantageCounter; i++) {
-            const advSelect = document.getElementById(`advantage${i}`);
-            if (advSelect && advSelect.value !== 'none') {
-                feats.push({
-                    name: advSelect.value,
-                    tier: parseInt(document.getElementById(`advantageTier${i}`).value) || 1,
-                    desc: ''
-                });
-            }
-        }
-
-        const disadvantages = [];
-        for (let i = 1; i <= disadvantageCounter; i++) {
-            const disSelect = document.getElementById(`disadvantage${i}`);
-            if (disSelect && disSelect.value !== 'none') {
-                disadvantages.push({
-                    name: disSelect.value,
-                    tier: parseInt(document.getElementById(`disadvantageTier${i}`).value) || 1
-                });
-            }
-        }
-
-        const powers = [];
-        if (lvl <= 3 && cls === 'Fatemarked') {
-            // Include Fatemarked abilities only for Levels 1–3
-            if (lvl >= 1) powers.push({ 
-                name: 'Fate’s Edge', 
-                category: 'Manipulation', 
-                level: 'PL1', 
-                cost: 0, 
-                effect: 'Advantage on one roll/encounter', 
-                dc: 15, 
-                risk: 'INT DC 15, -1 penalty', 
-                alignment: 'None' 
-            });
-            if (lvl >= 2) powers.push({ 
-                name: 'Fate’s Influence', 
-                category: 'Manipulation', 
-                level: 'PL1', 
-                cost: 0, 
-                effect: 'As above, plus disadvantage on enemy roll', 
-                dc: 15, 
-                risk: 'INT DC 15, -1 or anomaly', 
-                alignment: 'None' 
-            });
-            if (lvl >= 3) powers.push({ 
-                name: 'Fate’s Reach', 
-                category: 'Manipulation', 
-                level: 'PL1', 
-                cost: 0, 
-                effect: 'As above, plus any roll', 
-                dc: 15, 
-                risk: 'INT DC 15, -2 or rift', 
-                alignment: 'None' 
-            });
-        } else if (lvl > 3 && !['Faterunner', 'Harlequin'].includes(cls)) {
-            // Collect custom powers for Level 4+ non-Faterunner/Harlequin classes
-            for (let i = 1; i <= powerCounter; i++) {
-                const nameInput = document.getElementById(`powerName${i}`);
-                if (nameInput && nameInput.value) {
-                    powers.push({
-                        name: nameInput.value,
-                        category: document.getElementById(`powerCategory${i}`)?.value || 'none',
-                        level: document.getElementById(`powerLevel${i}`).value,
-                        cost: parseInt(document.getElementById(`powerCost${i}`).value) || 0,
-                        effect: document.getElementById(`powerEffect${i}`).value,
-                        dc: parseInt(document.getElementById(`powerDC${i}`).value) || 10,
-                        risk: document.getElementById(`powerRisk${i}`).value,
-                        alignment: document.getElementById('charAlignment').value
-                    });
-                }
-            }
-        }
-
-        const inventory = [];
-        for (let i = 1; i <= inventoryCounter; i++) {
-            const nameInput = document.getElementById(`itemName${i}`);
-            if (nameInput && nameInput.value) {
-                inventory.push({
-                    name: nameInput.value,
-                    slots: parseInt(document.getElementById(`itemSlots${i}`).value) || 0,
-                    weight: parseInt(document.getElementById(`itemWeight${i}`).value) || 0,
-                    desc: document.getElementById(`itemDesc${i}`).value,
-                    durability: document.getElementById(`itemDurability${i}`).value
-                });
-            }
-        }
-
-        const weapons = [];
-        for (let i = 1; i <= weaponCounter; i++) {
-            const nameInput = document.getElementById(`weaponName${i}`);
-            if (nameInput && nameInput.value) {
-                weapons.push({
-                    name: nameInput.value,
-                    damage: document.getElementById(`weaponDamage${i}`).value,
-                    range: document.getElementById(`weaponRange${i}`).value,
-                    traits: document.getElementById(`weaponTraits${i}`).value,
-                    cost: parseInt(document.getElementById(`weaponCost${i}`).value) || 0
-                });
-            }
-        }
-
-        const armors = [];
-        for (let i = 1; i <= armorCounter; i++) {
-            const nameInput = document.getElementById(`armorName${i}`);
-            if (nameInput && nameInput.value) {
-                armors.push({
-                    name: nameInput.value,
-                    ac: parseInt(document.getElementById(`armorAC${i}`).value) || 0,
-                    dex: document.getElementById(`armorDEX${i}`).value,
-                    str: parseInt(document.getElementById(`armorSTR${i}`).value) || 0,
-                    penalties: document.getElementById(`armorPenalties${i}`).value,
-                    slots: parseInt(document.getElementById(`armorSlots${i}`).value) || 0,
-                    cost: parseInt(document.getElementById(`armorCost${i}`).value) || 0
-                });
-            }
-        }
-
-        const downtime = [];
-        for (let i = 1; i <= downtimeCounter; i++) {
-            const activityInput = document.getElementById(`downtimeActivity${i}`);
-            if (activityInput && activityInput.value) {
-                downtime.push({
-                    activity: activityInput.value,
-                    time: parseInt(document.getElementById(`downtimeTime${i}`).value) || 0,
-                    resources: document.getElementById(`downtimeResources${i}`).value,
-                    skill: document.getElementById(`downtimeSkill${i}`).value,
-                    outcome: document.getElementById(`downtimeOutcome${i}`).value
-                });
-            }
-        }
-
-        const resources = [];
-        for (let i = 1; i <= resourceCounter; i++) {
-            const nameInput = document.getElementById(`resourceName${i}`);
-            if (nameInput && nameInput.value) {
-                resources.push({
-                    name: nameInput.value,
-                    current: parseInt(document.getElementById(`resourceCurrent${i}`).value) || 0,
-                    max: parseInt(document.getElementById(`resourceMax${i}`).value) || 0,
-                    recharge: document.getElementById(`resourceRecharge${i}`).value
-                });
-            }
-        }
-
-        return {
-            name: document.getElementById('charName').value || '',
-            player: document.getElementById('playerName').value || '',
-            level: lvl,
-            class: cls,
-            alignment: document.getElementById('charAlignment').value,
-            background: document.getElementById('charBackground').value || '',
-            appearance: document.getElementById('charAppearance').value || '',
-            occupation: document.getElementById('charOccupation').value || '',
-            personality: document.getElementById('charPersonality').value || '',
-            milestone: document.getElementById('charMilestone').value || '',
-            attrMethod: document.getElementById('attrMethod').value,
-            attributes: { STR: str, DEX: dex, CON: con, INT: int, WIS: wis, CHA: cha },
-            inherentAbility: inherentAbilities[cls],
-            skills,
-            feats,
-            disadvantages,
-            powers,
-            inventory,
-            wealth: {
-                credits: parseInt(document.getElementById('credits').value) || 0,
-                shards: parseInt(document.getElementById('shards').value) || 0
-            },
-            weapons,
-            armors,
-            progression: {
-                currentXP: parseInt(document.getElementById('currentXP').value) || 0,
-                nextLevelXP: parseInt(document.getElementById('nextLevelXP').value) || getNextLevelXP(lvl)
-            },
-            lifestyle: {
-                type: document.getElementById('charLifestyle').value,
-                cost: parseInt(document.getElementById('lifestyleCost').value) || 0
-            },
-            downtime,
-            notes: document.getElementById('charNotes').value || '',
-            resources,
-            paradoxPoints: parseInt(document.getElementById('paradoxPoints').value) || 0
-        };
-    } catch (e) {
-        console.error('Error collecting character data:', e);
-        alert('Failed to collect character data.');
-        return {};
+    const skills = [];
+    for (let i = 1; i <= skillCounter; i++) {
+      const skillSelect = document.getElementById(`skill${i}`);
+      const rankInput = document.getElementById(`skillRank${i}`);
+      if (skillSelect && skillSelect.value) {
+        const skillData = skillsList.find(s => s.name === skillSelect.value);
+        const specs = skillData.specs.map(spec => ({
+          name: spec,
+          checked: document.getElementById(`spec${i}_${spec}`)?.checked || false
+        }));
+        skills.push({
+          name: skillSelect.value,
+          attr: skillData.attr,
+          rank: parseInt(rankInput.value) || 0,
+          specs: specs.filter(s => s.checked).map(s => s.name)
+        });
+      }
     }
+
+    const feats = [];
+    for (let i = 1; i <= startingFeatCounter; i++) {
+      const featSelect = document.getElementById(`startingFeat${i}`);
+      if (featSelect && featSelect.value !== 'none') {
+        feats.push({
+          name: featSelect.value,
+          tier: 1,
+          desc: document.getElementById(`startingFeatDesc${i}`).value || ''
+        });
+      }
+    }
+    for (let i = 1; i <= levelUpFeatCounter; i++) {
+      const featSelect = document.getElementById(`levelUpFeat${i}`);
+      if (featSelect && featSelect.value !== 'none') {
+        feats.push({
+          name: featSelect.value,
+          tier: 1,
+          desc: document.getElementById(`levelUpFeatDesc${i}`).value || ''
+        });
+      }
+    }
+    for (let i = 1; i <= advantageCounter; i++) {
+      const advSelect = document.getElementById(`advantage${i}`);
+      if (advSelect && advSelect.value !== 'none') {
+        feats.push({
+          name: advSelect.value,
+          tier: parseInt(document.getElementById(`advantageTier${i}`).value) || 1,
+          desc: ''
+        });
+      }
+    }
+
+    const disadvantages = [];
+    for (let i = 1; i <= disadvantageCounter; i++) {
+      const disSelect = document.getElementById(`disadvantage${i}`);
+      if (disSelect && disSelect.value !== 'none') {
+        disadvantages.push({
+          name: disSelect.value,
+          tier: parseInt(document.getElementById(`disadvantageTier${i}`).value) || 1
+        });
+      }
+    }
+
+    const powers = [];
+    if (lvl <= 3 && cls === 'Fatemarked') {
+      if (lvl >= 1) powers.push({ 
+        name: 'Fate’s Edge', 
+        category: 'Manipulation', 
+        level: 'PL1', 
+        cost: 0, 
+        effect: 'Advantage on one roll/encounter', 
+        dc: 15, 
+        risk: 'INT DC 15, -1 penalty'
+      });
+      if (lvl >= 2) powers.push({ 
+        name: 'Fate’s Influence', 
+        category: 'Manipulation', 
+        level: 'PL1', 
+        cost: 0, 
+        effect: 'As above, plus disadvantage on enemy roll', 
+        dc: 15, 
+        risk: 'INT DC 15, -1 or anomaly'
+      });
+      if (lvl >= 3) powers.push({ 
+        name: 'Fate’s Reach', 
+        category: 'Manipulation', 
+        level: 'PL1', 
+        cost: 0, 
+        effect: 'As above, plus any roll', 
+        dc: 15, 
+        risk: 'INT DC 15, -2 or rift'
+      });
+    } else if (lvl > 3 && !['Faterunner', 'Harlequin'].includes(cls)) {
+      for (let i = 1; i <= powerCounter; i++) {
+        const nameInput = document.getElementById(`powerName${i}`);
+        if (nameInput && nameInput.value) {
+          powers.push({
+            name: nameInput.value,
+            category: document.getElementById(`powerCategory${i}`)?.value || 'none',
+            level: document.getElementById(`powerLevel${i}`).value,
+            cost: parseInt(document.getElementById(`powerCost${i}`).value) || 0,
+            effect: document.getElementById(`powerEffect${i}`).value,
+            dc: parseInt(document.getElementById(`powerDC${i}`).value) || 10,
+            risk: document.getElementById(`powerRisk${i}`).value
+          });
+        }
+      }
+    }
+
+    const inventory = [];
+    for (let i = 1; i <= inventoryCounter; i++) {
+      const nameInput = document.getElementById(`itemName${i}`);
+      if (nameInput && nameInput.value) {
+        inventory.push({
+          name: nameInput.value,
+          slots: parseInt(document.getElementById(`itemSlots${i}`).value) || 0,
+          weight: parseInt(document.getElementById(`itemWeight${i}`).value) || 0,
+          desc: document.getElementById(`itemDesc${i}`).value,
+          durability: document.getElementById(`itemDurability${i}`).value
+        });
+      }
+    }
+
+    const weapons = [];
+    for (let i = 1; i <= weaponCounter; i++) {
+      const nameInput = document.getElementById(`weaponName${i}`);
+      if (nameInput && nameInput.value) {
+        weapons.push({
+          name: nameInput.value,
+          damage: document.getElementById(`weaponDamage${i}`).value,
+          range: document.getElementById(`weaponRange${i}`).value,
+          traits: document.getElementById(`weaponTraits${i}`).value,
+          cost: parseInt(document.getElementById(`weaponCost${i}`).value) || 0
+        });
+      }
+    }
+
+    const armors = [];
+    for (let i = 1; i <= armorCounter; i++) {
+      const nameInput = document.getElementById(`armorName${i}`);
+      if (nameInput && nameInput.value) {
+        armors.push({
+          name: nameInput.value,
+          ac: parseInt(document.getElementById(`armorAC${i}`).value) || 0,
+          dex: document.getElementById(`armorDEX${i}`).value,
+          str: parseInt(document.getElementById(`armorSTR${i}`).value) || 0,
+          penalties: document.getElementById(`armorPenalties${i}`).value,
+          slots: parseInt(document.getElementById(`armorSlots${i}`).value) || 0,
+          cost: parseInt(document.getElementById(`armorCost${i}`).value) || 0
+        });
+      }
+    }
+
+    const downtime = [];
+    for (let i = 1; i <= downtimeCounter; i++) {
+      const activityInput = document.getElementById(`downtimeActivity${i}`);
+      if (activityInput && activityInput.value) {
+        downtime.push({
+          activity: activityInput.value,
+          time: parseInt(document.getElementById(`downtimeTime${i}`).value) || 0,
+          resources: document.getElementById(`downtimeResources${i}`).value,
+          skill: document.getElementById(`downtimeSkill${i}`).value,
+          outcome: document.getElementById(`downtimeOutcome${i}`).value
+        });
+      }
+    }
+
+    const resources = [];
+    for (let i = 1; i <= resourceCounter; i++) {
+      const nameInput = document.getElementById(`resourceName${i}`);
+      if (nameInput && nameInput.value) {
+        resources.push({
+          name: nameInput.value,
+          current: parseInt(document.getElementById(`resourceCurrent${i}`).value) || 0,
+          max: parseInt(document.getElementById(`resourceMax${i}`).value) || 0,
+          recharge: document.getElementById(`resourceRecharge${i}`).value
+        });
+      }
+    }
+
+    const data = {
+      name: document.getElementById('charName').value || '',
+      player: document.getElementById('playerName').value || '',
+      level: lvl,
+      class: cls,
+      alignment: document.getElementById('charAlignment').value,
+      background: document.getElementById('charBackground').value || '',
+      appearance: document.getElementById('charAppearance').value || '',
+      occupation: document.getElementById('charOccupation').value || '',
+      personality: document.getElementById('charPersonality').value || '',
+      milestone: document.getElementById('charMilestone').value || '',
+      attrMethod: document.getElementById('attrMethod').value,
+      attributes: { STR: str, DEX: dex, CON: con, INT: int, WIS: wis, CHA: cha },
+      inherentAbility: inherentAbilities[cls],
+      skills,
+      feats,
+      disadvantages,
+      powers,
+      inventory,
+      wealth: {
+        credits: parseInt(document.getElementById('credits').value) || 0,
+        shards: parseInt(document.getElementById('shards').value) || 0
+      },
+      weapons,
+      armors,
+      progression: {
+        currentXP: parseInt(document.getElementById('currentXP').value) || 0,
+        nextLevelXP: parseInt(document.getElementById('nextLevelXP').value) || getNextLevelXP(lvl)
+      },
+      lifestyle: {
+        type: document.getElementById('charLifestyle').value,
+        cost: parseInt(document.getElementById('lifestyleCost').value) || 0
+      },
+      downtime,
+      notes: document.getElementById('charNotes').value || '',
+      resources,
+      paradoxPoints: parseInt(document.getElementById('paradoxPoints').value) || 0
+    };
+    saveStatPointsToData(data);
+    return data;
+  } catch (e) {
+    console.error('Error collecting character data:', e);
+    alert('Failed to collect character data.');
+    return {};
+  }
 }
 
   function validateCharacterData(data) {
@@ -4767,199 +5469,198 @@ function removePowerField(button) {
 
   function generateSheetHTML(data) {
     try {
-        const attrMod = attr => getModifier(data.attributes[attr]);
-        const health = data.level === 1 ? 10 + attrMod('CON') : 10 + attrMod('CON') + 5 * (data.level - 1);
-        const sanity = data.level === 1 ? 10 + attrMod('WIS') : 10 + attrMod('WIS') + 2 * (data.level - 1);
-        const defense = 10 + attrMod('DEX') + data.armors.reduce((s, a) => s + a.ac, 0);
-        const resource = {
-            'Biomatrix Suit': 'Energy Cell (1-hour rest)',
-            'Continuum Raider': 'Bio-Energy Pool (1-hour rest)',
-            'Gunrunner': 'Credit Pool (DC 15 check)',
-            'Warrior': 'Chi Pool (1-hour meditation)',
-            'Mage': 'Vitality Pool (1-hour rest)',
-            'Shape': 'Pathos Pool/Darkwell (1-hour ritual)',
-            'Masque': 'Soulshard Pool (1-hour ritual)',
-            'Faterunner': 'Fate Points (8-hour rest)',
-            'Harlequin': 'Fate Points (8-hour rest)',
-            'Adventurer': 'None',
-            'Fatemarked': 'None'
-        }[data.class] || 'None';
+    const attrMod = attr => getModifier(data.attributes[attr]);
+    const health = data.level === 1 ? 10 + attrMod('CON') : 10 + attrMod('CON') + 5 * (data.level - 1);
+    const sanity = data.level === 1 ? 10 + attrMod('WIS') : 10 + attrMod('WIS') + 2 * (data.level - 1);
+    const defense = 10 + attrMod('DEX') + data.armors.reduce((s, a) => s + a.ac, 0);
+    const resource = {
+      'Biomatrix Suit': 'Energy Cell (1-hour rest)',
+      'Continuum Raider': 'Bio-Energy Pool (1-hour rest)',
+      'Gunrunner': 'Credit Pool (DC 15 check)',
+      'Warrior': 'Chi Pool (1-hour meditation)',
+      'Mage': 'Vitality Pool (1-hour rest)',
+      'Shape': 'Pathos Pool/Darkwell (1-hour ritual)',
+      'Masque': 'Soulshard Pool (1-hour ritual)',
+      'Faterunner': 'Fate Points (8-hour rest)',
+      'Harlequin': 'Fate Points (8-hour rest)',
+      'Adventurer': 'None',
+      'Fatemarked': 'None'
+    }[data.class] || 'None';
 
-        let html = `
-            <h2>Continuum Wars Character Sheet</h2>
-            <p><strong>Name:</strong> ${data.name} | <strong>Player:</strong> ${data.player}</p>
-            <p><strong>Level:</strong> ${data.level} | <strong>Class:</strong> ${data.class} | <strong>Alignment:</strong> ${data.alignment}</p>
-            <p><strong>Background:</strong> ${data.background}</p>
-            <p><strong>Appearance:</strong> ${data.appearance}</p>
-            <p><strong>Occupation:</strong> ${data.occupation}</p>
-            <p><strong>Personality & Motivation:</strong> ${data.personality}</p>
-            <p><strong>Milestone:</strong> ${data.milestone}</p>
-            <p><strong>Inherent Ability:</strong> ${data.inherentAbility}</p>
+    let html = `
+      <h2>Continuum Wars Character Sheet</h2>
+      <p><strong>Name:</strong> ${data.name} | <strong>Player:</strong> ${data.player}</p>
+      <p><strong>Level:</strong> ${data.level} | <strong>Class:</strong> ${data.class} | <strong>Alignment:</strong> ${data.alignment}</p>
+      <p><strong>Background:</strong> ${data.background}</p>
+      <p><strong>Appearance:</strong> ${data.appearance}</p>
+      <p><strong>Occupation:</strong> ${data.occupation}</p>
+      <p><strong>Personality & Motivation:</strong> ${data.personality}</p>
+      <p><strong>Milestone:</strong> ${data.milestone}</p>
+      <p><strong>Inherent Ability:</strong> ${data.inherentAbility}</p>
 
-            <h2>Attributes</h2>
-            <table>
-                <tr><th>Attribute</th><th>Score</th><th>Modifier</th></tr>
-                <tr><td>Strength (STR)</td><td>${data.attributes.STR}</td><td>${attrMod('STR')}</td></tr>
-                <tr><td>Dexterity (DEX)</td><td>${data.attributes.DEX}</td><td>${attrMod('DEX')}</td></tr>
-                <tr><td>Constitution (CON)</td><td>${data.attributes.CON}</td><td>${attrMod('CON')}</td></tr>
-                <tr><td>Intelligence (INT)</td><td>${data.attributes.INT}</td><td>${attrMod('INT')}</td></tr>
-                <tr><td>Wisdom (WIS)</td><td>${data.attributes.WIS}</td><td>${attrMod('WIS')}</td></tr>
-                <tr><td>Charisma (CHA)</td><td>${data.attributes.CHA}</td><td>${attrMod('CHA')}</td></tr>
-            </table>
-            <p><strong>Method:</strong> ${data.attrMethod === 'pointBuy' ? 'Point Buy' : 'Random'}</p>
+      <h2>Attributes</h2>
+      <table>
+        <tr><th>Attribute</th><th>Score</th><th>Modifier</th></tr>
+        <tr><td>Strength (STR)</td><td>${data.attributes.STR}</td><td>${attrMod('STR')}</td></tr>
+        <tr><td>Dexterity (DEX)</td><td>${data.attributes.DEX}</td><td>${attrMod('DEX')}</td></tr>
+        <tr><td>Constitution (CON)</td><td>${data.attributes.CON}</td><td>${attrMod('CON')}</td></tr>
+        <tr><td>Intelligence (INT)</td><td>${data.attributes.INT}</td><td>${attrMod('INT')}</td></tr>
+        <tr><td>Wisdom (WIS)</td><td>${data.attributes.WIS}</td><td>${attrMod('WIS')}</td></tr>
+        <tr><td>Charisma (CHA)</td><td>${data.attributes.CHA}</td><td>${attrMod('CHA')}</td></tr>
+      </table>
+      <p><strong>Method:</strong> ${data.attrMethod === 'pointBuy' ? 'Point Buy' : data.attrMethod === 'random' ? 'Random' : 'Imported'}</p>
 
-            <h2>Derived Stats</h2>
-            <p><strong>Health:</strong> ${health} | <strong>Sanity:</strong> ${sanity} | <strong>Defense:</strong> ${defense}</p>
-            <p><strong>Initiative:</strong> ${attrMod('DEX')} | <strong>BAB:</strong> ${getBAB(data.level, data.class)}</p>
-            <p><strong>Speed:</strong> 30 ft.</p>
-            <p><strong>Saving Throws:</strong> Reflex: +1 + ${attrMod('DEX')} = ${1 + attrMod('DEX')} | Fortitude: +1 + ${attrMod('CON')} = ${1 + attrMod('CON')} | Willpower: +1 + ${attrMod('WIS')} = ${1 + attrMod('WIS')} | Luck: ${data.level >= 4 ? attrMod('CHA') + 2 : 0}</p>
-            <p><strong>Fate Points:</strong> ${data.level <= 3 ? 0 : data.level} | <strong>Paradox Points:</strong> ${data.paradoxPoints}</p>
+      <h2>Derived Stats</h2>
+      <p><strong>Health:</strong> ${health} | <strong>Sanity:</strong> ${sanity} | <strong>Defense:</strong> ${defense}</p>
+      <p><strong>Initiative:</strong> ${attrMod('DEX')} | <strong>BAB:</strong> ${getBAB(data.level, data.class)}</p>
+      <p><strong>Speed:</strong> 30 ft.</p>
+      <p><strong>Saving Throws:</strong> Reflex: +1 + ${attrMod('DEX')} = ${1 + attrMod('DEX')} | Fortitude: +1 + ${attrMod('CON')} = ${1 + attrMod('CON')} | Willpower: +1 + ${attrMod('WIS')} = ${1 + attrMod('WIS')} | Luck: ${data.level >= 4 ? attrMod('CHA') + 2 : 0}</p>
+      <p><strong>Fate Points:</strong> ${data.level <= 3 ? 0 : data.level} | <strong>Paradox Points:</strong> ${data.paradoxPoints}</p>
 
-            <h2>Resources</h2>
-            <table>
-                <tr><th>Name</th><th>Current</th><th>Max</th><th>Recharge</th></tr>
-                ${data.resources.map(r => `
-                    <tr>
-                        <td>${r.name}</td>
-                        <td>${r.current}</td>
-                        <td>${r.max}</td>
-                        <td>${r.recharge}</td>
-                    </tr>
-                `).join('')}
-            </table>
+      <h2>Resources</h2>
+      <table>
+        <tr><th>Name</th><th>Current</th><th>Max</th><th>Recharge</th></tr>
+        ${data.resources.map(r => `
+          <tr>
+            <td>${r.name}</td>
+            <td>${r.current}</td>
+            <td>${r.max}</td>
+            <td>${r.recharge}</td>
+          </tr>
+        `).join('')}
+      </table>
 
-            <h2>Skills</h2>
-            <table>
-                <tr><th>Skill</th><th>Attribute</th><th>Rank</th><th>Specializations</th><th>Total Bonus</th></tr>
-                ${data.skills.map(s => `
-                    <tr>
-                        <td>${s.name}</td>
-                        <td>${s.attr}</td>
-                        <td>${s.rank}</td>
-                        <td>${s.specs.join(', ') || 'None'}</td>
-                        <td>${s.rank + attrMod(s.attr.split('/')[0]) + (s.specs.length ? 2 : 0)}</td>
-                    </tr>
-                `).join('')}
-            </table>
+      <h2>Skills</h2>
+      <table>
+        <tr><th>Skill</th><th>Attribute</th><th>Rank</th><th>Specializations</th><th>Total Bonus</th></tr>
+        ${data.skills.map(s => `
+          <tr>
+            <td>${s.name}</td>
+            <td>${s.attr}</td>
+            <td>${s.rank}</td>
+            <td>${s.specs.join(', ') || 'None'}</td>
+            <td>${s.rank + attrMod(s.attr.split('/')[0]) + (s.specs.length ? 2 : 0)}</td>
+          </tr>
+        `).join('')}
+      </table>
 
-            <h2>Feats & Advantages</h2>
-            <table>
-                <tr><th>Name</th><th>Tier</th><th>Description</th></tr>
-                ${data.feats.map(f => `
-                    <tr>
-                        <td>${f.name}</td>
-                        <td>${f.tier}</td>
-                        <td>${f.desc || (startingFeatsList.find(fe => fe.value === f.name)?.text || levelUpFeatsList.find(fe => fe.value === f.name)?.text || advantagesList.find(a => a.name === f.name)?.desc)}</td>
-                    </tr>
-                `).join('')}
-            </table>
+      <h2>Feats & Advantages</h2>
+      <table>
+        <tr><th>Name</th><th>Tier</th><th>Description</th></tr>
+        ${data.feats.map(f => `
+          <tr>
+            <td>${f.name}</td>
+            <td>${f.tier}</td>
+            <td>${f.desc || (startingFeatsList.find(fe => fe.value === f.name)?.text || levelUpFeatsList.find(fe => fe.value === f.name)?.text || advantagesList.find(a => a.name === f.name)?.desc)}</td>
+          </tr>
+        `).join('')}
+      </table>
 
-            <h2>Disadvantages</h2>
-            <table>
-                <tr><th>Name</th><th>Tier</th><th>Description</th></tr>
-                ${data.disadvantages.map(d => `
-                    <tr>
-                        <td>${d.name}</td>
-                        <td>${d.tier}</td>
-                        <td>${disadvantagesList.find(dis => dis.name === d.name)?.desc}</td>
-                    </tr>
-                `).join('')}
-            </table>
+      <h2>Disadvantages</h2>
+      <table>
+        <tr><th>Name</th><th>Tier</th><th>Description</th></tr>
+        ${data.disadvantages.map(d => `
+          <tr>
+            <td>${d.name}</td>
+            <td>${d.tier}</td>
+            <td>${disadvantagesList.find(dis => dis.name === d.name)?.desc}</td>
+          </tr>
+        `).join('')}
+      </table>
 
-            <h2>Powers/Effects</h2>
-            <table>
-                <tr><th>Name</th><th>Category</th><th>Level</th><th>Cost</th><th>Effect</th><th>DC</th><th>Paradox Risk</th><th>Alignment</th></tr>
-                ${data.powers.map(p => `
-                    <tr>
-                        <td>${p.name}</td>
-                        <td>${p.category}</td>
-                        <td>${p.level}</td>
-                        <td>${p.cost}</td>
-                        <td>${p.effect}</td>
-                        <td>${p.dc}</td>
-                        <td>${p.risk}</td>
-                        <td>${p.alignment}</td>
-                    </tr>
-                `).join('')}
-            </table>
-            <p><strong>Resource:</strong> ${resource}</p>
+      <h2>Powers/Effects</h2>
+      <table>
+        <tr><th>Name</th><th>Category</th><th>Level</th><th>Cost</th><th>Effect</th><th>DC</th><th>Paradox Risk</th></tr>
+        ${data.powers.map(p => `
+          <tr>
+            <td>${p.name}</td>
+            <td>${p.category}</td>
+            <td>${p.level}</td>
+            <td>${p.cost}</td>
+            <td>${p.effect}</td>
+            <td>${p.dc}</td>
+            <td>${p.risk}</td>
+          </tr>
+        `).join('')}
+      </table>
+      <p><strong>Resource:</strong> ${resource}</p>
 
-            <h2>Inventory</h2>
-            <table>
-                <tr><th>Item</th><th>Slots</th><th>Weight</th><th>Description</th><th>Durability</th></tr>
-                ${data.inventory.map(i => `
-                    <tr>
-                        <td>${i.name}</td>
-                        <td>${i.slots}</td>
-                        <td>${i.weight}</td>
-                        <td>${i.desc}</td>
-                        <td>${i.durability}</td>
-                    </tr>
-                `).join('')}
-            </table>
-            <p><strong>Carrying Capacity:</strong> Normal: ${data.attributes.STR * 10} lbs | Heavy: ${data.attributes.STR * 20} lbs</p>
-            <p><strong>Wealth:</strong> Credits: ${data.wealth.credits} | Rift Shards: ${data.wealth.shards}</p>
+      <h2>Inventory</h2>
+      <table>
+        <tr><th>Item</th><th>Slots</th><th>Weight</th><th>Description</th><th>Durability</th></tr>
+        ${data.inventory.map(i => `
+          <tr>
+            <td>${i.name}</td>
+            <td>${i.slots}</td>
+            <td>${i.weight}</td>
+            <td>${i.desc}</td>
+            <td>${i.durability}</td>
+          </tr>
+        `).join('')}
+      </table>
+      <p><strong>Carrying Capacity:</strong> Normal: ${data.attributes.STR * 10} lbs | Heavy: ${data.attributes.STR * 20} lbs</p>
+      <p><strong>Wealth:</strong> Credits: ${data.wealth.credits} | Rift Shards: ${data.wealth.shards}</p>
 
-            <h2>Combat</h2>
-            <p><strong>Melee Attack:</strong> d20 + ${getBAB(data.level, data.class)} + ${attrMod('STR')} + Melee Weapon Rank</p>
-            <p><strong>Ranged Attack:</strong> d20 + ${getBAB(data.level, data.class)} + ${attrMod('DEX')} + Ranged Weapons Rank</p>
-            <table>
-                <tr><th>Weapon</th><th>Damage</th><th>Range</th><th>Traits</th><th>Cost</th></tr>
-                ${data.weapons.map(w => `
-                    <tr>
-                        <td>${w.name}</td>
-                        <td>${w.damage}</td>
-                        <td>${w.range}</td>
-                        <td>${w.traits}</td>
-                        <td>${w.cost}</td>
-                    </tr>
-                `).join('')}
-            </table>
-            <table>
-                <tr><th>Armor</th><th>AC</th><th>Max DEX</th><th>STR Req</th><th>Penalties</th><th>Slots</th><th>Cost</th></tr>
-                ${data.armors.map(a => `
-                    <tr>
-                        <td>${a.name}</td>
-                        <td>${a.ac}</td>
-                        <td>${a.dex}</td>
-                        <td>${a.str}</td>
-                        <td>${a.penalties}</td>
-                        <td>${a.slots}</td>
-                        <td>${a.cost}</td>
-                    </tr>
-                `).join('')}
-            </table>
+      <h2>Combat</h2>
+      <p><strong>Melee Attack:</strong> d20 + ${getBAB(data.level, data.class)} + ${attrMod('STR')} + Melee Weapon Rank</p>
+      <p><strong>Ranged Attack:</strong> d20 + ${getBAB(data.level, data.class)} + ${attrMod('DEX')} + Ranged Weapons Rank</p>
+      <table>
+        <tr><th>Weapon</th><th>Damage</th><th>Range</th><th>Traits</th><th>Cost</th></tr>
+        ${data.weapons.map(w => `
+          <tr>
+            <td>${w.name}</td>
+            <td>${w.damage}</td>
+            <td>${w.range}</td>
+            <td>${w.traits}</td>
+            <td>${w.cost}</td>
+          </tr>
+        `).join('')}
+      </table>
+      <table>
+        <tr><th>Armor</th><th>AC</th><th>Max DEX</th><th>STR Req</th><th>Penalties</th><th>Slots</th><th>Cost</th></tr>
+        ${data.armors.map(a => `
+          <tr>
+            <td>${a.name}</td>
+            <td>${a.ac}</td>
+            <td>${a.dex}</td>
+            <td>${a.str}</td>
+            <td>${a.penalties}</td>
+            <td>${a.slots}</td>
+            <td>${a.cost}</td>
+          </tr>
+        `).join('')}
+      </table>
 
-            <h2>Progression</h2>
-            <p><strong>XP:</strong> ${data.progression.currentXP} / ${data.progression.nextLevelXP}</p>
-            <p><strong>Next Level Benefits:</strong> +1 Attribute (every 3 levels), +5 Health, +2 Sanity, ${2 + attrMod('INT') + (data.class === 'Adventurer' ? 1 : 0)} Skill Points, Feat at even levels</p>
+      <h2>Progression</h2>
+      <p><strong>XP:</strong> ${data.progression.currentXP} / ${data.progression.nextLevelXP}</p>
+      <p><strong>Next Level Benefits:</strong> +1 Attribute (every 3 levels), +5 Health, +2 Sanity, ${2 + attrMod('INT') + (data.class === 'Adventurer' ? 1 : 0)} Skill Points, Feat at even levels</p>
 
-            <h2>Lifestyle</h2>
-            <p><strong>Type:</strong> ${data.lifestyle.type} | <strong>Cost:</strong> ${data.lifestyle.cost} Credits/day</p>
+      <h2>Lifestyle</h2>
+      <p><strong>Type:</strong> ${data.lifestyle.type} | <strong>Cost:</strong> ${data.lifestyle.cost} Credits/day</p>
 
-            <h2>Downtime Activities</h2>
-            <table>
-                <tr><th>Activity</th><th>Time</th><th>Resources</th><th>Skill Check</th><th>Outcome</th></tr>
-                ${data.downtime.map(d => `
-                    <tr>
-                        <td>${d.activity}</td>
-                        <td>${d.time} days</td>
-                        <td>${d.resources}</td>
-                        <td>${d.skill}</td>
-                        <td>${d.outcome}</td>
-                    </tr>
-                `).join('')}
-            </table>
+      <h2>Downtime Activities</h2>
+      <table>
+        <tr><th>Activity</th><th>Time (Days)</th><th>Resources</th><th>Skill</th><th>Outcome</th></tr>
+        ${data.downtime.map(d => `
+          <tr>
+            <td>${d.activity}</td>
+            <td>${d.time}</td>
+            <td>${d.resources}</td>
+            <td>${d.skill}</td>
+            <td>${d.outcome}</td>
+          </tr>
+        `).join('')}
+      </table>
 
-            <h2>Notes</h2>
-            <p>${data.notes.replace(/\n/g, '<br>')}</p>
-        `;
-        return html;
-    } catch (e) {
-        console.error('Error generating sheet HTML:', e);
-        alert('Failed to generate sheet HTML.');
-        return '';
-    }
+      <h2>Notes</h2>
+      <p>${data.notes.replace(/\n/g, '<br>')}</p>
+    `;
+    return html;
+  } catch (e) {
+    console.error('Error generating sheet HTML:', e);
+    alert('Failed to generate character sheet.');
+    return '';
+  }
 }
 
   function htmlToText(html) {
@@ -5336,248 +6037,242 @@ function removePowerField(button) {
 
   function populateCharacterSheet(data) {
     try {
-      if (!data || !data.name) {
-        throw new Error('Invalid character data.');
-      }
-      console.log('Populating character sheet with data:', JSON.stringify(data, null, 2));
-      window.isLoadingCharacter = true;
-
-      // Helper to set input values
-      const setValue = (id, value) => {
-        const el = document.getElementById(id);
-        if (el) {
-          const oldValue = el.value;
-          el.value = value !== undefined && value !== null ? value : '';
-          console.log(`Set ${id} from ${oldValue} to ${el.value} (intended: ${value})`);
-        } else {
-          console.warn(`Element ${id} not found`);
-        }
-      };
-
-      // Clear dynamic fields
-      const containers = [
-        'skillsContainer', 'startingFeatsContainer', 'levelUpFeatsContainer',
-        'advantagesContainer', 'disadvantagesContainer', 'powersContainer',
-        'inventoryContainer', 'weaponsContainer', 'armorContainer',
-        'downtimeContainer', 'resourcesContainer'
-      ];
-      containers.forEach(container => {
-        const el = document.getElementById(container);
-        if (el) el.innerHTML = '';
-      });
-      skillCounter = startingFeatCounter = levelUpFeatCounter = advantageCounter =
-      disadvantageCounter = powerCounter = inventoryCounter = weaponCounter =
-      armorCounter = downtimeCounter = resourceCounter = 0;
-      rolledStats = [];
-      assignedStats = {};
-      availableStats = [];
-      skillCriticalTracker = {};
-      fatePointsUsedInEncounter = 0;
-
-      // Step 1: Set class and level
-      const level = data.level || 1;
-      let charClass = data.class || 'Fatemarked';
-      if (level > 3 && charClass === 'Fatemarked') {
-        console.warn('Fatemarked invalid at level > 3, defaulting to Continuum Raider');
-        charClass = 'Continuum Raider';
-      }
-      const classSelect = document.getElementById('charClass');
-      if (classSelect) {
-        const advancedClasses = [
-          'Fatemarked', 'Biomatrix Suit', 'Continuum Raider', 'Gunrunner', 'Faterunner', 'Harlequin',
-          'Warrior', 'Mage', 'Shape', 'Masque', 'Adventurer'
-        ];
-        classSelect.innerHTML = level <= 3 ? '<option value="Fatemarked">Fatemarked</option>' :
-          advancedClasses.map(cls => `<option value="${cls}">${cls}</option>`).join('');
-        const classOptions = Array.from(classSelect.options).map(opt => opt.value);
-        setValue('charClass', classOptions.includes(charClass) ? charClass : 'Continuum Raider');
-      }
-      setValue('charLevel', level);
-      setValue('charAlignment', data.alignment || (level <= 3 ? 'None' : 'Balance'));
-
-      // Step 2: Set attrMethod and attributes
-      setValue('attrMethod', 'imported');
-      ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
-        const value = data.attributes && data.attributes[attr] && data.attributes[attr] >= 8 && data.attributes[attr] <= 18 ? data.attributes[attr] : 10;
-        setValue(`attr${attr}`, value);
-        const input = document.getElementById(`attr${attr}`);
-        if (input) input.readOnly = true;
-        const assignSelect = document.getElementById(`assign${attr}`);
-        if (assignSelect) {
-          assignSelect.classList.add('hidden');
-          assignSelect.value = '';
-          assignSelect.disabled = true;
-        }
-      });
-      setValue('pointsRemaining', 'N/A');
-      document.getElementById('rerollButton')?.classList.add('hidden');
-      document.getElementById('randomRolls')?.classList.add('hidden');
-      document.getElementById('confirmAssignments')?.classList.add('hidden');
-
-      // Step 3: Load basic info
-      setValue('charName', data.name);
-      setValue('playerName', data.player);
-      setValue('charBackground', data.background);
-      setValue('charAppearance', data.appearance);
-      setValue('charOccupation', data.occupation);
-      setValue('charPersonality', data.personality);
-      setValue('charMilestone', data.milestone);
-      setValue('charNotes', data.notes);
-      setValue('credits', data.wealth?.credits || 0);
-      setValue('shards', data.wealth?.shards || 0);
-      setValue('currentXP', data.progression?.currentXP || 0);
-      setValue('nextLevelXP', data.progression?.nextLevelXP || getNextLevelXP(level));
-      setValue('charLifestyle', data.lifestyle?.type || 'Squalid');
-      setValue('lifestyleCost', data.lifestyle?.cost || 0);
-      setValue('paradoxPoints', data.paradoxPoints || 0);
-      setValue('fatePointsCurrent', level <= 3 ? 0 : level);
-
-      // Step 4: Load disadvantages
-      if (data.disadvantages) {
-        data.disadvantages.forEach(dis => {
-          addDisadvantageField();
-          const i = disadvantageCounter;
-          setValue(`disadvantage${i}`, dis.name);
-          setValue(`disadvantageTier${i}`, dis.tier || 1);
-        });
-      }
-
-      // Step 5: Load feats and advantages
-      if (data.feats) {
-        data.feats.forEach(feat => {
-          if (startingFeatsList.some(f => f.value === feat.name)) {
-            addStartingFeatField();
-            const i = startingFeatCounter;
-            setValue(`startingFeat${i}`, feat.name);
-            if (feat.name === 'custom') setValue(`startingFeatDesc${i}`, feat.desc);
-          } else if (levelUpFeatsList.some(f => f.value === feat.name) || feat.name === 'custom') {
-            addLevelUpFeatField();
-            const i = levelUpFeatCounter;
-            setValue(`levelUpFeat${i}`, feat.name);
-            if (feat.name === 'custom') setValue(`levelUpFeatDesc${i}`, feat.desc);
-          } else if (advantagesList.some(a => a.name === feat.name)) {
-            addAdvantageField();
-            const i = advantageCounter;
-            setValue(`advantage${i}`, feat.name);
-            setValue(`advantageTier${i}`, feat.tier || 1);
-          }
-        });
-      }
-
-      // Step 6: Load powers
-      if (data.powers && level > 3 && !['Faterunner', 'Harlequin'].includes(charClass)) {
-        powerCounter = 0;
-        data.powers.forEach(power => {
-          addPowerField();
-          const i = powerCounter;
-          setValue(`powerCategory${i}`, power.category || 'none');
-          setValue(`powerName${i}`, power.name);
-          setValue(`powerLevel${i}`, power.level);
-          setValue(`powerCost${i}`, power.cost || 0);
-          setValue(`powerEffect${i}`, power.effect);
-          setValue(`powerDC${i}`, power.dc || 10);
-          setValue(`powerRisk${i}`, power.risk);
-        });
-      }
-
-      // Step 7: Load skills
-      if (data.skills) {
-        data.skills.forEach(skill => {
-          addSkillField();
-          const i = skillCounter;
-          setValue(`skill${i}`, skill.name);
-          setValue(`skillRank${i}`, skill.rank || 0);
-          updateSkillSpecs(i);
-          skill.specs.forEach(spec => {
-            const specCheckbox = document.getElementById(`spec${i}_${spec}`);
-            if (specCheckbox) specCheckbox.checked = true;
-          });
-        });
-      }
-
-      // Step 8: Load inventory
-      if (data.inventory) {
-        data.inventory.forEach(item => {
-          addInventoryField();
-          const i = inventoryCounter;
-          setValue(`itemName${i}`, item.name);
-          setValue(`itemSlots${i}`, item.slots || 0);
-          setValue(`itemWeight${i}`, item.weight || 0);
-          setValue(`itemDesc${i}`, item.desc);
-          setValue(`itemDurability${i}`, item.durability);
-        });
-      }
-
-      // Step 9: Load weapons
-      if (data.weapons) {
-        data.weapons.forEach(weapon => {
-          addWeaponField();
-          const i = weaponCounter;
-          setValue(`weaponName${i}`, weapon.name);
-          setValue(`weaponDamage${i}`, weapon.damage);
-          setValue(`weaponRange${i}`, weapon.range);
-          setValue(`weaponTraits${i}`, weapon.traits);
-          setValue(`weaponCost${i}`, weapon.cost || 0);
-        });
-      }
-
-      // Step 10: Load armor
-      if (data.armors) {
-        data.armors.forEach(armor => {
-          addArmorField();
-          const i = armorCounter;
-          setValue(`armorName${i}`, armor.name);
-          setValue(`armorAC${i}`, armor.ac || 0);
-          setValue(`armorDEX${i}`, armor.dex);
-          setValue(`armorSTR${i}`, armor.str || 0);
-          setValue(`armorPenalties${i}`, armor.penalties);
-          setValue(`armorSlots${i}`, armor.slots || 0);
-          setValue(`armorCost${i}`, armor.cost || 0);
-        });
-      }
-
-      // Step 11: Load downtime
-      if (data.downtime) {
-        data.downtime.forEach(activity => {
-          addDowntimeField();
-          const i = downtimeCounter;
-          setValue(`downtimeActivity${i}`, activity.activity);
-          setValue(`downtimeTime${i}`, activity.time || 0);
-          setValue(`downtimeResources${i}`, activity.resources);
-          setValue(`downtimeSkill${i}`, activity.skill);
-          setValue(`downtimeOutcome${i}`, activity.outcome);
-          updateDowntimeOutcome(i);
-        });
-      }
-
-      // Step 12: Load resources
-      if (data.resources) {
-        data.resources.forEach(resource => {
-          addResourceField();
-          const i = resourceCounter;
-          setValue(`resourceName${i}`, resource.name);
-          setValue(`resourceCurrent${i}`, resource.current || 0);
-          setValue(`resourceMax${i}`, resource.max || 0);
-          setValue(`resourceRecharge${i}`, resource.recharge);
-        });
-      }
-
-      // Step 13: Finalize updates
-      updateSheetInputs({ skipPowers: false, preserveAttributes: true });
-      updateSkills();
-      debouncedUpdateFeatsSheet();
-      updateInputs();
-      updateSkillSpecOptions();
-      updateFeats();
-      updateClassAbilities();
-      console.log(`Final DOM state: class=${document.getElementById('charClass')?.value}, BAB=${document.getElementById('charBAB')?.value}`);
-      window.isLoadingCharacter = false;
-    } catch (e) {
-      console.error('Error populating character sheet:', e);
-      alert(`Failed to populate character sheet: ${e.message}`);
-      window.isLoadingCharacter = false;
+    if (!data || !data.name) {
+      throw new Error('Invalid character data.');
     }
+    console.log('Populating character sheet with data:', JSON.stringify(data, null, 2));
+    window.isLoadingCharacter = true;
+
+    const setValue = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) {
+        const oldValue = el.value;
+        el.value = value !== undefined && value !== null ? value : '';
+        console.log(`Set ${id} from ${oldValue} to ${el.value} (intended: ${value})`);
+      } else {
+        console.warn(`Element ${id} not found`);
+      }
+    };
+
+    const containers = [
+      'skillsContainer', 'startingFeatsContainer', 'levelUpFeatsContainer',
+      'advantagesContainer', 'disadvantagesContainer', 'powersContainer',
+      'inventoryContainer', 'weaponsContainer', 'armorContainer',
+      'downtimeContainer', 'resourcesContainer'
+    ];
+    containers.forEach(container => {
+      const el = document.getElementById(container);
+      if (el) el.innerHTML = '';
+    });
+    skillCounter = startingFeatCounter = levelUpFeatCounter = advantageCounter =
+    disadvantageCounter = powerCounter = inventoryCounter = weaponCounter =
+    armorCounter = downtimeCounter = resourceCounter = 0;
+    rolledStats = [];
+    assignedStats = {};
+    availableStats = [];
+    skillCriticalTracker = {};
+    fatePointsUsedInEncounter = 0;
+
+    const level = data.level || 1;
+    let charClass = data.class || 'Fatemarked';
+    if (level > 3 && charClass === 'Fatemarked') {
+      console.warn('Fatemarked invalid at level > 3, defaulting to Continuum Raider');
+      charClass = 'Continuum Raider';
+    }
+    const classSelect = document.getElementById('charClass');
+    if (classSelect) {
+      const advancedClasses = [
+        'Fatemarked', 'Biomatrix Suit', 'Continuum Raider', 'Gunrunner', 'Faterunner', 'Harlequin',
+        'Warrior', 'Mage', 'Shape', 'Masque', 'Adventurer'
+      ];
+      classSelect.innerHTML = level <= 3 ? '<option value="Fatemarked">Fatemarked</option>' :
+        advancedClasses.map(cls => `<option value="${cls}">${cls}</option>`).join('');
+      const classOptions = Array.from(classSelect.options).map(opt => opt.value);
+      setValue('charClass', classOptions.includes(charClass) ? charClass : 'Continuum Raider');
+    }
+    setValue('charLevel', level);
+    setValue('charAlignment', data.alignment || (level <= 3 ? 'None' : 'Balance'));
+
+    setValue('attrMethod', 'imported');
+    ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+      const value = data.attributes && data.attributes[attr] && data.attributes[attr] >= 8 ? data.attributes[attr] : 10;
+      setValue(`attr${attr}`, value);
+      const input = document.getElementById(`attr${attr}`);
+      if (input) input.readOnly = true;
+      const assignSelect = document.getElementById(`assign${attr}`);
+      if (assignSelect) {
+        assignSelect.classList.add('hidden');
+        assignSelect.value = '';
+        assignSelect.disabled = true;
+      }
+    });
+    setValue('pointsRemaining', 'N/A');
+    const rerollButton = document.getElementById('rerollButton');
+    if (rerollButton) rerollButton.classList.add('hidden');
+    const randomRolls = document.getElementById('randomRolls');
+    if (randomRolls) randomRolls.classList.add('hidden');
+    const confirmAssignments = document.getElementById('confirmAssignments');
+    if (confirmAssignments) confirmAssignments.classList.add('hidden');
+
+    setValue('charName', data.name);
+    setValue('playerName', data.player);
+    setValue('charBackground', data.background);
+    setValue('charAppearance', data.appearance);
+    setValue('charOccupation', data.occupation);
+    setValue('charPersonality', data.personality);
+    setValue('charMilestone', data.milestone);
+    setValue('charNotes', data.notes);
+    setValue('credits', data.wealth?.credits || 0);
+    setValue('shards', data.wealth?.shards || 0);
+    setValue('currentXP', data.progression?.currentXP || 0);
+    setValue('nextLevelXP', data.progression?.nextLevelXP || getNextLevelXP(level));
+    setValue('charLifestyle', data.lifestyle?.type || 'Squalid');
+    setValue('lifestyleCost', data.lifestyle?.cost || 0);
+    setValue('paradoxPoints', data.paradoxPoints || 0);
+    setValue('fatePointsCurrent', level <= 3 ? 0 : level);
+
+    if (data.disadvantages) {
+      data.disadvantages.forEach(dis => {
+        addDisadvantageField();
+        const i = disadvantageCounter;
+        setValue(`disadvantage${i}`, dis.name);
+        setValue(`disadvantageTier${i}`, dis.tier || 1);
+      });
+    }
+
+    if (data.feats) {
+      data.feats.forEach(feat => {
+        if (startingFeatsList.some(f => f.value === feat.name)) {
+          addStartingFeatField();
+          const i = startingFeatCounter;
+          setValue(`startingFeat${i}`, feat.name);
+          if (feat.name === 'custom') setValue(`startingFeatDesc${i}`, feat.desc);
+        } else if (levelUpFeatsList.some(f => f.value === feat.name) || feat.name === 'custom') {
+          addLevelUpFeatField();
+          const i = levelUpFeatCounter;
+          setValue(`levelUpFeat${i}`, feat.name);
+          if (feat.name === 'custom') setValue(`levelUpFeatDesc${i}`, feat.desc);
+        } else if (advantagesList.some(a => a.name === feat.name)) {
+          addAdvantageField();
+          const i = advantageCounter;
+          setValue(`advantage${i}`, feat.name);
+          setValue(`advantageTier${i}`, feat.tier || 1);
+        }
+      });
+    }
+
+    if (data.powers && level > 3 && !['Faterunner', 'Harlequin'].includes(charClass)) {
+      powerCounter = 0;
+      data.powers.forEach(power => {
+        addPowerField();
+        const i = powerCounter;
+        setValue(`powerCategory${i}`, power.category || 'none');
+        setValue(`powerName${i}`, power.name);
+        setValue(`powerLevel${i}`, power.level || 'PL1');
+        setValue(`powerCost${i}`, power.cost || 0);
+        setValue(`powerEffect${i}`, power.effect);
+        setValue(`powerDC${i}`, power.dc || 10);
+        setValue(`powerRisk${i}`, power.risk || 'None');
+        const costInput = document.getElementById(`powerCost${i}`);
+        if (costInput) {
+          costInput.dataset.prevCost = power.cost || 0;
+          updatePowerCost(i);
+        }
+      });
+    }
+
+    if (data.skills) {
+      data.skills.forEach(skill => {
+        addSkillField();
+        const i = skillCounter;
+        setValue(`skill${i}`, skill.name);
+        setValue(`skillRank${i}`, skill.rank || 0);
+        updateSkillSpecs(i);
+        skill.specs.forEach(spec => {
+          const specCheckbox = document.getElementById(`spec${i}_${spec}`);
+          if (specCheckbox) specCheckbox.checked = true;
+        });
+      });
+    }
+
+    if (data.inventory) {
+      data.inventory.forEach(item => {
+        addInventoryField();
+        const i = inventoryCounter;
+        setValue(`itemName${i}`, item.name);
+        setValue(`itemSlots${i}`, item.slots || 1);
+        setValue(`itemWeight${i}`, item.weight || 0);
+        setValue(`itemDesc${i}`, item.desc);
+        setValue(`itemDurability${i}`, item.durability);
+      });
+    }
+
+    if (data.weapons) {
+      data.weapons.forEach(weapon => {
+        addWeaponField();
+        const i = weaponCounter;
+        setValue(`weaponName${i}`, weapon.name);
+        setValue(`weaponDamage${i}`, weapon.damage);
+        setValue(`weaponRange${i}`, weapon.range);
+        setValue(`weaponTraits${i}`, weapon.traits);
+        setValue(`weaponCost${i}`, weapon.cost || 0);
+      });
+    }
+
+    if (data.armors) {
+      data.armors.forEach(armor => {
+        addArmorField();
+        const i = armorCounter;
+        setValue(`armorName${i}`, armor.name);
+        setValue(`armorAC${i}`, armor.ac || 0);
+        setValue(`armorDEX${i}`, armor.dex);
+        setValue(`armorSTR${i}`, armor.str || 0);
+        setValue(`armorPenalties${i}`, armor.penalties);
+        setValue(`armorSlots${i}`, armor.slots || 0);
+        setValue(`armorCost${i}`, armor.cost || 0);
+      });
+    }
+
+    if (data.downtime) {
+      data.downtime.forEach(activity => {
+        addDowntimeField();
+        const i = downtimeCounter;
+        setValue(`downtimeActivity${i}`, activity.activity);
+        setValue(`downtimeTime${i}`, activity.time || 0);
+        setValue(`downtimeResources${i}`, activity.resources);
+        setValue(`downtimeSkill${i}`, activity.skill);
+        setValue(`downtimeOutcome${i}`, activity.outcome);
+        updateDowntimeOutcome(i);
+      });
+    }
+
+    if (data.resources) {
+      data.resources.forEach(resource => {
+        addResourceField();
+        const i = resourceCounter;
+        setValue(`resourceName${i}`, resource.name);
+        setValue(`resourceCurrent${i}`, resource.current || 0);
+        setValue(`resourceMax${i}`, resource.max || 0);
+        setValue(`resourceRecharge${i}`, resource.recharge);
+      });
+    }
+
+    loadStatPointsFromData(data);
+    updateSheetInputs({ skipPowers: false, preserveAttributes: true });
+    updateSkills();
+    debouncedUpdateFeatsSheet();
+    updateInputs();
+    updateSkillSpecOptions();
+    updateFeats();
+    updateClassAbilities();
+    console.log(`Final DOM state: class=${document.getElementById('charClass')?.value}, BAB=${document.getElementById('charBAB')?.value}`);
+    window.isLoadingCharacter = false;
+  } catch (e) {
+    console.error('Error populating character sheet:', e);
+    alert(`Failed to populate character sheet: ${e.message}`);
+    window.isLoadingCharacter = false;
   }
+}
 
   function generateCharacterSheet() {
     try {
@@ -5615,7 +6310,27 @@ function removePowerField(button) {
       if (attrMethodEl) attrMethodEl.value = 'pointBuy';
       const charLifestyleEl = document.getElementById('charLifestyle');
       if (charLifestyleEl) charLifestyleEl.value = 'Squalid';
-  
+
+      // Reset stat point globals
+      statPointsAllocated = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+      statPointsCommitted = true;
+      statPointsAvailable = 0;
+
+      // Clear attribute inputs
+      ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+        const input = document.getElementById(`attr${attr}`);
+        if (input) {
+          input.value = 10;
+          input.readOnly = false;
+        }
+        const assignSelect = document.getElementById(`assign${attr}`);
+        if (assignSelect) {
+          assignSelect.classList.add('hidden');
+          assignSelect.value = '';
+          assignSelect.disabled = true;
+        }
+      });
+
       // Clear dynamic containers
       [
         'skillsContainer', 'startingFeatsContainer', 'levelUpFeatsContainer', 'advantagesContainer',
@@ -5625,7 +6340,7 @@ function removePowerField(button) {
         const el = document.getElementById(container);
         if (el) el.innerHTML = '';
       });
-  
+
       // Reset counters and trackers
       skillCounter = startingFeatCounter = levelUpFeatCounter = advantageCounter = disadvantageCounter =
       powerCounter = inventoryCounter = weaponCounter = armorCounter = downtimeCounter = resourceCounter = 0;
@@ -5634,10 +6349,13 @@ function removePowerField(button) {
       availableStats = [];
       skillCriticalTracker = {};
       fatePointsUsedInEncounter = 0;
-  
+
       // Update UI and state
       updateSheetInputs({ preserveAttributes: true });
+      resetStatPointsOnLevelChange();
       debouncedUpdateFeatsSheet();
+      updateStatPointUI();
+      console.log('clearSheetFields: Reset statPointsAllocated=', statPointsAllocated, 'statPointsCommitted=', statPointsCommitted);
       alert('Character sheet cleared!');
     } catch (e) {
       console.error('Error clearing sheet fields:', e);
@@ -5647,71 +6365,128 @@ function removePowerField(button) {
   // Initialize on page load
   document.addEventListener('DOMContentLoaded', () => {
     try {
-      // Clear power fields
-      const powersContainer = document.getElementById('powersContainer');
-      if (powersContainer) {
-        powersContainer.innerHTML = '';
-        powerCounter = 0;
-        console.log('Cleared powersContainer and reset powerCounter');
+    // Initialize stat point globals based on current level
+    const charLevelEl = document.getElementById('charLevel');
+    if (!charLevelEl) {
+      throw new Error('charLevel input not found');
+    }
+    const lvl = parseInt(charLevelEl.value) || 1;
+    const totalPoints = getStatPointsForLevel(lvl);
+    statPointsAllocated = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+    statPointsAvailable = totalPoints;
+    statPointsCommitted = totalPoints === 0;
+    console.log(`DOMContentLoaded: Initialized statPointsAllocated=`, statPointsAllocated, `statPointsCommitted=${statPointsCommitted}, statPointsAvailable=${statPointsAvailable}, lvl=${lvl}`);
+
+    // Validate critical DOM elements
+    const requiredElements = [
+      'charName', 'playerName', 'charLevel', 'charClass', 'charAlignment', 'charBackground',
+      'charAppearance', 'charOccupation', 'charPersonality', 'charMilestone', 'attrMethod',
+      'pointsRemaining', 'rerollButton', 'randomRolls', 'confirmAssignments', 'rolledStats',
+      'attrSTR', 'attrDEX', 'attrCON', 'attrINT', 'attrWIS', 'attrCHA', 'statPointAllocation',
+      'statPointsAvailable', 'commitStatPointsBtn', 'statCommitBanner', 'health', 'sanity',
+      'defense', 'initiative', 'charBAB', 'speed', 'reflex', 'fortitude', 'willpower', 'luck',
+      'fatePointsCurrent', 'fatePointsRegenerate', 'fatePointsRest', 'paradoxPoints',
+      'resourcesContainer', 'inherentAbilitiesContainer', 'skillPointsDisplay', 'skillsContainer',
+      'startingFeatsContainer', 'levelUpFeatsContainer', 'advantageWarning', 'advantagesContainer',
+      'disadvantagesContainer', 'powersContainer', 'addPowerButton', 'credits', 'shards',
+      'inventoryContainer', 'weaponsContainer', 'armorContainer', 'currentXP', 'nextLevelXP',
+      'charLifestyle', 'lifestyleCost', 'downtimeContainer', 'charNotes', 'loadCharacterInput',
+      'results', 'rollResult', 'criticalResult', 'sanityResult', 'paradoxResult', 'levelNote',
+      'historyList', 'gmReferenceOutput', 'sheetModal', 'sheetPreview', 'sheetText',
+      'rollType', 'characterLevel', 'characterClass', 'modifier', 'skillRank', 'bab', 'dc',
+      'ac', 'opponentRoll', 'cumulativeDC', 'customParadoxDC', 'classFeatTier', 'customFeat',
+      'synergyBonus', 'envAdvantage', 'coverConcealment', 'powerLevel', 'paradoxDC', 'classFeat',
+      'advantage', 'featContainer', 'savingType', 'skillName', 'skillSpec', 'advantageSelect',
+      'advantageTier', 'disadvantageSelect', 'disadvantageTier', 'powerSelect', 'paradoxCheckOptIn'
+    ];
+    requiredElements.forEach(id => {
+      if (!document.getElementById(id)) {
+        console.warn(`Required element ${id} is missing from the DOM`);
       }
+    });
 
-      // Initialize character sheet
-      updateSheetInputs({ skipPowers: true, preserveAttributes: true });
-      debouncedUpdateFeatsSheet();
+    // Clear power fields
+    const powersContainer = document.getElementById('powersContainer');
+    if (powersContainer) {
+      powersContainer.innerHTML = '';
+      powerCounter = 0;
+      console.log('Cleared powersContainer and reset powerCounter');
+    } else {
+      console.warn('powersContainer element not found');
+    }
 
-      // Initialize roll tool
-      updateInputs();
-      updateSkillSpecOptions();
-      updateFeats();
-      updateClassAbilities();
+    // Initialize character sheet
+    resetStatPointsOnLevelChange();
+    updateSheetInputs({ skipPowers: true, preserveAttributes: true });
+    debouncedUpdateFeatsSheet();
+    updateInputs();
+    updateSkillSpecOptions();
+    updateFeats();
+    updateClassAbilities();
 
-      // Add dynamic onchange handlers
-      const inputs = [
-        { id: 'charName', handler: () => {
+    // Call updateStatPointUI once at the end
+    updateStatPointUI();
+
+    // Add dynamic onchange handlers
+    const inputs = [
+      {
+        id: 'charName',
+        handler: () => {
           console.log('charName changed to:', document.getElementById('charName').value);
           updateInputs();
           updateSkillSpecOptions();
           updateFeats();
           updateClassAbilities();
-        }},
-        { id: 'charLevel', handler: () => {
+        }
+      },
+      {
+        id: 'charLevel',
+        handler: () => {
           console.log('charLevel changed to:', document.getElementById('charLevel').value);
+          resetStatPointsOnLevelChange();
           updateSheetInputs({ preserveAttributes: true });
           updateInputs();
           updateSkillSpecOptions();
           updateFeats();
           updateClassAbilities();
-        }},
-        { id: 'charClass', handler: () => {
+          updateStatPointUI();
+        }
+      },
+      {
+        id: 'charClass',
+        handler: () => {
           console.log('charClass changed to:', document.getElementById('charClass').value);
           updateSheetInputs({ preserveAttributes: true });
           updateInputs();
           updateSkillSpecOptions();
           updateFeats();
           updateClassAbilities();
-        }},
-        { id: 'attrSTR', handler: () => updateSheetInputs({ preserveAttributes: true }) },
-        { id: 'attrDEX', handler: () => updateSheetInputs({ preserveAttributes: true }) },
-        { id: 'attrCON', handler: () => updateSheetInputs({ preserveAttributes: true }) },
-        { id: 'attrINT', handler: () => updateSheetInputs({ preserveAttributes: true }) },
-        { id: 'attrWIS', handler: () => updateSheetInputs({ preserveAttributes: true }) },
-        { id: 'attrCHA', handler: () => updateSheetInputs({ preserveAttributes: true }) }
-      ];
-      inputs.forEach(({ id, handler }) => {
-        const input = document.getElementById(id);
-        if (input) {
-          input.addEventListener('change', () => {
-            if (!window.isLoadingCharacter) handler();
-          });
-        } else {
-          console.warn(`Input ${id} not found`);
         }
-      });
-    } catch (e) {
-      console.error('Error initializing page:', e);
-      alert('Failed to initialize page.');
-    }
-  });
+      },
+      { id: 'attrSTR', handler: () => updateSheetInputs({ preserveAttributes: true }) },
+      { id: 'attrDEX', handler: () => updateSheetInputs({ preserveAttributes: true }) },
+      { id: 'attrCON', handler: () => updateSheetInputs({ preserveAttributes: true }) },
+      { id: 'attrINT', handler: () => updateSheetInputs({ preserveAttributes: true }) },
+      { id: 'attrWIS', handler: () => updateSheetInputs({ preserveAttributes: true }) },
+      { id: 'attrCHA', handler: () => updateSheetInputs({ preserveAttributes: true }) }
+    ];
+    inputs.forEach(({ id, handler }) => {
+      const input = document.getElementById(id);
+      if (input) {
+        input.addEventListener('change', () => {
+          if (!window.isLoadingCharacter) handler();
+        });
+      } else {
+        console.warn(`Input ${id} not found`);
+      }
+    });
+
+    console.log('DOMContentLoaded: Initialized statPointsAllocated=', statPointsAllocated, 'statPointsCommitted=', statPointsCommitted);
+  } catch (e) {
+    console.error('Error initializing page:', e);
+    alert('Failed to initialize page.');
+  }
+});
 </script>
 </body>
 </html>
