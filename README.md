@@ -14,8 +14,7 @@ Getting Started
 
 
 
-Clone the repository: git clone https://github.com/your-username/continuum-wars-roll-widget.git
-
+Clone the repository: git clone (https://github.com/Hymlock/Continuum-Wars-Roll-Widget.git)
 
 
 Open Continuum Wars Roll Widget.html in a web browser.
