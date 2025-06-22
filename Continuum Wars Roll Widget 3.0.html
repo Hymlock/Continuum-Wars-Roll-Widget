@@ -8,579 +8,596 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>const { jsPDF } = window.jspdf;</script>
 <style>
-    @import url('https://fonts.cdnfonts.com/css/orbitron');
-    body {
-      font-family: 'Orbitron', sans-serif;
-      background: linear-gradient(135deg, #0a0a23, #1a1a3a);
-      color: #e0e0ff;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 1170px;
-      margin: 20px auto;
-      padding: 20px;
-      background: rgba(15, 15, 40, 0.9);
-      border: 2px solid #00ffcc;
-      border-radius: 10px;
-      box-shadow: 0 0 15px #00cc99;
-    }
-    h1 {
-      font-size: 2rem;
-      text-align: center;
-      color: #00ffcc;
-      text-shadow: 0 0 5px #00cc99;
-      margin-bottom: 1.5rem;
-    }
-    h2 {
-      font-size: 1.3rem;
-      color: #ffcc00;
-      text-shadow: 0 0 3px #ff9900;
-      margin-bottom: 0.75rem;
-    }
-    .input-section, .results, .history, .gm-reference, .character-sheet {
-      background: rgba(20, 20, 50, 0.8);
-      padding: 1.5rem;
-      border-radius: 8px;
-      margin-bottom: 1.5rem;
-      border: 1px solid #00ffcc;
-    }
-    .gm-reference.collapsed .gm-content, .character-sheet.collapsed .sheet-content {
-      display: none;
-    }
-    #statPointAllocation {
-      position: relative;
-      z-index: 20;
-    }
-    .attributes-section, .non-attributes-section {
-      position: relative;
-      padding: 1rem 0;
-    }
-    #statCommitBanner {
-      position: relative;
-      width: 100%;
-      background: rgba(50, 50, 50, 0.9);
-      border: 2px solid #ff4444;
-      padding: 15px;
-      margin-bottom: 10px;
-      text-align: center;
-      color: #ffffff;
-      font-size: 1.5rem;
-      z-index: 1000;
-    }
-    #statCommitBanner div {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .toggle-button {
-      background: linear-gradient(90deg, #ffcc00, #ff9900);
-      padding: 0.6rem;
-      border-radius: 5px;
-      cursor: pointer;
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-    .toggle-button:hover {
-      background: linear-gradient(90deg, #ff9900, #ffcc00);
-      transform: scale(1.05);
-    }
+  @import url('https://fonts.cdnfonts.com/css/orbitron');
+  body {
+    font-family: 'Orbitron', sans-serif;
+    background: linear-gradient(135deg, #0a0a23, #1a1a3a);
+    color: #e0e0ff;
+    margin: 0;
+    padding: 0;
+  }
+  .container {
+    max-width: 1170px;
+    margin: 20px auto;
+    padding: 20px;
+    background: rgba(15, 15, 40, 0.9);
+    border: 2px solid #00ffcc;
+    border-radius: 10px;
+    box-shadow: 0 0 15px #00cc99;
+  }
+  h1 {
+    font-size: 2rem;
+    text-align: center;
+    color: #00ffcc;
+    text-shadow: 0 0 5px #00cc99;
+    margin-bottom: 1.5rem;
+  }
+  h2 {
+    font-size: 1.3rem;
+    color: #ffcc00;
+    text-shadow: 0 0 3px #ff9900;
+    margin-bottom: 0.75rem;
+  }
+  .input-section, .results, .history, .gm-reference, .character-sheet {
+    background: rgba(20, 20, 50, 0.8);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #00ffcc;
+  }
+  .gm-reference.collapsed .gm-content, .character-sheet.collapsed .sheet-content {
+    display: none;
+  }
+  #statPointAllocation {
+    position: relative;
+    z-index: 20;
+  }
+  .attributes-section, .non-attributes-section {
+    position: relative;
+    padding: 1rem 0;
+  }
+  #statCommitBanner {
+    position: relative;
+    width: 100%;
+    background: rgba(50, 50, 50, 0.9);
+    border: 2px solid #ff4444;
+    padding: 15px;
+    margin-bottom: 10px;
+    text-align: center;
+    color: #ffffff;
+    font-size: 1.5rem;
+    z-index: 1000;
+  }
+  #statCommitBanner div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .toggle-button {
+    background: linear-gradient(90deg, #ffcc00, #ff9900);
+    padding: 0.6rem;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  .toggle-button:hover {
+    background: linear-gradient(90deg, #ff9900, #ffcc00);
+    transform: scale(1.05);
+  }
+  .grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 768px) {
     .grid {
-      display: grid;
-      gap: 1rem;
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
     }
-    @media (min-width: 768px) {
-      .grid {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-    label {
-      display: block;
-      font-size: 0.9rem;
-      font-weight: 600;
-      margin-bottom: 0.3rem;
-    }
-    select, input, textarea {
-      width: 100%;
-      padding: 0.6rem;
-      border: 1px solid #00cc99;
-      border-radius: 5px;
-      background: #1a1a3a;
-      color: #e0e0ff;
-    }
-    button {
-      width: 100%;
-      padding: 0.7rem;
-      background: linear-gradient(90deg, #00ffcc, #00cc99);
-      color: #0a0a23;
-      border: none;
-      border-radius: 5px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    button:hover {
-      transform: scale(1.05);
-      background: linear-gradient(90deg, #00cc99, #00ffcc);
-    }
-    .dynamic-button, .add-button, .reroll-button {
-      background: linear-gradient(90deg, #ffcc00, #ff9900);
-      margin: 5px;
-      padding: 0.6rem;
-      font-size: 0.9rem;
-      width: auto;
-    }
-    .dynamic-button:hover, .add-button:hover, .reroll-button:hover {
-      background: linear-gradient(90deg, #ff9900, #ffcc00);
-    }
-    .remove-button {
-      background: linear-gradient(90deg, #ff4444, #cc0000);
-      padding: 0.6rem;
-      width: auto;
-    }
-    .remove-button:hover {
-      background: linear-gradient(90deg, #cc0000, #ff4444);
-    }
-    .button-group {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-    .hidden {
-      display: none !important;
-    }
-    ul {
-      padding-left: 1.5rem;
-      list-style-type: square;
-      color: #ffcc00;
-    }
-    p {
-      margin: 0.3rem 0;
-      line-height: 1.4;
-    }
-    .critical { color: #00ffcc; font-weight: bold; text-shadow: 0 0 3px #00cc99; }
-    .sanity { color: #ff66cc; font-weight: bold; text-shadow: 0 0 3px #ff3399; }
-    .paradox { color: #ff4444; font-weight: bold; text-shadow: 0 0 3px #cc0000; }
-    .level-note { color: #ffcc00; font-style: italic; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      border: 1px solid #00cc99;
-      padding: 8px;
-      text-align: left;
-      color: #e0e0ff;
-    }
-    th { background: #1a1a3a; }
-    .dynamic-group {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 0.5rem;
-      align-items: center;
-    }
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    .modal-content {
-      background: rgba(15, 15, 40, 0.9);
-      border: 2px solid #00ffcc;
-      border-radius: 10px;
-      padding: 20px;
-      max-width: 90%;
-      max-height: 90%;
-      overflow-y: auto;
-    }
-    .close-button {
-      float: right;
-      cursor: pointer;
-      color: #ff4444;
-      font-size: 1.5rem;
-    }
-    .sheet-preview {
-      font-size: 12pt;
-      line-height: 1.6;
-    }
-    .sheet-preview h2 { font-size: 18pt; }
-    .copyable-text {
-      width: 100%;
-      height: 200px;
-      margin-top: 10px;
-    }
-    .advantage-warning {
-      color: #ff4444;
-      margin-bottom: 10px;
-      display: none;
-    }
+  }
+  label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+  select, input, textarea {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid #00cc99;
+    border-radius: 5px;
+    background: #1a1a3a;
+    color: #e0e0ff;
+  }
+  button {
+    width: 100%;
+    padding: 0.7rem;
+    background: linear-gradient(90deg, #00ffcc, #00cc99);
+    color: #0a0a23;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  button:hover {
+    transform: scale(1.05);
+    background: linear-gradient(90deg, #00cc99, #00ffcc);
+  }
+  .dynamic-button, .add-button, .reroll-button {
+    background: linear-gradient(90deg, #ffcc00, #ff9900);
+    margin: 5px;
+    padding: 0.6rem;
+    font-size: 0.9rem;
+    width: auto;
+  }
+  .dynamic-button:hover, .add-button:hover, .reroll-button:hover {
+    background: linear-gradient(90deg, #ff9900, #ffcc00);
+  }
+  .remove-button {
+    background: linear-gradient(90deg, #ff4444, #cc0000);
+    padding: 0.6rem;
+    width: auto;
+  }
+  .remove-button:hover {
+    background: linear-gradient(90deg, #cc0000, #ff4444);
+  }
+  .button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .hidden {
+    display: none !important;
+  }
+  ul {
+    padding-left: 1.5rem;
+    list-style-type: square;
+    color: #ffcc00;
+  }
+  p {
+    margin: 0.3rem 0;
+    line-height: 1.4;
+  }
+  .critical { color: #00ffcc; font-weight: bold; text-shadow: 0 0 3px #00cc99; }
+  .sanity { color: #ff66cc; font-weight: bold; text-shadow: 0 0 3px #ff3399; }
+  .paradox { color: #ff4444; font-weight: bold; text-shadow: 0 0 3px #cc0000; }
+  .level-note { color: #ffcc00; font-style: italic; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  th, td {
+    border: 1px solid #00cc99;
+    padding: 8px;
+    text-align: left;
+    color: #e0e0ff;
+  }
+  th { background: #1a1a3a; }
+  .dynamic-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    align-items: center;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  .modal-content {
+    background: rgba(15, 15, 40, 0.9);
+    border: 2px solid #00ffcc;
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow-y: auto;
+  }
+  .close-button {
+    float: right;
+    cursor: pointer;
+    color: #ff4444;
+    font-size: 1.5rem;
+  }
+  .sheet-preview {
+    font-size: 12pt;
+    line-height: 1.6;
+  }
+  .sheet-preview h2 { font-size: 18pt; }
+  .copyable-text {
+    width: 100%;
+    height: 200px;
+    margin-top: 10px;
+  }
+  .advantage-warning {
+    color: #ff4444;
+    margin-bottom: 10px;
+    display: none;
+  }
+  /* Disable number input arrows for attribute inputs */
+  input[id^="attr"][type="number"]::-webkit-inner-spin-button,
+  input[id^="attr"][type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[id^="attr"][type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
 </style>
 </head>
 <body>
   <div class="container">
-  <h1>Continuum Wars Roll Widget</h1>
-  <div class="input-section">
-  <h2>Configure Your Roll</h2>
-  <div class="grid">
-    <div>
-      <label>Character Level</label>
-      <input id="characterLevel" type="number" value="1" min="1" max="15" placeholder="Level (1-15)" title="Character's level" onchange="updateInputs(); updateFeats(); updateClassAbilities();">
-    </div>
-    <div>
-      <label>Character Class</label>
-      <select id="characterClass" title="Character's class" onchange="updateInputs(); updateFeats(); updateClassAbilities();">
-        <option value="Fatemarked">Fatemarked</option>
-        <option value="Biomatrix Suit">Biomatrix Suit</option>
-        <option value="Continuum Raider">Continuum Raider</option>
-        <option value="Gunrunner">Gunrunner</option>
-        <option value="Faterunner">Faterunner</option>
-        <option value="Harlequin">Harlequin</option>
-        <option value="Warrior">Warrior</option>
-        <option value="Mage">Mage</option>
-        <option value="Shape">Shape</option>
-        <option value="Masque">Masque</option>
-        <option value="Adventurer">Adventurer</option>
-      </select>
-    </div>
-    <div>
-      <label>Roll Type</label>
-      <select id="rollType" title="Type of dice roll" onchange="resetInputs(); updateInputs(); updateSkillSpecOptions();">
-        <option value="skill">Skill Check (d20 + Modifier + Rank)</option>
-        <option value="attack">Attack Roll (d20 + BAB + Modifier vs. AC)</option>
-        <option value="damage">Damage Roll (Dice + Modifier)</option>
-        <option value="sanity">Sanity Check (d20 + WIS Modifier)</option>
-        <option value="saving">Saving Throw (d20 + Modifier)</option>
-        <option value="initiative">Initiative (d20 + DEX Modifier)</option>
-        <option value="paradox">Paradox Risk Check (d20 + Modifier)</option>
-        <option value="hazard">Environmental Hazard Roll (d20 + Modifier)</option>
-        <option value="custom">Custom Roll (e.g., 3d6)</option>
-        <option value="extended">Extended Test (Cumulative DC)</option>
-        <option value="opposed">Opposed Test (d20 + Modifier vs. Opponent)</option>
-        <option value="extendedOpposed">Extended Opposed Test</option>
-        <option value="disarm">Disarm (Attack Roll vs. AC)</option>
-        <option value="grapple">Grapple (Opposed Check)</option>
-        <option value="trip">Trip (Attack Roll vs. AC)</option>
-        <option value="nonLethal">Non-Lethal Damage (Dice + Modifier)</option>
-      </select>
-    </div>
-    <div id="damageDiceInput" class="hidden">
-      <label>Damage Dice</label>
-      <select id="damageDice" title="Dice for damage roll">
-        <option value="1d4">1d4</option>
-        <option value="1d6">1d6</option>
-        <option value="1d8">1d8</option>
-        <option value="2d6">2d6</option>
-        <option value="1d10">1d10</option>
-        <option value="2d8">2d8</option>
-      </select>
-    </div>
-    <div id="customDiceInput" class="hidden">
-      <label>Custom Dice</label>
-      <input id="customDice" type="text" placeholder="e.g., 3d6" title="Custom dice notation (e.g., 3d6)">
-    </div>
-    <div>
-      <label>Modifier (Attribute)</label>
-      <input id="modifier" type="number" value="0" placeholder="Modifier" title="Attribute modifier">
-    </div>
-    <div id="skillRankInput" class="hidden">
-      <label>Skill Rank</label>
-      <input id="skillRank" type="number" value="0" min="0" placeholder="Rank" title="Skill rank">
-    </div>
-    <div id="babInput" class="hidden">
-      <label>Base Attack Bonus (BAB)</label>
-      <input id="bab" type="number" value="0" min="0" placeholder="BAB" title="Base Attack Bonus">
-    </div>
-    <div id="savingTypeInput" class="hidden">
-      <label>Saving Throw Type</label>
-      <select id="savingType" title="Type of saving throw">
-        <option value="reflex">Reflex (DEX)</option>
-        <option value="fortitude">Fortitude (CON)</option>
-        <option value="willpower">Willpower (WIS)</option>
-        <option value="luck">Luck (CHA, Level 4+)</option>
-      </select>
-    </div>
-    <div id="paradoxDCInput" class="hidden">
-      <label>Paradox DC</label>
-      <select id="paradoxDC" title="Paradox Difficulty Class" onchange="updateParadoxDC()">
-        <option value="custom">Custom DC</option>
-        <option value="15">PL 1 (DC 15)</option>
-        <option value="18">PL 2 (DC 18)</option>
-        <option value="22">PL 3 (DC 22)</option>
-      </select>
-      <input id="customParadoxDC" type="number" placeholder="Custom DC" title="Custom Paradox DC" class="hidden">
-    </div>
-    <div id="powerLevelInput" class="hidden">
-      <label>Power Level/Tier</label>
-      <select id="powerLevel" title="Power level for paradox risk"></select>
-    </div>
-    <div id="dcInput" class="hidden">
-      <label>Difficulty Class (DC)</label>
-      <input id="dc" type="number" placeholder="DC (e.g., 15)" min="0" title="Difficulty Class">
-    </div>
-    <div id="acInput" class="hidden">
-      <label>Target Armor Class (AC)</label>
-      <input id="ac" type="number" value="15" min="0" placeholder="AC" title="Target Armor Class">
-    </div>
-    <div id="opponentRollInput" class="hidden">
-      <label>Opponent Roll</label>
-      <input id="opponentRoll" type="number" value="0" min="0" placeholder="Opponent Roll" title="Opponent's roll for opposed tests">
-    </div>
-    <div id="cumulativeDCInput" class="hidden">
-      <label>Cumulative DC</label>
-      <input id="cumulativeDC" type="number" placeholder="DC (e.g., 30)" min="0" title="Cumulative DC for extended tests">
-    </div>
-    <div id="skillNameInput" class="hidden">
-      <label>Skill Name</label>
-      <select id="skillName" title="Skill for the roll" onchange="updateSkillSpecOptions()">
-        <option value="none">Select Skill</option>
-      </select>
-    </div>
-    <div id="skillSpecInput" class="hidden">
-      <label>Skill Specialization</label>
-      <select id="skillSpec" title="Specialization for the skill">
-        <option value="none">None</option>
-      </select>
-    </div>
-    <div id="advantageSelectInput" class="hidden">
-      <label>Advantage</label>
-      <select id="advantageSelect" title="Select advantage">
-        <option value="none">None</option>
-      </select>
-      <input id="advantageTier" type="number" min="1" max="5" value="1" style="width: 100px;" placeholder="Tier" title="Advantage tier" class="hidden">
-    </div>
-    <div id="disadvantageSelectInput" class="hidden">
-      <label>Disadvantage</label>
-      <select id="disadvantageSelect" title="Select disadvantage">
-        <option value="none">None</option>
-      </select>
-      <input id="disadvantageTier" type="number" min="1" max="5" value="1" style="width: 100px;" placeholder="Tier" title="Disadvantage tier" class="hidden">
-    </div>
-    <div id="powerSelectInput" class="hidden">
-      <label>Power</label>
-      <select id="powerSelect" title="Select power">
-        <option value="none">None</option>
-      </select>
-    </div>
-    <div>
-      <label>Class Feat/Advantage</label>
-      <select id="classFeat" class="feat-select" title="Class-relevant feat or advantage" onchange="updateInputs(); updateFeatOptions()">
-        <option value="none">None</option>
-      </select>
-      <div id="classFeatTierInput" class="hidden">
-        <label>Feat/Advantage Tier</label>
-        <input id="classFeatTier" type="number" min="1" max="5" value="1" placeholder="Tier" title="Feat or advantage tier">
-      </div>
-      <div id="featContainer"></div>
-      <button class="add-button" onclick="addFeatField()">Add Feat/Advantage</button>
-    </div>
-    <div>
-      <label>Mechanical Advantage</label>
-      <select id="advantage" title="Mechanical advantage or disadvantage">
-        <option value="none">None</option>
-        <option value="advantage">Advantage</option>
-        <option value="disadvantage">Disadvantage</option>
-      </select>
-    </div>
-    <div>
-      <label>Environmental Advantage (GM)</label>
-      <input type="checkbox" id="envAdvantage" title="Grant environmental advantage">
-      <label for="envAdvantage">Grant Advantage</label>
-    </div>
-    <div id="paradoxCheckInput" class="hidden">
-      <label>Elective Paradox Check (Faterunner/Harlequin)</label>
-      <input type="checkbox" id="paradoxCheckOptIn" title="Opt-in for paradox check on Tier 2/3 effects">
-      <label for="paradoxCheckOptIn">Apply Paradox Check</label>
-    </div>
-    <div id="synergyBonusInput" class="hidden">
-      <label>Synergy Bonus</label>
-      <input type="checkbox" id="synergyBonus" title="Apply +2 bonus from allies"> Apply +2 Bonus
-    </div>
-    <div id="coverConcealmentInput" class="hidden">
-      <label>Cover/Concealment</label>
-      <select id="coverConcealment" title="Cover or concealment modifiers">
-        <option value="none">None</option>
-        <option value="cover">Cover (+4 AC)</option>
-        <option value="concealment">Concealment (20% miss)</option>
-      </select>
-    </div>
-    <div id="customFeatInput" class="hidden">
-      <label>Custom Feat Description</label>
-      <input id="customFeat" type="text" placeholder="Describe custom feat" title="Description of custom feat">
-    </div>
-    <div id="rollFormulaInput" class="hidden">
-      <label>Roll Formula</label>
-      <input id="rollFormula" type="text" readonly title="Calculated roll formula">
-    </div>
-  </div>
-  <div id="classAbilities">
-    <h2>Class Abilities</h2>
-    <div id="abilitiesContainer"></div>
-  </div>
-  <div class="button-group">
-    <button onclick="rollDice()">Roll the Dice of Destiny</button>
-    <button onclick="clearFields()">Clear Fields</button>
-  </div>
-</div>
-
-  <div class="gm-reference collapsed">
-    <div class="toggle-button" onclick="toggleGMReference()">Show GM Reference</div>
-    <div class="gm-content">
-      <h2>GM Reference</h2>
-      <div>
-        <button class="dynamic-button" onclick="generateReality()">Generate Wondrous Reality</button>
-        <button class="dynamic-button" onclick="displayTable('attributeModifiers')">Attribute Modifiers</button>
-        <button class="dynamic-button" onclick="displayTable('combatDCs')">Combat DCs</button>
-        <button class="dynamic-button" onclick="displayTable('sanityDCs')">Sanity DCs</button>
-        <button class="dynamic-button" onclick="displayTable('paradoxConsequences')">Paradox Consequences</button>
-        <button class="dynamic-button" onclick="displayTable('powerCreation')">Power Creation Costs</button>
-        <button class="dynamic-button" onclick="displayTable('levelCaps')">Level Caps</button>
-        <button class="dynamic-button" onclick="displayTable('fatemarkedAbilities')">Fatemarked Abilities</button>
-        <button class="dynamic-button" onclick="displayTable('challengeRatings')">Challenge Ratings</button>
-        <button class="dynamic-button" onclick="displayTable('classResources')">Class Resources</button>
-        <button class="dynamic-button" onclick="generateFixedPoint()">Generate Fixed Point</button>
-      </div>
-      <div id="gmReferenceOutput"></div>
-    </div>
-  </div>
-
-  <div class="character-sheet collapsed">
-    <div class="toggle-button" onclick="toggleCharacterSheet()">Show Character Sheet Generator</div>
-  <div class="sheet-content">
-    <h2>Character Sheet Generator</h2>
-    <div class="attributes-section">
+    <h1>Continuum Wars Roll Widget</h1>
+    <div class="input-section">
+      <h2>Configure Your Roll</h2>
       <div class="grid">
-    <div>
-      <label>Character Name</label>
-      <input id="charName" type="text" placeholder="e.g., Kael Vortex" title="Your character's name">
+        <div>
+          <label>Character Level</label>
+          <input id="characterLevel" type="number" value="1" min="1" max="15" placeholder="Level (1-15)" title="Character's level" onchange="updateInputs(); updateFeats(); updateClassAbilities();">
+        </div>
+        <div>
+          <label>Character Class</label>
+          <select id="characterClass" title="Character's class" onchange="updateInputs(); updateFeats(); updateClassAbilities();">
+            <option value="Fatemarked">Fatemarked</option>
+            <option value="Biomatrix Suit">Biomatrix Suit</option>
+            <option value="Continuum Raider">Continuum Raider</option>
+            <option value="Gunrunner">Gunrunner</option>
+            <option value="Faterunner">Faterunner</option>
+            <option value="Harlequin">Harlequin</option>
+            <option value="Warrior">Warrior</option>
+            <option value="Mage">Mage</option>
+            <option value="Shape">Shape</option>
+            <option value="Masque">Masque</option>
+            <option value="Adventurer">Adventurer</option>
+          </select>
+        </div>
+        <div>
+          <label>Roll Type</label>
+          <select id="rollType" title="Type of dice roll" onchange="resetInputs(); updateInputs(); updateSkillSpecOptions();">
+            <option value="skill">Skill Check (d20 + Modifier + Rank)</option>
+            <option value="attack">Attack Roll (d20 + BAB + Modifier vs. AC)</option>
+            <option value="damage">Damage Roll (Dice + Modifier)</option>
+            <option value="sanity">Sanity Check (d20 + WIS Modifier)</option>
+            <option value="saving">Saving Throw (d20 + Modifier)</option>
+            <option value="initiative">Initiative (d20 + DEX Modifier)</option>
+            <option value="paradox">Paradox Risk Check (d20 + Modifier)</option>
+            <option value="hazard">Environmental Hazard Roll (d20 + Modifier)</option>
+            <option value="custom">Custom Roll (e.g., 3d6)</option>
+            <option value="extended">Extended Test (Cumulative DC)</option>
+            <option value="opposed">Opposed Test (d20 + Modifier vs. Opponent)</option>
+            <option value="extendedOpposed">Extended Opposed Test</option>
+            <option value="disarm">Disarm (Attack Roll vs. AC)</option>
+            <option value="grapple">Grapple (Opposed Check)</option>
+            <option value="trip">Trip (Attack Roll vs. AC)</option>
+            <option value="nonLethal">Non-Lethal Damage (Dice + Modifier)</option>
+          </select>
+        </div>
+        <div id="damageDiceInput" class="hidden">
+          <label>Damage Dice</label>
+          <select id="damageDice" title="Dice for damage roll">
+            <option value="1d4">1d4</option>
+            <option value="1d6">1d6</option>
+            <option value="1d8">1d8</option>
+            <option value="2d6">2d6</option>
+            <option value="1d10">1d10</option>
+            <option value="2d8">2d8</option>
+          </select>
+        </div>
+        <div id="customDiceInput" class="hidden">
+          <label>Custom Dice</label>
+          <input id="customDice" type="text" placeholder="e.g., 3d6" title="Custom dice notation (e.g., 3d6)">
+        </div>
+        <div>
+          <label>Modifier (Attribute)</label>
+          <input id="modifier" type="number" value="0" placeholder="Modifier" title="Attribute modifier">
+        </div>
+        <div id="skillRankInput" class="hidden">
+          <label>Skill Rank</label>
+          <input id="skillRank" type="number" value="0" min="0" placeholder="Rank" title="Skill rank">
+        </div>
+        <div id="babInput" class="hidden">
+          <label>Base Attack Bonus (BAB)</label>
+          <input id="bab" type="number" value="0" min="0" placeholder="BAB" title="Base Attack Bonus">
+        </div>
+        <div id="savingTypeInput" class="hidden">
+          <label>Saving Throw Type</label>
+          <select id="savingType" title="Type of saving throw">
+            <option value="reflex">Reflex (DEX)</option>
+            <option value="fortitude">Fortitude (CON)</option>
+            <option value="willpower">Willpower (WIS)</option>
+            <option value="luck">Luck (CHA, Level 4+)</option>
+          </select>
+        </div>
+        <div id="paradoxDCInput" class="hidden">
+          <label>Paradox DC</label>
+          <select id="paradoxDC" title="Paradox Difficulty Class" onchange="updateParadoxDC()">
+            <option value="custom">Custom DC</option>
+            <option value="15">PL 1 (DC 15)</option>
+            <option value="18">PL 2 (DC 18)</option>
+            <option value="22">PL 3 (DC 22)</option>
+          </select>
+          <input id="customParadoxDC" type="number" placeholder="Custom DC" title="Custom Paradox DC" class="hidden">
+        </div>
+        <div id="powerLevelInput" class="hidden">
+          <label>Power Level/Tier</label>
+          <select id="powerLevel" title="Power level for paradox risk"></select>
+        </div>
+        <div id="dcInput" class="hidden">
+          <label>Difficulty Class (DC)</label>
+          <input id="dc" type="number" placeholder="DC (e.g., 15)" min="0" title="Difficulty Class">
+        </div>
+        <div id="acInput" class="hidden">
+          <label>Target Armor Class (AC)</label>
+          <input id="ac" type="number" value="15" min="0" placeholder="AC" title="Target Armor Class">
+        </div>
+        <div id="opponentRollInput" class="hidden">
+          <label>Opponent Roll</label>
+          <input id="opponentRoll" type="number" value="0" min="0" placeholder="Opponent Roll" title="Opponent's roll for opposed tests">
+        </div>
+        <div id="cumulativeDCInput" class="hidden">
+          <label>Cumulative DC</label>
+          <input id="cumulativeDC" type="number" placeholder="DC (e.g., 30)" min="0" title="Cumulative DC for extended tests">
+        </div>
+        <div id="skillNameInput" class="hidden">
+          <label>Skill Name</label>
+          <select id="skillName" title="Skill for the roll" onchange="updateSkillSpecOptions()">
+            <option value="none">Select Skill</option>
+          </select>
+        </div>
+        <div id="skillSpecInput" class="hidden">
+          <label>Skill Specialization</label>
+          <select id="skillSpec" title="Specialization for the skill">
+            <option value="none">None</option>
+          </select>
+        </div>
+        <div id="advantageSelectInput" class="hidden">
+          <label>Advantage</label>
+          <select id="advantageSelect" title="Select advantage">
+            <option value="none">None</option>
+          </select>
+          <input id="advantageTier" type="number" min="1" max="5" value="1" style="width: 100px;" placeholder="Tier" title="Advantage tier" class="hidden">
+        </div>
+        <div id="disadvantageSelectInput" class="hidden">
+          <label>Disadvantage</label>
+          <select id="disadvantageSelect" title="Select disadvantage">
+            <option value="none">None</option>
+          </select>
+          <input id="disadvantageTier" type="number" min="1" max="5" value="1" style="width: 100px;" placeholder="Tier" title="Disadvantage tier" class="hidden">
+        </div>
+        <div id="powerSelectInput" class="hidden">
+          <label>Power</label>
+          <select id="powerSelect" title="Select power">
+            <option value="none">None</option>
+          </select>
+        </div>
+        <div>
+          <label>Class Feat/Advantage</label>
+          <select id="classFeat" class="feat-select" title="Class-relevant feat or advantage" onchange="updateInputs(); updateFeatOptions()">
+            <option value="none">None</option>
+          </select>
+          <div id="classFeatTierInput" class="hidden">
+            <label>Feat/Advantage Tier</label>
+            <input id="classFeatTier" type="number" min="1" max="5" value="1" placeholder="Tier" title="Feat or advantage tier">
+          </div>
+          <div id="featContainer"></div>
+          <button class="add-button" onclick="addFeatField()">Add Feat/Advantage</button>
+        </div>
+        <div>
+          <label>Mechanical Advantage</label>
+          <select id="advantage" title="Mechanical advantage or disadvantage">
+            <option value="none">None</option>
+            <option value="advantage">Advantage</option>
+            <option value="disadvantage">Disadvantage</option>
+          </select>
+        </div>
+        <div>
+          <label>Environmental Advantage (GM)</label>
+          <input type="checkbox" id="envAdvantage" title="Grant environmental advantage">
+          <label for="envAdvantage">Grant Advantage</label>
+        </div>
+        <div id="paradoxCheckInput" class="hidden">
+          <label>Elective Paradox Check (Faterunner/Harlequin)</label>
+          <input type="checkbox" id="paradoxCheckOptIn" title="Opt-in for paradox check on Tier 2/3 effects">
+          <label for="paradoxCheckOptIn">Apply Paradox Check</label>
+        </div>
+        <div id="synergyBonusInput" class="hidden">
+          <label>Synergy Bonus</label>
+          <input type="checkbox" id="synergyBonus" title="Apply +2 bonus from allies"> Apply +2 Bonus
+        </div>
+        <div id="coverConcealmentInput" class="hidden">
+          <label>Cover/Concealment</label>
+          <select id="coverConcealment" title="Cover or concealment modifiers">
+            <option value="none">None</option>
+            <option value="cover">Cover (+4 AC)</option>
+            <option value="concealment">Concealment (20% miss)</option>
+          </select>
+        </div>
+        <div id="customFeatInput" class="hidden">
+          <label>Custom Feat Description</label>
+          <input id="customFeat" type="text" placeholder="Describe custom feat" title="Description of custom feat">
+        </div>
+        <div id="rollFormulaInput" class="hidden">
+          <label>Roll Formula</label>
+          <input id="rollFormula" type="text" readonly title="Calculated roll formula">
+        </div>
+      </div>
+      <div id="classAbilities">
+        <h2>Class Abilities</h2>
+        <div id="abilitiesContainer"></div>
+      </div>
+      <div class="button-group">
+        <button onclick="rollDice()">Roll the Dice of Destiny</button>
+        <button onclick="clearFields()">Clear Fields</button>
+      </div>
     </div>
-    <div>
-      <label>Player Name</label>
-      <input id="playerName" type="text" placeholder="e.g., Alex" title="Your name as the player">
+
+    <div class="gm-reference collapsed">
+      <div class="toggle-button" onclick="toggleGMReference()">Show GM Reference</div>
+      <div class="gm-content">
+        <h2>GM Reference</h2>
+        <div>
+          <button class="dynamic-button" onclick="generateReality()">Generate Wondrous Reality</button>
+          <button class="dynamic-button" onclick="displayTable('attributeModifiers')">Attribute Modifiers</button>
+          <button class="dynamic-button" onclick="displayTable('combatDCs')">Combat DCs</button>
+          <button class="dynamic-button" onclick="displayTable('sanityDCs')">Sanity DCs</button>
+          <button class="dynamic-button" onclick="displayTable('paradoxConsequences')">Paradox Consequences</button>
+          <button class="dynamic-button" onclick="displayTable('powerCreation')">Power Creation Costs</button>
+          <button class="dynamic-button" onclick="displayTable('levelCaps')">Level Caps</button>
+          <button class="dynamic-button" onclick="displayTable('fatemarkedAbilities')">Fatemarked Abilities</button>
+          <button class="dynamic-button" onclick="displayTable('challengeRatings')">Challenge Ratings</button>
+          <button class="dynamic-button" onclick="displayTable('classResources')">Class Resources</button>
+          <button class="dynamic-button" onclick="generateFixedPoint()">Generate Fixed Point</button>
+        </div>
+        <div id="gmReferenceOutput"></div>
+      </div>
     </div>
-    <div>
-      <label>Level</label>
-      <input id="charLevel" type="number" value="1" min="1" max="15" placeholder="Level (1-15)" title="Character's current level (1-15)" onchange="updateSheetInputs({ preserveAttributes: true }); updateInputs(); updateSkillSpecOptions(); updateFeats(); updateClassAbilities()">
-    </div>
-    <div>
-      <label>Class</label>
-      <select id="charClass" title="Character's class" onchange="updateSheetInputs({ preserveAttributes: true }); updateInputs(); updateSkillSpecOptions(); updateFeats(); updateClassAbilities()">
-        <option value="Fatemarked">Fatemarked</option>
-        <option value="Biomatrix Suit">Biomatrix Suit</option>
-        <option value="Continuum Raider">Continuum Raider</option>
-        <option value="Gunrunner">Gunrunner</option>
-        <option value="Faterunner">Faterunner</option>
-        <option value="Harlequin">Harlequin</option>
-        <option value="Warrior">Warrior</option>
-        <option value="Mage">Mage</option>
-        <option value="Shape">Shape</option>
-        <option value="Masque">Masque</option>
-        <option value="Adventurer">Adventurer</option>
-      </select>
-    </div>
-    <div>
-      <label>Primordial Alignment</label>
-      <select id="charAlignment" title="Character's alignment (None for Levels 1-3)">
-        <option value="None">None (Levels 1–3)</option>
-        <option value="Balance">Balance</option>
-        <option value="Chaos">Chaos</option>
-        <option value="Order">Order</option>
-        <option value="Neutrality">Neutrality</option>
-      </select>
-    </div>
-    <div>
-      <label>Background</label>
-      <input id="charBackground" type="text" placeholder="e.g., Rift Survivor" title="Character's backstory or origin">
-    </div>
-    <div>
-      <label>Appearance</label>
-      <input id="charAppearance" type="text" placeholder="e.g., Cybernetic eye, blue cloak" title="Physical description of the character">
-    </div>
-    <div>
-      <label>Occupation</label>
-      <input id="charOccupation" type="text" placeholder="e.g., Rift Navigator" title="Character's profession or role">
-    </div>
-    <div>
-      <label>Personality & Motivation</label>
-      <textarea id="charPersonality" placeholder="e.g., Curious, seeks to seal rifts" title="Character's personality traits and goals"></textarea>
-    </div>
-    <div>
-      <label>Narrative Milestone</label>
-      <input id="charMilestone" type="text" placeholder="e.g., Sealed first rift" title="Significant event in character's story">
-    </div>
-  </div>
-  <h2>Attributes</h2>
-  <div id="statPointAllocation" class="dynamic-group" style="margin-bottom: 10px; display:none;">
-    <label style="margin-right: 1em;"><strong>Unspent Stat Points:</strong> <span id="statPointsAvailable">0</span></label>
-    <button id="commitStatPointsBtn" class="dynamic-button" style="padding:1px 7px; font-size:0.8em; width:auto;" onclick="commitStatPoints()" disabled>Commit</button>
-  </div>
-  <div class="grid">
-    <div>
-      <label>Attribute Method</label>
-      <select id="attrMethod" title="Method for generating attributes" onchange="updateAttributes()">
-        <option value="pointBuy">Point Buy (15 points)</option>
-        <option value="random">Random (4d6 drop lowest)</option>
-        <option value="imported" hidden>Imported</option>
-      </select>
-    </div>
-    <div>
-      <label>Points Remaining (Point Buy)</label>
-      <input id="pointsRemaining" type="text" readonly value="15" title="Remaining points for point buy">
-    </div>
-    <div id="randomRolls" class="hidden">
-      <label>Rolled Stats</label>
-      <input id="rolledStats" type="text" readonly placeholder="e.g., 15, 14, 13, 12, 10, 8" title="Rolled attribute values">
-    </div>
-    <div class="button-group">
-      <button id="rerollButton" class="dynamic-button hidden" onclick="rerollAttributes()">Reroll Stats</button>
-      <button id="confirmAssignments" class="dynamic-button hidden" onclick="assignStats()">Confirm Assignments</button>
-    </div>
-    <div>
-      <label>Strength (STR)</label>
-      <input id="attrSTR" type="number" min="1" max="20" value="10" placeholder="STR (8-18)" title="Strength score (8-18)" readonly>
-      <span id="statPointBtnsSTR"></span>
-      <select id="assignSTR" class="hidden" title="Assign rolled stat to Strength" onchange="assignStat('STR')"></select>
-    </div>
-    <div>
-      <label>Dexterity (DEX)</label>
-      <input id="attrDEX" type="number" min="1" max="20" value="10" placeholder="DEX (8-18)" title="Dexterity score (8-18)" readonly>
-      <span id="statPointBtnsDEX"></span>
-      <select id="assignDEX" class="hidden" title="Assign rolled stat to Dexterity" onchange="assignStat('DEX')"></select>
-    </div>
-    <div>
-      <label>Constitution (CON)</label>
-      <input id="attrCON" type="number" min="1" max="20" value="10" placeholder="CON (8-18)" title="Constitution score (8-18)" readonly>
-      <span id="statPointBtnsCON"></span>
-      <select id="assignCON" class="hidden" title="Assign rolled stat to Constitution" onchange="assignStat('CON')"></select>
-    </div>
-    <div>
-      <label>Intelligence (INT)</label>
-      <input id="attrINT" type="number" min="1" max="20" value="10" placeholder="INT (8-18)" title="Intelligence score (8-18)" readonly>
-      <span id="statPointBtnsINT"></span>
-      <select id="assignINT" class="hidden" title="Assign rolled stat to Intelligence" onchange="assignStat('INT')"></select>
-    </div>
-    <div>
-      <label>Wisdom (WIS)</label>
-      <input id="attrWIS" type="number" min="1" max="20" value="10" placeholder="WIS (8-18)" title="Wisdom score (8-18)" readonly>
-      <span id="statPointBtnsWIS"></span>
-      <select id="assignWIS" class="hidden" title="Assign rolled stat to Wisdom" onchange="assignStat('WIS')"></select>
-    </div>
-    <div>
-      <label>Charisma (CHA)</label>
-      <input id="attrCHA" type="number" min="1" max="20" value="10" placeholder="CHA (8-18)" title="Charisma score (8-18)" readonly>
-      <span id="statPointBtnsCHA"></span>
-      <select id="assignCHA" class="hidden" title="Assign rolled stat to Charisma" onchange="assignStat('CHA')"></select>
-    </div>
-  </div>
-</div>
+
+    <div class="character-sheet collapsed">
+      <div class="toggle-button" onclick="toggleCharacterSheet()">Show Character Sheet Generator</div>
+      <div class="sheet-content">
+        <h2>Character Sheet Generator</h2>
+        <div class="attributes-section">
+          <div class="grid">
+            <div>
+              <label>Character Name</label>
+              <input id="charName" type="text" placeholder="e.g., Kael Vortex" title="Your character's name">
+            </div>
+            <div>
+              <label>Player Name</label>
+              <input id="playerName" type="text" placeholder="e.g., Alex" title="Your name as the player">
+            </div>
+            <div>
+              <label>Level</label>
+              <input id="charLevel" type="number" value="1" min="1" max="15" placeholder="Level (1-15)" title="Character's current level (1-15)" onchange="updateSheetInputs({ preserveAttributes: true }); updateInputs(); updateSkillSpecOptions(); updateFeats(); updateClassAbilities()">
+            </div>
+            <div>
+              <label>Class</label>
+              <select id="charClass" title="Character's class" onchange="updateSheetInputs({ preserveAttributes: true }); updateInputs(); updateSkillSpecOptions(); updateFeats(); updateClassAbilities()">
+                <option value="Fatemarked">Fatemarked</option>
+                <option value="Biomatrix Suit">Biomatrix Suit</option>
+                <option value="Continuum Raider">Continuum Raider</option>
+                <option value="Gunrunner">Gunrunner</option>
+                <option value="Faterunner">Faterunner</option>
+                <option value="Harlequin">Harlequin</option>
+                <option value="Warrior">Warrior</option>
+                <option value="Mage">Mage</option>
+                <option value="Shape">Shape</option>
+                <option value="Masque">Masque</option>
+                <option value="Adventurer">Adventurer</option>
+              </select>
+            </div>
+            <div>
+              <label>Primordial Alignment</label>
+              <select id="charAlignment" title="Character's alignment (None for Levels 1-3)">
+                <option value="None">None (Levels 1–3)</option>
+                <option value="Balance">Balance</option>
+                <option value="Chaos">Chaos</option>
+                <option value="Order">Order</option>
+                <option value="Neutrality">Neutrality</option>
+              </select>
+            </div>
+            <div>
+              <label>Background</label>
+              <input id="charBackground" type="text" placeholder="e.g., Rift Survivor" title="Character's backstory or origin">
+            </div>
+            <div>
+              <label>Appearance</label>
+              <input id="charAppearance" type="text" placeholder="e.g., Cybernetic eye, blue cloak" title="Physical description of the character">
+            </div>
+            <div>
+              <label>Occupation</label>
+              <input id="charOccupation" type="text" placeholder="e.g., Rift Navigator" title="Character's profession or role">
+            </div>
+            <div>
+              <label>Personality & Motivation</label>
+              <textarea id="charPersonality" placeholder="e.g., Curious, seeks to seal rifts" title="Character's personality traits and goals"></textarea>
+            </div>
+            <div>
+              <label>Narrative Milestone</label>
+              <input id="charMilestone" type="text" placeholder="e.g., Sealed first rift" title="Significant event in character's story">
+            </div>
+          </div>
+          <h2>Attributes</h2>
+          <div id="statPointAllocation" class="dynamic-group" style="margin-bottom: 10px; display:none;">
+            <label style="margin-right: 1em;"><strong>Unspent Stat Points:</strong> <span id="statPointsAvailable">0</span></label>
+            <button id="commitStatPointsBtn" class="dynamic-button" style="padding:1px 7px; font-size:0.8em; width:auto;" onclick="commitStatPoints()" disabled>Commit</button>
+          </div>
+          <div class="grid">
+            <div>
+              <label>Attribute Method</label>
+              <select id="attrMethod" title="Method for generating attributes" onchange="updateAttributes()">
+                <option value="pointBuy">Point Buy (15 points)</option>
+                <option value="random">Random (4d6 drop lowest)</option>
+                <option value="manual">Manual Input</option>
+                <option value="imported" hidden>Imported</option>
+              </select>
+            </div>
+            <div>
+              <label>Points Remaining (Point Buy)</label>
+              <input id="pointsRemaining" type="text" readonly value="15" title="Remaining points for point buy">
+            </div>
+            <div id="randomRolls" class="hidden">
+              <label>Rolled Stats</label>
+              <input id="rolledStats" type="text" readonly placeholder="e.g., 15, 14, 13, 12, 10, 8" title="Rolled attribute values">
+            </div>
+            <div class="button-group">
+              <button id="rerollButton" class="dynamic-button hidden" onclick="rerollAttributes()">Reroll Stats</button>
+              <button id="confirmAssignments" class="dynamic-button hidden" onclick="confirmAttributes()">Confirm Assignments</button>
+            </div>
+            <div>
+              <label>Strength (STR)</label>
+              <input id="attrSTR" type="number" min="1" max="20" value="10" placeholder="STR (8-18)" title="Strength score (8-18)" readonly>
+              <span id="statPointBtnsSTR"></span>
+              <span id="pointBuyBtnsSTR"></span>
+              <select id="assignSTR" class="hidden" title="Assign rolled stat to Strength" onchange="assignStat('STR')"></select>
+            </div>
+            <div>
+              <label>Dexterity (DEX)</label>
+              <input id="attrDEX" type="number" min="1" max="20" value="10" placeholder="DEX (8-18)" title="Dexterity score (8-18)" readonly>
+              <span id="statPointBtnsDEX"></span>
+              <span id="pointBuyBtnsDEX"></span>
+              <select id="assignDEX" class="hidden" title="Assign rolled stat to Dexterity" onchange="assignStat('DEX')"></select>
+            </div>
+            <div>
+              <label>Constitution (CON)</label>
+              <input id="attrCON" type="number" min="1" max="20" value="10" placeholder="CON (8-18)" title="Constitution score (8-18)" readonly>
+              <span id="statPointBtnsCON"></span>
+              <span id="pointBuyBtnsCON"></span>
+              <select id="assignCON" class="hidden" title="Assign rolled stat to Constitution" onchange="assignStat('CON')"></select>
+            </div>
+            <div>
+              <label>Intelligence (INT)</label>
+              <input id="attrINT" type="number" min="1" max="20" value="10" placeholder="INT (8-18)" title="Intelligence score (8-18)" readonly>
+              <span id="statPointBtnsINT"></span>
+              <span id="pointBuyBtnsINT"></span>
+              <select id="assignINT" class="hidden" title="Assign rolled stat to Intelligence" onchange="assignStat('INT')"></select>
+            </div>
+            <div>
+              <label>Wisdom (WIS)</label>
+              <input id="attrWIS" type="number" min="1" max="20" value="10" placeholder="WIS (8-18)" title="Wisdom score (8-18)" readonly>
+              <span id="statPointBtnsWIS"></span>
+              <span id="pointBuyBtnsWIS"></span>
+              <select id="assignWIS" class="hidden" title="Assign rolled stat to Wisdom" onchange="assignStat('WIS')"></select>
+            </div>
+            <div>
+              <label>Charisma (CHA)</label>
+              <input id="attrCHA" type="number" min="1" max="20" value="10" placeholder="CHA (8-18)" title="Charisma score (8-18)" readonly>
+              <span id="statPointBtnsCHA"></span>
+              <span id="pointBuyBtnsCHA"></span>
+              <select id="assignCHA" class="hidden" title="Assign rolled stat to Charisma" onchange="assignStat('CHA')"></select>
+            </div>
+          </div>
+        </div>
 <div class="non-attributes-section" style="position: relative;">
   <div id="statCommitBanner" class="hidden">
     <div>
@@ -827,7 +844,7 @@ function updateStatPointUI() {
     statPointsAvailable = totalPoints - spent;
     statPointsCommitted = totalPoints === 0 || spent >= totalPoints;
 
-    console.log(`updateStatPointUI: lvl=${lvl}, totalPoints=${totalPoints}, spent=${spent}, statPointsAvailable=${statPointsAvailable}, statPointsCommitted=${statPointsCommitted}, statPointsByLevel=`, statPointsByLevel);
+    console.log(`updateStatPointUI: lvl=${lvl}, totalPoints=${totalPoints}, spent=${spent}, statPointsAvailable=${statPointsAvailable}, statPointsCommitted=${statPointsCommitted}, attrMethod=${attrMethod}`);
 
     // Control visibility of allocation UI and banner
     const shouldShowAllocation = totalPoints > 0 && !statPointsCommitted;
@@ -880,7 +897,7 @@ function updateStatPointUI() {
     const currentLevelAllocations = statPointsByLevel.find(entry => entry.level === lvl)?.allocations || {};
     const hasLevelPoints = stat => (statPointsByLevel.filter(entry => entry.level <= lvl).reduce((sum, entry) => sum + (entry.allocations[stat] || 0), 0)) > 0;
 
-    // Render stat allocation buttons
+    // Render stat allocation buttons for level-up points
     ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
       const btnSpan = document.getElementById(`statPointBtns${attr}`);
       if (!btnSpan) {
@@ -896,7 +913,7 @@ function updateStatPointUI() {
       }
       const currentVal = parseInt(attrInput.value) || 10;
 
-      if (!statPointsCommitted && statPointsAvailable > 0 && (attrMethod === 'imported' || currentVal < 18)) {
+      if (!statPointsCommitted && !attributesConfirmed && statPointsAvailable > 0 && currentVal < 18) {
         const plusBtn = document.createElement('button');
         plusBtn.className = 'dynamic-button stat-point-btn';
         plusBtn.style.padding = '1px 4px';
@@ -912,7 +929,7 @@ function updateStatPointUI() {
         console.log(`updateStatPointUI: Created + button for ${attr}`);
       }
 
-      if (!statPointsCommitted && hasLevelPoints(attr) && currentVal > 8) {
+      if (!statPointsCommitted && !attributesConfirmed && hasLevelPoints(attr) && currentVal > 8) {
         const minusBtn = document.createElement('button');
         minusBtn.className = 'dynamic-button stat-point-btn';
         minusBtn.style.padding = '1px 4px';
@@ -948,7 +965,6 @@ function updateStatPointUI() {
   } catch (e) {
     console.error('Error updating stat point UI:', e);
     alert('Failed to update stat point UI.');
-    window.isUpdatingStatPointUI = false;
   }
 }
 
@@ -1032,6 +1048,118 @@ function allocateStatPoint(stat, delta) {
   } catch (e) {
     console.error('Error allocating stat point:', e);
     alert('Failed to allocate stat point.');
+  }
+}
+
+function allocatePointBuyPoint(stat, delta) {
+  try {
+    if (attributesConfirmed) {
+      console.log(`allocatePointBuyPoint: Cannot allocate, attributes confirmed`);
+      return;
+    }
+    console.log(`allocatePointBuyPoint: Attempting to change ${stat} by ${delta}`);
+    const input = document.getElementById(`attr${stat}`);
+    if (!input) {
+      console.warn(`attr${stat} input not found`);
+      return;
+    }
+    const attrMethod = document.getElementById('attrMethod').value;
+    if (attrMethod !== 'pointBuy') {
+      console.log(`allocatePointBuyPoint: Cannot allocate, attrMethod=${attrMethod}`);
+      return;
+    }
+    const val = parseInt(input.value) || 10;
+    const pointCosts = { 8: -2, 9: -1, 10: 0, 11: 1, 12: 2, 13: 3, 14: 4, 15: 6, 16: 8, 17: 11, 18: 14 };
+    const currentCost = pointCosts[val] || 0;
+    const newVal = val + delta;
+    if (newVal < 8 || newVal > 18) {
+      console.log(`allocatePointBuyPoint: ${stat} out of range (8-18), requested ${newVal}`);
+      alert(`${stat} must be between 8 and 18!`);
+      return;
+    }
+    const newCost = pointCosts[newVal] || 0;
+    const pointsRemainingEl = document.getElementById('pointsRemaining');
+    const pointsRemaining = parseInt(pointsRemainingEl.value) || 15;
+    const costDelta = newCost - currentCost;
+    if (pointsRemaining - costDelta < 0) {
+      console.log(`allocatePointBuyPoint: Not enough points, need ${costDelta}, have ${pointsRemaining}`);
+      alert('Not enough points to increase attribute!');
+      return;
+    }
+    input.value = newVal;
+    pointsRemainingEl.value = pointsRemaining - costDelta;
+    console.log(`allocatePointBuyPoint: ${stat} changed to ${newVal}, pointsRemaining=${pointsRemainingEl.value}, costDelta=${costDelta}`);
+    updateDerivedStats();
+    updateSkills();
+  } catch (e) {
+    console.error('Error allocating point buy point:', e);
+    alert('Failed to allocate point buy point.');
+  }
+}
+
+let attributesConfirmed = false;
+
+function confirmAttributes() {
+  try {
+    const method = document.getElementById('attrMethod').value;
+    const attrs = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+    const pointsRemaining = document.getElementById('pointsRemaining');
+    const confirmButton = document.getElementById('confirmAssignments');
+
+    // Validate attributes
+    let valid = true;
+    const attrValues = {};
+    attrs.forEach(attr => {
+      const input = document.getElementById(`attr${attr}`);
+      const value = parseInt(input.value) || 10;
+      attrValues[attr] = value;
+      if (method !== 'manual' && (value < 8 || value > 18)) {
+        alert(`${attr} must be between 8 and 18 for ${method} method!`);
+        valid = false;
+      }
+    });
+
+    if (method === 'pointBuy') {
+      const pointCosts = { 8: -2, 9: -1, 10: 0, 11: 1, 12: 2, 13: 3, 14: 4, 15: 6, 16: 8, 17: 11, 18: 14 };
+      const totalCost = attrs.reduce((sum, attr) => sum + (pointCosts[attrValues[attr]] || 0), 0);
+      if (totalCost > 15) {
+        alert(`Point Buy exceeds 15 points! Used: ${totalCost}`);
+        valid = false;
+      }
+    } else if (method === 'random') {
+      const rolledStatsSet = new Set(rolledStats);
+      const assignedValues = Object.values(attrValues);
+      if (assignedValues.length !== 6 || !assignedValues.every(val => rolledStatsSet.has(val))) {
+        alert('All attributes must be assigned valid rolled stats!');
+        valid = false;
+      }
+    }
+
+    if (!valid) return;
+
+    // Lock attributes
+    attributesConfirmed = true;
+    attrs.forEach(attr => {
+      const input = document.getElementById(`attr${attr}`);
+      if (input) input.readOnly = true;
+      const pointBuyBtnSpan = document.getElementById(`pointBuyBtns${attr}`);
+      if (pointBuyBtnSpan) pointBuyBtnSpan.innerHTML = '';
+      const assignSelect = document.getElementById(`assign${attr}`);
+      if (assignSelect) assignSelect.classList.add('hidden');
+    });
+
+    // Lock attrMethod and confirm button
+    const attrMethodSelect = document.getElementById('attrMethod');
+    if (attrMethodSelect) attrMethodSelect.disabled = true;
+    if (confirmButton) confirmButton.classList.add('hidden');
+    if (pointsRemaining) pointsRemaining.value = 'N/A';
+
+    console.log('confirmAttributes: Attributes confirmed, attrMethod locked');
+    updateDerivedStats();
+    updateSkills();
+  } catch (e) {
+    console.error('Error confirming attributes:', e);
+    alert('Failed to confirm attributes.');
   }
 }
 
@@ -2919,41 +3047,37 @@ function resetStatPointsOnLevelChange() {
     }
     const confirmAssignments = document.getElementById('confirmAssignments');
     if (confirmAssignments) {
-      confirmAssignments.classList.toggle('hidden', method !== 'random');
+      confirmAssignments.classList.toggle('hidden', method === 'imported' || attributesConfirmed);
     } else {
       console.warn('confirmAssignments element not found');
     }
     const pointsRemaining = document.getElementById('pointsRemaining');
     if (pointsRemaining) {
-      pointsRemaining.value = method === 'pointBuy' ? '15' : 'N/A';
+      pointsRemaining.value = method === 'pointBuy' && !attributesConfirmed ? '15' : 'N/A';
     } else {
       console.warn('pointsRemaining element not found');
     }
 
     const attrs = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
 
-    if (method === 'imported') {
-      console.log('Skipping attribute reset for imported method');
+    if (method === 'imported' || attributesConfirmed) {
+      console.log('updateAttributes: Skipping for imported or confirmed attributes');
       attrs.forEach(attr => {
         const input = document.getElementById(`attr${attr}`);
         if (input) input.readOnly = true;
         const assignSelect = document.getElementById(`assign${attr}`);
         if (assignSelect) assignSelect.classList.add('hidden');
+        const pointBuyBtnSpan = document.getElementById(`pointBuyBtns${attr}`);
+        if (pointBuyBtnSpan) pointBuyBtnSpan.innerHTML = '';
       });
       return;
     }
 
-    if (method === 'random') {
-      attrs.forEach(attr => {
-        const input = document.getElementById(`attr${attr}`);
-        if (input) input.readOnly = true;
-        const assignSelect = document.getElementById(`assign${attr}`);
-        if (assignSelect) assignSelect.classList.remove('hidden');
-      });
-      if (rolledStats.length === 0) rerollAttributes();
-      const rolledStatsInput = document.getElementById('rolledStats');
-      if (rolledStatsInput) rolledStatsInput.value = rolledStats.join(', ');
-    } else {
+    if (method === 'manual') {
+      if (!window.manualInputWarned) {
+        alert('Manual Input selected: GM Approval Required');
+        window.manualInputWarned = true;
+      }
       attrs.forEach(attr => {
         const input = document.getElementById(`attr${attr}`);
         if (input) {
@@ -2966,7 +3090,75 @@ function resetStatPointsOnLevelChange() {
           assignSelect.innerHTML = '<option value="">Select Stat</option>';
           assignSelect.value = '';
         }
+        const pointBuyBtnSpan = document.getElementById(`pointBuyBtns${attr}`);
+        if (pointBuyBtnSpan) pointBuyBtnSpan.innerHTML = '';
         delete assignedStats[attr];
+      });
+      rolledStats = [];
+      availableStats = [];
+      const rolledStatsInput = document.getElementById('rolledStats');
+      if (rolledStatsInput) rolledStatsInput.value = '';
+      updateDerivedStats();
+      return;
+    }
+
+    if (method === 'random') {
+      attrs.forEach(attr => {
+        const input = document.getElementById(`attr${attr}`);
+        if (input) input.readOnly = true;
+        const assignSelect = document.getElementById(`assign${attr}`);
+        if (assignSelect) assignSelect.classList.remove('hidden');
+        const pointBuyBtnSpan = document.getElementById(`pointBuyBtns${attr}`);
+        if (pointBuyBtnSpan) pointBuyBtnSpan.innerHTML = '';
+      });
+      if (rolledStats.length === 0) rerollAttributes();
+      const rolledStatsInput = document.getElementById('rolledStats');
+      if (rolledStatsInput) rolledStatsInput.value = rolledStats.join(', ');
+    } else if (method === 'pointBuy') {
+      attrs.forEach(attr => {
+        const input = document.getElementById(`attr${attr}`);
+        if (input) {
+          input.value = 10;
+          input.readOnly = true;
+        }
+        const assignSelect = document.getElementById(`assign${attr}`);
+        if (assignSelect) {
+          assignSelect.classList.add('hidden');
+          assignSelect.innerHTML = '<option value="">Select Stat</option>';
+          assignSelect.value = '';
+        }
+        delete assignedStats[attr];
+        // Clear level-based stat point buttons
+        const btnSpan = document.getElementById(`statPointBtns${attr}`);
+        if (btnSpan) btnSpan.innerHTML = '';
+        // Add point buy buttons
+        const pointBuyBtnSpan = document.getElementById(`pointBuyBtns${attr}`) || document.createElement('span');
+        pointBuyBtnSpan.id = `pointBuyBtns${attr}`;
+        pointBuyBtnSpan.innerHTML = '';
+        const plusBtn = document.createElement('button');
+        plusBtn.className = 'dynamic-button point-buy-btn';
+        plusBtn.style.padding = '1px 4px';
+        plusBtn.style.fontSize = '0.7em';
+        plusBtn.style.width = 'auto';
+        plusBtn.textContent = '+';
+        plusBtn.addEventListener('click', () => {
+          console.log(`Point Buy: Plus button clicked for ${attr}`);
+          allocatePointBuyPoint(attr, 1);
+        });
+        pointBuyBtnSpan.appendChild(plusBtn);
+        const minusBtn = document.createElement('button');
+        minusBtn.className = 'dynamic-button point-buy-btn';
+        minusBtn.style.padding = '1px 4px';
+        minusBtn.style.fontSize = '0.7em';
+        minusBtn.style.width = 'auto';
+        minusBtn.textContent = '-';
+        minusBtn.addEventListener('click', () => {
+          console.log(`Point Buy: Minus button clicked for ${attr}`);
+          allocatePointBuyPoint(attr, -1);
+        });
+        pointBuyBtnSpan.appendChild(minusBtn);
+        input.parentNode.appendChild(pointBuyBtnSpan);
+        console.log(`updateAttributes: Added point buy buttons for ${attr}`);
       });
       rolledStats = [];
       availableStats = [];
@@ -5368,6 +5560,7 @@ function removePowerField(button) {
       personality: document.getElementById('charPersonality').value || '',
       milestone: document.getElementById('charMilestone').value || '',
       attrMethod: document.getElementById('attrMethod').value,
+      attributesConfirmed: attributesConfirmed,
       attributes: { STR: str, DEX: dex, CON: con, INT: int, WIS: wis, CHA: cha },
       inherentAbility: inherentAbilities[cls],
       skills,
@@ -6072,6 +6265,7 @@ function removePowerField(button) {
     availableStats = [];
     skillCriticalTracker = {};
     fatePointsUsedInEncounter = 0;
+    window.manualInputWarned = false;
 
     const level = data.level || 1;
     let charClass = data.class || 'Fatemarked';
@@ -6094,6 +6288,7 @@ function removePowerField(button) {
     setValue('charAlignment', data.alignment || (level <= 3 ? 'None' : 'Balance'));
 
     setValue('attrMethod', 'imported');
+    attributesConfirmed = !!data.attributesConfirmed;
     ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
       const value = data.attributes && data.attributes[attr] && data.attributes[attr] >= 8 ? data.attributes[attr] : 10;
       setValue(`attr${attr}`, value);
@@ -6105,6 +6300,8 @@ function removePowerField(button) {
         assignSelect.value = '';
         assignSelect.disabled = true;
       }
+      const pointBuyBtnSpan = document.getElementById(`pointBuyBtns${attr}`);
+      if (pointBuyBtnSpan) pointBuyBtnSpan.innerHTML = '';
     });
     setValue('pointsRemaining', 'N/A');
     const rerollButton = document.getElementById('rerollButton');
@@ -6112,7 +6309,9 @@ function removePowerField(button) {
     const randomRolls = document.getElementById('randomRolls');
     if (randomRolls) randomRolls.classList.add('hidden');
     const confirmAssignments = document.getElementById('confirmAssignments');
-    if (confirmAssignments) confirmAssignments.classList.add('hidden');
+    if (confirmAssignments) confirmAssignments.classList.toggle('hidden', attributesConfirmed);
+    const attrMethodSelect = document.getElementById('attrMethod');
+    if (attrMethodSelect) attrMethodSelect.disabled = attributesConfirmed;
 
     setValue('charName', data.name);
     setValue('playerName', data.player);
