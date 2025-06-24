@@ -233,547 +233,782 @@
     -moz-appearance: textfield;
     appearance: textfield;
   }
+  /* Guide Tool styles from Artifact 1 */
+  .guide-button {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(90deg, #00ffcc, #00cc99);
+    color: #0a0a23;
+    border: 1px solid #00cc99;
+    border-radius: 50%;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    text-align: center;
+    line-height: 18px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    z-index: 1001;
+  }
+  .guide-button.active {
+    background: linear-gradient(90deg, #ff4444, #cc0000);
+    border-color: #ff4444;
+  }
+  .guide-button:hover {
+    transform: scale(1.1);
+  }
+  .guide-popup {
+    display: none;
+    position: absolute;
+    background: rgba(15, 15, 40, 0.9);
+    border: 2px solid #00ffcc;
+    border-radius: 5px;
+    padding: 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    color: #e0e0ff;
+    max-width: 250px;
+    box-shadow: 0 0 10px #00cc99;
+    z-index: 1002;
+    pointer-events: none;
+  }
+  .guide-popup.show {
+    display: block;
+  }
 </style>
-</head>
 <body>
   <div class="container">
-    <h1>Continuum Wars Roll Widget</h1>
-    <div class="input-section">
-      <h2>Configure Your Roll</h2>
-      <div class="grid">
-        <div>
-          <label>Character Level</label>
-          <input id="characterLevel" type="number" value="1" min="1" max="15" placeholder="Level (1-15)" title="Character's level" onchange="updateInputs(); updateFeats(); updateClassAbilities();">
+  <h1>Continuum Wars Roll Widget</h1>
+  <div class="input-section" style="position: relative;">
+    <div class="guide-button" onclick="toggleGuideMode('input-section')" title="Toggle Guide Mode">?</div>
+    <h2>Configure Your Roll</h2>
+    <div class="grid">
+      <div>
+        <label>Character Level</label>
+        <input id="characterLevel" type="number" value="1" min="1" max="15" placeholder="Level (1-15)" title="Sets level (1–15). Affects BAB, skill ranks (max 3 + level), feats, powers, Sanity (+2/level), and XP (e.g., Level 3 to 4: 450 XP). Synced with character sheet." onchange="updateInputs(); updateFeats(); updateClassAbilities();">
+      </div>
+      <div>
+        <label>Character Class</label>
+        <select id="characterClass" title="Character's class" onchange="updateInputs(); updateFeats(); updateClassAbilities();">
+          <option value="Fatemarked">Fatemarked</option>
+          <option value="Biomatrix Suit">Biomatrix Suit</option>
+          <option value="Continuum Raider">Continuum Raider</option>
+          <option value="Gunrunner">Gunrunner</option>
+          <option value="Faterunner">Faterunner</option>
+          <option value="Harlequin">Harlequin</option>
+          <option value="Warrior">Warrior</option>
+          <option value="Mage">Mage</option>
+          <option value="Shape">Shape</option>
+          <option value="Masque">Masque</option>
+          <option value="Adventurer">Adventurer</option>
+        </select>
+      </div>
+      <div>
+        <label>Roll Type</label>
+        <select id="rollType" title="Type of dice roll" onchange="resetInputs(); updateInputs(); updateSkillSpecOptions();">
+          <option value="skill">Skill Check (d20 + Modifier + Rank)</option>
+          <option value="attack">Attack Roll (d20 + BAB + Modifier vs. AC)</option>
+          <option value="damage">Damage Roll (Dice + Modifier)</option>
+          <option value="sanity">Sanity Check (d20 + WIS Modifier)</option>
+          <option value="saving">Saving Throw (d20 + Modifier)</option>
+          <option value="initiative">Initiative (d20 + DEX Modifier)</option>
+          <option value="paradox">Paradox Risk Check (d20 + Modifier)</option>
+          <option value="hazard">Environmental Hazard Roll (d20 + Modifier)</option>
+          <option value="custom">Custom Roll (e.g., 3d6)</option>
+          <option value="extended">Extended Test (Cumulative DC)</option>
+          <option value="opposed">Opposed Test (d20 + Modifier vs. Opponent)</option>
+          <option value="extendedOpposed">Extended Opposed Test</option>
+          <option value="disarm">Disarm (Attack Roll vs. AC)</option>
+          <option value="grapple">Grapple (Opposed Check)</option>
+          <option value="trip">Trip (Attack Roll vs. AC)</option>
+          <option value="nonLethal">Non-Lethal Damage (Dice + Modifier)</option>
+        </select>
+      </div>
+      <div>
+        <label>Sphere Influence</label>
+        <select id="sphereInfluence" title="Sets sphere modifiers (e.g., Balance: +2 Persuasion)" onchange="updateInputs();">
+          <option value="none">None</option>
+          <option value="Balance">Balance</option>
+          <option value="Growth">Growth</option>
+          <option value="Discord">Discord</option>
+          <option value="Oppression">Oppression</option>
+          <option value="Reason">Reason</option>
+        </select>
+      </div>
+      <div>
+        <label>Social Encounter</label>
+        <select id="socialEncounter" title="Manages social conflicts (e.g., DC 15 Persuasion, Influence Pool 10 + WIS). Affects Reputation and narrative." onchange="updateInputs();">
+          <option value="none">None</option>
+          <option value="Persuasion">Persuasion (DC 15)</option>
+          <option value="Intimidation">Intimidation (DC 15)</option>
+          <option value="Deception">Deception (DC 15)</option>
+        </select>
+      </div>
+      <div>
+        <label>Class Power</label>
+        <select id="classPower" title="Activates class-specific powers (e.g., Biomatrix Suit: Energy Cells, Faterunner: Fate Points). Includes narrative risks." onchange="updateInputs();">
+          <option value="none">None</option>
+          <option value="NanoPulse">Nano Pulse (Biomatrix Suit)</option>
+          <option value="FatePoint">Fate Point (Faterunner)</option>
+          <option value="ChaosBolt">Chaos Bolt (Masque)</option>
+        </select>
+      </div>
+      <div>
+        <label>Combat Modifiers</label>
+        <select id="combatModifiers" title="Combat modifiers (e.g., cover, concealment)" onchange="updateInputs();">
+          <option value="none">None</option>
+          <option value="partialCover">Partial Cover (+2 AC)</option>
+          <option value="halfCover">Half Cover (+4 AC)</option>
+          <option value="partialConcealment">Partial Concealment (20% miss)</option>
+          <option value="nonLethal">Non-Lethal (-4 attack)</option>
+        </select>
+      </div>
+      <div>
+        <label>Paradox Risk</label>
+        <input id="paradoxRisk" type="number" value="0" min="0" title="Tracks paradox for powers (e.g., PL 1 DC 15 INT/CHA, +2 per extra use). Failure: -2 penalty or rift (AC 15, 30 Health). Varies by class." onchange="updateInputs();">
+      </div>
+      <div>
+        <label>Inventory Slots</label>
+        <input id="inventorySlots" type="number" value="10" min="0" title="Inventory slots (default 10)" onchange="updateInputs(); updateInventory();">
+      </div>
+      <div>
+        <label>Currency Type</label>
+        <select id="currencyType" title="Currency type (e.g., Credits, Rift Shards)" onchange="updateInputs();">
+          <option value="credits">Credits</option>
+          <option value="riftShards">Rift Shards</option>
+          <option value="gunrunnerCredits">Gunrunner Credits</option>
+        </select>
+      </div>
+      <div>
+        <label>Power Creation</label>
+        <select id="powerCreation" title="Power creation level" onchange="updateInputs();">
+          <option value="pl1">PL 1</option>
+          <option value="pl2">PL 2</option>
+          <option value="pl3">PL 3</option>
+        </select>
+      </div>
+      <div>
+        <label>Pact Effect</label>
+        <select id="pactEffect" title="Creates Masque Pacts (e.g., Chaos Bolt: 1d8 + CHA). Risks Revenant spawns." onchange="updateInputs();">
+          <option value="none">None</option>
+          <option value="ChaosBolt">Chaos Bolt (1d8 + CHA)</option>
+          <option value="InfernalSurge">Infernal Surge (1d8 + CHA)</option>
+        </select>
+      </div>
+      <div>
+        <label>Market Purchase</label>
+        <input id="marketPurchase" type="number" value="0" min="0" placeholder="e.g., 20" title="Handles haven market transactions (e.g., Chronometric Rifle: 20 Credits). Risks scams/taxes." onchange="updateInputs();">
+      </div>
+      <div>
+        <label>XP Tracker</label>
+        <input id="xpTracker" type="number" value="0" min="0" placeholder="e.g., 450" title="Tracks XP for leveling (e.g., Level 3 to 4: 450 XP). Requires narrative milestones." onchange="updateInputs();">
+      </div>
+      <div>
+        <label>World Topography</label>
+        <select id="worldTopography" title="Sets dimension topography (e.g., Floating Islands: DC 15 Acrobatics). Affects navigation and encounters." onchange="updateInputs();">
+          <option value="none">None</option>
+          <option value="FloatingIslands">Floating Islands (DC 15 Acrobatics)</option>
+          <option value="CrystallineCaverns">Crystalline Caverns (DC 15 WIS)</option>
+          <option value="EndlessOcean">Endless Ocean (DC 15 Swim)</option>
+        </select>
+      </div>
+      <div>
+        <label>Adventure Objective</label>
+        <select id="adventureObjective" title="Defines adventure goal (e.g., Seal rift: DC 15 group check). Drives narrative and rewards." onchange="updateInputs();">
+          <option value="none">None</option>
+          <option value="SealRift">Seal Rift (DC 15)</option>
+          <option value="RecoverArtifact">Recover Artifact (DC 15)</option>
+          <option value="Rescue">Rescue (DC 15)</option>
+        </select>
+      </div>
+      <div>
+        <label>Paradox Consequence</label>
+        <input id="paradoxConsequence" type="number" value="0" min="0" placeholder="e.g., 2" title="Tracks paradox failure effects (e.g., Minor: -2 penalty). Varies by class and severity." onchange="updateInputs();">
+      </div>
+      <div>
+        <label>Condition Status</label>
+        <select id="conditionStatus" title="Applies status effects (e.g., Disoriented: -2 checks). Includes recovery methods." onchange="updateInputs();">
+          <option value="none">None</option>
+          <option value="Disoriented">Disoriented (-2 checks)</option>
+          <option value="Exhausted">Exhausted (-2 STR/CON)</option>
+        </select>
+      </div>
+      <div id="damageDiceInput" class="hidden">
+        <label>Damage Dice</label>
+        <select id="damageDice" title="Dice for damage roll">
+          <option value="1d4">1d4</option>
+          <option value="1d6">1d6</option>
+          <option value="1d8">1d8</option>
+          <option value="2d6">2d6</option>
+          <option value="1d10">1d10</option>
+          <option value="2d8">2d8</option>
+        </select>
+      </div>
+      <div id="customDiceInput" class="hidden">
+        <label>Custom Dice</label>
+        <input id="customDice" type="text" placeholder="e.g., 3d6" title="Custom dice notation (e.g., 3d6)">
+      </div>
+      <div>
+        <label>Modifier (Attribute)</label>
+        <input id="modifier" type="number" value="0" placeholder="Modifier" title="Attribute modifier">
+      </div>
+      <div id="skillRankInput" class="hidden">
+        <label>Skill Rank</label>
+        <input id="skillRank" type="number" value="0" min="0" placeholder="Rank" title="Skill rank">
+      </div>
+      <div id="babInput" class="hidden">
+        <label>Base Attack Bonus (BAB)</label>
+        <input id="bab" type="number" value="0" min="0" placeholder="BAB" title="Base Attack Bonus">
+      </div>
+      <div id="savingTypeInput" class="hidden">
+        <label>Saving Throw Type</label>
+        <select id="savingType" title="Type of saving throw">
+          <option value="reflex">Reflex (DEX)</option>
+          <option value="fortitude">Fortitude (CON)</option>
+          <option value="willpower">Willpower (WIS)</option>
+          <option value="luck">Luck (CHA, Level 4+)</option>
+        </select>
+      </div>
+      <div id="paradoxDCInput" class="hidden">
+        <label>Paradox DC</label>
+        <select id="paradoxDC" title="Paradox Difficulty Class" onchange="updateParadoxDC()">
+          <option value="custom">Custom DC</option>
+          <option value="15">PL 1 (DC 15)</option>
+          <option value="18">PL 2 (DC 18)</option>
+          <option value="22">PL 3 (DC 22)</option>
+        </select>
+        <input id="customParadoxDC" type="number" placeholder="Custom DC" title="Custom Paradox DC" class="hidden">
+      </div>
+      <div id="powerLevelInput" class="hidden">
+        <label>Power Level/Tier</label>
+        <select id="powerLevel" title="Power level for paradox risk"></select>
+      </div>
+      <div id="dcInput" class="hidden">
+        <label>Difficulty Class (DC)</label>
+        <input id="dc" type="number" placeholder="DC (e.g., 15)" min="0" title="Difficulty Class">
+      </div>
+      <div id="acInput" class="hidden">
+        <label>Target Armor Class (AC)</label>
+        <input id="ac" type="number" value="15" min="0" placeholder="AC" title="Target Armor Class">
+      </div>
+      <div id="opponentRollInput" class="hidden">
+        <label>Opponent Roll</label>
+        <input id="opponentRoll" type="number" value="0" min="0" placeholder="Opponent Roll" title="Opponent's roll for opposed tests">
+      </div>
+      <div id="cumulativeDCInput" class="hidden">
+        <label>Cumulative DC</label>
+        <input id="cumulativeDC" type="number" placeholder="DC (e.g., 30)" min="0" title="Cumulative DC for extended tests">
+      </div>
+      <div id="skillNameInput" class="hidden">
+        <label>Skill Name</label>
+        <select id="skillName" title="Skill for the roll" onchange="updateSkillSpecOptions()">
+          <option value="none">Select Skill</option>
+        </select>
+      </div>
+      <div id="skillSpecInput" class="hidden">
+        <label>Skill Specialization</label>
+        <select id="skillSpec" title="Specialization for the skill">
+          <option value="none">None</option>
+        </select>
+      </div>
+      <div id="advantageSelectInput" class="hidden">
+        <label>Advantage</label>
+        <select id="advantageSelect" title="Select advantage">
+          <option value="none">None</option>
+        </select>
+        <input id="advantageTier" type="number" min="1" max="5" value="1" style="width: 100px;" placeholder="Tier" title="Advantage tier" class="hidden">
+      </div>
+      <div id="disadvantageSelectInput" class="hidden">
+        <label>Disadvantage</label>
+        <select id="disadvantageSelect" title="Select disadvantage">
+          <option value="none">None</option>
+        </select>
+        <input id="disadvantageTier" type="number" min="1" max="5" value="1" style="width: 100px;" placeholder="Tier" title="Disadvantage tier" class="hidden">
+      </div>
+      <div id="powerSelectInput" class="hidden">
+        <label>Power</label>
+        <select id="powerSelect" title="Select power">
+          <option value="none">None</option>
+        </select>
+      </div>
+      <div>
+        <label>Class Feat/Advantage</label>
+        <select id="classFeat" class="feat-select" title="Class-relevant feat or advantage" onchange="updateInputs(); updateFeatOptions()">
+          <option value="none">None</option>
+        </select>
+        <div id="classFeatTierInput" class="hidden">
+          <label>Feat/Advantage Tier</label>
+          <input id="classFeatTier" type="number" min="1" max="5" value="1" placeholder="Tier" title="Feat or advantage tier">
         </div>
-        <div>
-          <label>Character Class</label>
-          <select id="characterClass" title="Character's class" onchange="updateInputs(); updateFeats(); updateClassAbilities();">
-            <option value="Fatemarked">Fatemarked</option>
-            <option value="Biomatrix Suit">Biomatrix Suit</option>
-            <option value="Continuum Raider">Continuum Raider</option>
-            <option value="Gunrunner">Gunrunner</option>
-            <option value="Faterunner">Faterunner</option>
-            <option value="Harlequin">Harlequin</option>
-            <option value="Warrior">Warrior</option>
-            <option value="Mage">Mage</option>
-            <option value="Shape">Shape</option>
-            <option value="Masque">Masque</option>
-            <option value="Adventurer">Adventurer</option>
-          </select>
+        <div id="featContainer"></div>
+        <button class="add-button" onclick="addFeatField()">Add Feat/Advantage</button>
+      </div>
+      <div>
+        <label>Mechanical Advantage</label>
+        <select id="advantage" title="Mechanical advantage or disadvantage">
+          <option value="none">None</option>
+          <option value="advantage">Advantage</option>
+          <option value="disadvantage">Disadvantage</option>
+        </select>
+      </div>
+      <div>
+        <label>Environmental Advantage (GM)</label>
+        <input type="checkbox" id="envAdvantage" title="Grant environmental advantage">
+        <label for="envAdvantage">Grant Advantage</label>
+      </div>
+      <div id="paradoxCheckInput" class="hidden">
+        <label>Elective Paradox Check (Faterunner/Harlequin)</label>
+        <input type="checkbox" id="paradoxCheckOptIn" title="Opt-in for paradox check on Tier 2/3 effects">
+        <label for="paradoxCheckOptIn">Apply Paradox Check</label>
+      </div>
+      <div id="synergyBonusInput" class="hidden">
+        <label>Synergy Bonus</label>
+        <input type="checkbox" id="synergyBonus" title="Apply +2 bonus from allies"> Apply +2 Bonus
+      </div>
+      <div id="coverConcealmentInput" class="hidden">
+        <label>Cover/Concealment</label>
+        <select id="coverConcealment" title="Cover or concealment modifiers">
+          <option value="none">None</option>
+          <option value="cover">Cover (+4 AC)</option>
+          <option value="concealment">Concealment (20% miss)</option>
+        </select>
+      </div>
+      <div id="customFeatInput" class="hidden">
+        <label>Custom Feat Description</label>
+        <input id="customFeat" type="text" placeholder="Describe custom feat" title="Description of custom feat">
+      </div>
+      <div id="rollFormulaInput" class="hidden">
+        <label>Roll Formula</label>
+        <input id="rollFormula" type="text" readonly title="Calculated roll formula">
+      </div>
+    </div>
+    <div id="classAbilities">
+      <h2>Class Abilities</h2>
+      <div id="abilitiesContainer"></div>
+    </div>
+    <div class="button-group">
+      <button onclick="rollDice()">Roll the Dice of Destiny</button>
+      <button onclick="clearFields()">Clear Fields</button>
+    </div>
+  </div>
+  <div class="gm-reference collapsed" style="position: relative;">
+    <div class="guide-button" onclick="toggleGuideMode('gm-reference')" title="Toggle Guide Mode">?</div>
+    <div class="toggle-button" onclick="toggleGMReference()">Show GM Reference</div>
+    <div class="gm-content">
+      <h2>GM Reference</h2>
+      <div>
+        <button class="dynamic-button" onclick="generateReality()">Generate Wondrous Reality</button>
+        <button class="dynamic-button" onclick="displayTable('attributeModifiers')">Attribute Modifiers</button>
+        <button class="dynamic-button" onclick="displayTable('skillDCs')">Skill DCs</button>
+        <button class="dynamic-button" onclick="displayTable('paradoxRisks')">Paradox Risks</button>
+        <button class="dynamic-button" onclick="displayTable('dimensionalTravelDCs')">Dimensional Travel DCs</button>
+        <button class="dynamic-button" onclick="displayTable('dimensionalTravelMishaps')">Dimensional Travel Mishaps</button>
+        <button class="dynamic-button" onclick="displayTable('currencyConversions')">Currency Conversions</button>
+        <button class="dynamic-button" onclick="displayTable('xpThresholds')">XP Thresholds</button>
+        <button class="dynamic-button" onclick="displayTable('downtimeActivityCosts')">Downtime Activity Costs</button>
+        <button class="dynamic-button" onclick="displayTable('lifestyleModifiers')">Lifestyle Modifiers</button>
+        <button class="dynamic-button" onclick="displayTable('powerCreationParameters')">Power Creation Parameters</button>
+        <button class="dynamic-button" onclick="displayTable('sphereModifiers')">Sphere Modifiers</button>
+        <button class="dynamic-button" onclick="displayTable('paragonStats')">Paragon Stats</button>
+        <button class="dynamic-button" onclick="displayTable('knightChampionStats')">Knight/Champion Stats</button>
+        <button class="dynamic-button" onclick="displayTable('classParadoxRisks')">Class Paradox Risks</button>
+        <button class="dynamic-button" onclick="displayTable('magePerceptionEffects')">Mage Perception Effects</button>
+        <button class="dynamic-button" onclick="displayTable('shapeTransformationRisks')">Shape Transformation Risks</button>
+        <button class="dynamic-button" onclick="displayTable('combatDCs')">Combat DCs</button>
+        <button class="dynamic-button" onclick="displayTable('sanityDCs')">Sanity DCs</button>
+        <button class="dynamic-button" onclick="displayTable('paradoxConsequences')">Paradox Consequences</button>
+        <button class="dynamic-button" onclick="displayTable('powerCreation')">Power Creation Costs</button>
+        <button class="dynamic-button" onclick="displayTable('levelCaps')">Level Caps</button>
+        <button class="dynamic-button" onclick="displayTable('fatemarkedAbilities')">Fatemarked Abilities</button>
+        <button class="dynamic-button" onclick="displayTable('challengeRatings')">Challenge Ratings</button>
+        <button class="dynamic-button" onclick="displayTable('classResources')">Class Resources</button>
+        <button class="dynamic-button" onclick="generateFixedPoint()">Generate Fixed Point</button>
+        <button class="dynamic-button" onclick="displayTable('skillDCs')">Skill DCs</button>
+        <button class="dynamic-button" onclick="displayTable('paradoxRisks')">Paradox Risks</button>
+        <button class="dynamic-button" onclick="displayTable('weaponDamage')">Weapon Damage</button>
+        <button class="dynamic-button" onclick="displayTable('synergyBonuses')">Synergy Bonuses</button>
+        <button class="dynamic-button" onclick="displayTable('sanityEffects')">Sanity Effects</button>
+        <button class="dynamic-button" onclick="displayTable('influencePools')">Influence Pools</button>
+        <button class="dynamic-button" onclick="displayTable('dimensionalTravelDCs')">Dimensional Travel DCs</button>
+        <button class="dynamic-button" onclick="displayTable('dimensionalTravelMishaps')">Dimensional Travel Mishaps</button>
+        <button class="dynamic-button" onclick="displayTable('currencyConversions')">Currency Conversions</button>
+        <button class="dynamic-button" onclick="displayTable('xpThresholds')">XP Thresholds</button>
+        <button class="dynamic-button" onclick="displayTable('downtimeActivityCosts')">Downtime Activity Costs</button>
+        <button class="dynamic-button" onclick="displayTable('lifestyleModifiers')">Lifestyle Modifiers</button>
+        <button class="dynamic-button" onclick="displayTable('powerCreationParameters')">Power Creation Parameters</button>
+        <button class="dynamic-button" onclick="displayTable('marketPriceList')">Market Price List</button>
+        <button class="dynamic-button" onclick="displayTable('wondrousTableRealities')">Wondrous Table of Infinite Realities</button>
+        <button class="dynamic-button" onclick="displayTable('encounterCRXPAwards')">Encounter CR/XP Awards</button>
+        <button class="dynamic-button" onclick="displayTable('commonConditions')">Common Conditions</button>
+        <button class="dynamic-button" onclick="displayTable('classResources')">Class Resource Pools</button>
+        <button class="dynamic-button" onclick="displayTable('skillsList')">Skills List</button>
         </div>
-        <div>
-          <label>Roll Type</label>
-          <select id="rollType" title="Type of dice roll" onchange="resetInputs(); updateInputs(); updateSkillSpecOptions();">
-            <option value="skill">Skill Check (d20 + Modifier + Rank)</option>
-            <option value="attack">Attack Roll (d20 + BAB + Modifier vs. AC)</option>
-            <option value="damage">Damage Roll (Dice + Modifier)</option>
-            <option value="sanity">Sanity Check (d20 + WIS Modifier)</option>
-            <option value="saving">Saving Throw (d20 + Modifier)</option>
-            <option value="initiative">Initiative (d20 + DEX Modifier)</option>
-            <option value="paradox">Paradox Risk Check (d20 + Modifier)</option>
-            <option value="hazard">Environmental Hazard Roll (d20 + Modifier)</option>
-            <option value="custom">Custom Roll (e.g., 3d6)</option>
-            <option value="extended">Extended Test (Cumulative DC)</option>
-            <option value="opposed">Opposed Test (d20 + Modifier vs. Opponent)</option>
-            <option value="extendedOpposed">Extended Opposed Test</option>
-            <option value="disarm">Disarm (Attack Roll vs. AC)</option>
-            <option value="grapple">Grapple (Opposed Check)</option>
-            <option value="trip">Trip (Attack Roll vs. AC)</option>
-            <option value="nonLethal">Non-Lethal Damage (Dice + Modifier)</option>
-          </select>
-        </div>
-        <div id="damageDiceInput" class="hidden">
-          <label>Damage Dice</label>
-          <select id="damageDice" title="Dice for damage roll">
-            <option value="1d4">1d4</option>
-            <option value="1d6">1d6</option>
-            <option value="1d8">1d8</option>
-            <option value="2d6">2d6</option>
-            <option value="1d10">1d10</option>
-            <option value="2d8">2d8</option>
-          </select>
-        </div>
-        <div id="customDiceInput" class="hidden">
-          <label>Custom Dice</label>
-          <input id="customDice" type="text" placeholder="e.g., 3d6" title="Custom dice notation (e.g., 3d6)">
-        </div>
-        <div>
-          <label>Modifier (Attribute)</label>
-          <input id="modifier" type="number" value="0" placeholder="Modifier" title="Attribute modifier">
-        </div>
-        <div id="skillRankInput" class="hidden">
-          <label>Skill Rank</label>
-          <input id="skillRank" type="number" value="0" min="0" placeholder="Rank" title="Skill rank">
-        </div>
-        <div id="babInput" class="hidden">
-          <label>Base Attack Bonus (BAB)</label>
-          <input id="bab" type="number" value="0" min="0" placeholder="BAB" title="Base Attack Bonus">
-        </div>
-        <div id="savingTypeInput" class="hidden">
-          <label>Saving Throw Type</label>
-          <select id="savingType" title="Type of saving throw">
-            <option value="reflex">Reflex (DEX)</option>
-            <option value="fortitude">Fortitude (CON)</option>
-            <option value="willpower">Willpower (WIS)</option>
-            <option value="luck">Luck (CHA, Level 4+)</option>
-          </select>
-        </div>
-        <div id="paradoxDCInput" class="hidden">
-          <label>Paradox DC</label>
-          <select id="paradoxDC" title="Paradox Difficulty Class" onchange="updateParadoxDC()">
-            <option value="custom">Custom DC</option>
-            <option value="15">PL 1 (DC 15)</option>
-            <option value="18">PL 2 (DC 18)</option>
-            <option value="22">PL 3 (DC 22)</option>
-          </select>
-          <input id="customParadoxDC" type="number" placeholder="Custom DC" title="Custom Paradox DC" class="hidden">
-        </div>
-        <div id="powerLevelInput" class="hidden">
-          <label>Power Level/Tier</label>
-          <select id="powerLevel" title="Power level for paradox risk"></select>
-        </div>
-        <div id="dcInput" class="hidden">
-          <label>Difficulty Class (DC)</label>
-          <input id="dc" type="number" placeholder="DC (e.g., 15)" min="0" title="Difficulty Class">
-        </div>
-        <div id="acInput" class="hidden">
-          <label>Target Armor Class (AC)</label>
-          <input id="ac" type="number" value="15" min="0" placeholder="AC" title="Target Armor Class">
-        </div>
-        <div id="opponentRollInput" class="hidden">
-          <label>Opponent Roll</label>
-          <input id="opponentRoll" type="number" value="0" min="0" placeholder="Opponent Roll" title="Opponent's roll for opposed tests">
-        </div>
-        <div id="cumulativeDCInput" class="hidden">
-          <label>Cumulative DC</label>
-          <input id="cumulativeDC" type="number" placeholder="DC (e.g., 30)" min="0" title="Cumulative DC for extended tests">
-        </div>
-        <div id="skillNameInput" class="hidden">
-          <label>Skill Name</label>
-          <select id="skillName" title="Skill for the roll" onchange="updateSkillSpecOptions()">
-            <option value="none">Select Skill</option>
-          </select>
-        </div>
-        <div id="skillSpecInput" class="hidden">
-          <label>Skill Specialization</label>
-          <select id="skillSpec" title="Specialization for the skill">
-            <option value="none">None</option>
-          </select>
-        </div>
-        <div id="advantageSelectInput" class="hidden">
-          <label>Advantage</label>
-          <select id="advantageSelect" title="Select advantage">
-            <option value="none">None</option>
-          </select>
-          <input id="advantageTier" type="number" min="1" max="5" value="1" style="width: 100px;" placeholder="Tier" title="Advantage tier" class="hidden">
-        </div>
-        <div id="disadvantageSelectInput" class="hidden">
-          <label>Disadvantage</label>
-          <select id="disadvantageSelect" title="Select disadvantage">
-            <option value="none">None</option>
-          </select>
-          <input id="disadvantageTier" type="number" min="1" max="5" value="1" style="width: 100px;" placeholder="Tier" title="Disadvantage tier" class="hidden">
-        </div>
-        <div id="powerSelectInput" class="hidden">
-          <label>Power</label>
-          <select id="powerSelect" title="Select power">
-            <option value="none">None</option>
-          </select>
-        </div>
-        <div>
-          <label>Class Feat/Advantage</label>
-          <select id="classFeat" class="feat-select" title="Class-relevant feat or advantage" onchange="updateInputs(); updateFeatOptions()">
-            <option value="none">None</option>
-          </select>
-          <div id="classFeatTierInput" class="hidden">
-            <label>Feat/Advantage Tier</label>
-            <input id="classFeatTier" type="number" min="1" max="5" value="1" placeholder="Tier" title="Feat or advantage tier">
+      <div id="gmReferenceOutput"></div>
+    </div>
+  </div>
+  <div class="character-sheet collapsed" style="position: relative;">
+    <div class="guide-button" onclick="toggleGuideMode('character-sheet')" title="Toggle Guide Mode">?</div>
+    <div class="toggle-button" onclick="toggleCharacterSheet()">Show Character Sheet Generator</div>
+    <div class="sheet-content">
+      <h2>Character Sheet Generator</h2>
+      <div class="attributes-section">
+        <div class="grid">
+          <div>
+            <label>Character Name</label>
+            <input id="charName" type="text" placeholder="e.g., Kael Vortex" title="Your character's name">
           </div>
-          <div id="featContainer"></div>
-          <button class="add-button" onclick="addFeatField()">Add Feat/Advantage</button>
-        </div>
-        <div>
-          <label>Mechanical Advantage</label>
-          <select id="advantage" title="Mechanical advantage or disadvantage">
-            <option value="none">None</option>
-            <option value="advantage">Advantage</option>
-            <option value="disadvantage">Disadvantage</option>
-          </select>
-        </div>
-        <div>
-          <label>Environmental Advantage (GM)</label>
-          <input type="checkbox" id="envAdvantage" title="Grant environmental advantage">
-          <label for="envAdvantage">Grant Advantage</label>
-        </div>
-        <div id="paradoxCheckInput" class="hidden">
-          <label>Elective Paradox Check (Faterunner/Harlequin)</label>
-          <input type="checkbox" id="paradoxCheckOptIn" title="Opt-in for paradox check on Tier 2/3 effects">
-          <label for="paradoxCheckOptIn">Apply Paradox Check</label>
-        </div>
-        <div id="synergyBonusInput" class="hidden">
-          <label>Synergy Bonus</label>
-          <input type="checkbox" id="synergyBonus" title="Apply +2 bonus from allies"> Apply +2 Bonus
-        </div>
-        <div id="coverConcealmentInput" class="hidden">
-          <label>Cover/Concealment</label>
-          <select id="coverConcealment" title="Cover or concealment modifiers">
-            <option value="none">None</option>
-            <option value="cover">Cover (+4 AC)</option>
-            <option value="concealment">Concealment (20% miss)</option>
-          </select>
-        </div>
-        <div id="customFeatInput" class="hidden">
-          <label>Custom Feat Description</label>
-          <input id="customFeat" type="text" placeholder="Describe custom feat" title="Description of custom feat">
-        </div>
-        <div id="rollFormulaInput" class="hidden">
-          <label>Roll Formula</label>
-          <input id="rollFormula" type="text" readonly title="Calculated roll formula">
-        </div>
-      </div>
-      <div id="classAbilities">
-        <h2>Class Abilities</h2>
-        <div id="abilitiesContainer"></div>
-      </div>
-      <div class="button-group">
-        <button onclick="rollDice()">Roll the Dice of Destiny</button>
-        <button onclick="clearFields()">Clear Fields</button>
-      </div>
-    </div>
-
-    <div class="gm-reference collapsed">
-      <div class="toggle-button" onclick="toggleGMReference()">Show GM Reference</div>
-      <div class="gm-content">
-        <h2>GM Reference</h2>
-        <div>
-          <button class="dynamic-button" onclick="generateReality()">Generate Wondrous Reality</button>
-          <button class="dynamic-button" onclick="displayTable('attributeModifiers')">Attribute Modifiers</button>
-          <button class="dynamic-button" onclick="displayTable('combatDCs')">Combat DCs</button>
-          <button class="dynamic-button" onclick="displayTable('sanityDCs')">Sanity DCs</button>
-          <button class="dynamic-button" onclick="displayTable('paradoxConsequences')">Paradox Consequences</button>
-          <button class="dynamic-button" onclick="displayTable('powerCreation')">Power Creation Costs</button>
-          <button class="dynamic-button" onclick="displayTable('levelCaps')">Level Caps</button>
-          <button class="dynamic-button" onclick="displayTable('fatemarkedAbilities')">Fatemarked Abilities</button>
-          <button class="dynamic-button" onclick="displayTable('challengeRatings')">Challenge Ratings</button>
-          <button class="dynamic-button" onclick="displayTable('classResources')">Class Resources</button>
-          <button class="dynamic-button" onclick="generateFixedPoint()">Generate Fixed Point</button>
-        </div>
-        <div id="gmReferenceOutput"></div>
-      </div>
-    </div>
-
-    <div class="character-sheet collapsed">
-      <div class="toggle-button" onclick="toggleCharacterSheet()">Show Character Sheet Generator</div>
-      <div class="sheet-content">
-        <h2>Character Sheet Generator</h2>
-        <div class="attributes-section">
-          <div class="grid">
-            <div>
-              <label>Character Name</label>
-              <input id="charName" type="text" placeholder="e.g., Kael Vortex" title="Your character's name">
-            </div>
-            <div>
-              <label>Player Name</label>
-              <input id="playerName" type="text" placeholder="e.g., Alex" title="Your name as the player">
-            </div>
-            <div>
-              <label>Level</label>
-              <input id="charLevel" type="number" value="1" min="1" max="15" placeholder="Level (1-15)" title="Character's current level (1-15)" onchange="updateSheetInputs({ preserveAttributes: true }); updateInputs(); updateSkillSpecOptions(); updateFeats(); updateClassAbilities()">
-            </div>
-            <div>
-              <label>Class</label>
-              <select id="charClass" title="Character's class" onchange="updateSheetInputs({ preserveAttributes: true }); updateInputs(); updateSkillSpecOptions(); updateFeats(); updateClassAbilities()">
-                <option value="Fatemarked">Fatemarked</option>
-                <option value="Biomatrix Suit">Biomatrix Suit</option>
-                <option value="Continuum Raider">Continuum Raider</option>
-                <option value="Gunrunner">Gunrunner</option>
-                <option value="Faterunner">Faterunner</option>
-                <option value="Harlequin">Harlequin</option>
-                <option value="Warrior">Warrior</option>
-                <option value="Mage">Mage</option>
-                <option value="Shape">Shape</option>
-                <option value="Masque">Masque</option>
-                <option value="Adventurer">Adventurer</option>
-              </select>
-            </div>
-            <div>
-              <label>Primordial Alignment</label>
-              <select id="charAlignment" title="Character's alignment (None for Levels 1-3)">
-                <option value="None">None (Levels 1–3)</option>
-                <option value="Balance">Balance</option>
-                <option value="Chaos">Chaos</option>
-                <option value="Order">Order</option>
-                <option value="Neutrality">Neutrality</option>
-              </select>
-            </div>
-            <div>
-              <label>Background</label>
-              <input id="charBackground" type="text" placeholder="e.g., Rift Survivor" title="Character's backstory or origin">
-            </div>
-            <div>
-              <label>Appearance</label>
-              <input id="charAppearance" type="text" placeholder="e.g., Cybernetic eye, blue cloak" title="Physical description of the character">
-            </div>
-            <div>
-              <label>Occupation</label>
-              <input id="charOccupation" type="text" placeholder="e.g., Rift Navigator" title="Character's profession or role">
-            </div>
-            <div>
-              <label>Personality & Motivation</label>
-              <textarea id="charPersonality" placeholder="e.g., Curious, seeks to seal rifts" title="Character's personality traits and goals"></textarea>
-            </div>
-            <div>
-              <label>Narrative Milestone</label>
-              <input id="charMilestone" type="text" placeholder="e.g., Sealed first rift" title="Significant event in character's story">
-            </div>
+          <div>
+            <label>Player Name</label>
+            <input id="playerName" type="text" placeholder="e.g., Alex" title="Your name as the player">
           </div>
-          <h2>Attributes</h2>
-          <div id="statPointAllocation" class="dynamic-group" style="margin-bottom: 10px; display:none;">
-            <label style="margin-right: 1em;"><strong>Unspent Stat Points:</strong> <span id="statPointsAvailable">0</span></label>
-            <button id="commitStatPointsBtn" class="dynamic-button" style="padding:1px 7px; font-size:0.8em; width:auto;" onclick="commitStatPoints()" disabled>Commit</button>
+          <div>
+            <label>Level</label>
+            <input id="charLevel" type="number" value="1" min="1" max="15" placeholder="Level (1-15)" title="Character's current level (1-15)" onchange="updateSheetInputs({ preserveAttributes: true }); updateInputs(); updateSkillSpecOptions(); updateFeats(); updateClassAbilities()">
           </div>
-          <div class="grid">
-            <div>
-              <label>Attribute Method</label>
-              <select id="attrMethod" title="Method for generating attributes" onchange="updateAttributes()">
-                <option value="pointBuy">Point Buy (15 points)</option>
-                <option value="random">Random (4d6 drop lowest)</option>
-                <option value="manual">Manual Input</option>
-                <option value="imported" hidden>Imported</option>
-              </select>
-            </div>
-            <div>
-              <label>Points Remaining (Point Buy)</label>
-              <input id="pointsRemaining" type="text" readonly value="15" title="Remaining points for point buy">
-            </div>
-            <div id="randomRolls" class="hidden">
-              <label>Rolled Stats</label>
-              <input id="rolledStats" type="text" readonly placeholder="e.g., 15, 14, 13, 12, 10, 8" title="Rolled attribute values">
-            </div>
-            <div class="button-group">
-              <button id="rerollButton" class="dynamic-button hidden" onclick="rerollAttributes()">Reroll Stats</button>
-              <button id="confirmAssignments" class="dynamic-button hidden" onclick="confirmAttributes()">Confirm Assignments</button>
-            </div>
-            <div>
-              <label>Strength (STR)</label>
-              <input id="attrSTR" type="number" min="1" max="20" value="10" placeholder="STR (8-18)" title="Strength score (8-18)" readonly>
-              <span id="statPointBtnsSTR"></span>
-              <span id="pointBuyBtnsSTR"></span>
-              <select id="assignSTR" class="hidden" title="Assign rolled stat to Strength" onchange="assignStat('STR')"></select>
-            </div>
-            <div>
-              <label>Dexterity (DEX)</label>
-              <input id="attrDEX" type="number" min="1" max="20" value="10" placeholder="DEX (8-18)" title="Dexterity score (8-18)" readonly>
-              <span id="statPointBtnsDEX"></span>
-              <span id="pointBuyBtnsDEX"></span>
-              <select id="assignDEX" class="hidden" title="Assign rolled stat to Dexterity" onchange="assignStat('DEX')"></select>
-            </div>
-            <div>
-              <label>Constitution (CON)</label>
-              <input id="attrCON" type="number" min="1" max="20" value="10" placeholder="CON (8-18)" title="Constitution score (8-18)" readonly>
-              <span id="statPointBtnsCON"></span>
-              <span id="pointBuyBtnsCON"></span>
-              <select id="assignCON" class="hidden" title="Assign rolled stat to Constitution" onchange="assignStat('CON')"></select>
-            </div>
-            <div>
-              <label>Intelligence (INT)</label>
-              <input id="attrINT" type="number" min="1" max="20" value="10" placeholder="INT (8-18)" title="Intelligence score (8-18)" readonly>
-              <span id="statPointBtnsINT"></span>
-              <span id="pointBuyBtnsINT"></span>
-              <select id="assignINT" class="hidden" title="Assign rolled stat to Intelligence" onchange="assignStat('INT')"></select>
-            </div>
-            <div>
-              <label>Wisdom (WIS)</label>
-              <input id="attrWIS" type="number" min="1" max="20" value="10" placeholder="WIS (8-18)" title="Wisdom score (8-18)" readonly>
-              <span id="statPointBtnsWIS"></span>
-              <span id="pointBuyBtnsWIS"></span>
-              <select id="assignWIS" class="hidden" title="Assign rolled stat to Wisdom" onchange="assignStat('WIS')"></select>
-            </div>
-            <div>
-              <label>Charisma (CHA)</label>
-              <input id="attrCHA" type="number" min="1" max="20" value="10" placeholder="CHA (8-18)" title="Charisma score (8-18)" readonly>
-              <span id="statPointBtnsCHA"></span>
-              <span id="pointBuyBtnsCHA"></span>
-              <select id="assignCHA" class="hidden" title="Assign rolled stat to Charisma" onchange="assignStat('CHA')"></select>
-            </div>
+          <div>
+            <label>Class</label>
+            <select id="charClass" title="Character's class" onchange="updateSheetInputs({ preserveAttributes: true }); updateInputs(); updateSkillSpecOptions(); updateFeats(); updateClassAbilities()">
+              <option value="Fatemarked">Fatemarked</option>
+              <option value="Biomatrix Suit">Biomatrix Suit</option>
+              <option value="Continuum Raider">Continuum Raider</option>
+              <option value="Gunrunner">Gunrunner</option>
+              <option value="Faterunner">Faterunner</option>
+              <option value="Harlequin">Harlequin</option>
+              <option value="Warrior">Warrior</option>
+              <option value="Mage">Mage</option>
+              <option value="Shape">Shape</option>
+              <option value="Masque">Masque</option>
+              <option value="Adventurer">Adventurer</option>
+            </select>
+          </div>
+          <div>
+            <label>Primordial Alignment</label>
+            <select id="charAlignment" title="Character's alignment (None for Levels 1-3)">
+              <option value="None">None (Levels 1–3)</option>
+              <option value="Balance">Balance</option>
+              <option value="Chaos">Chaos</option>
+              <option value="Order">Order</option>
+              <option value="Neutrality">Neutrality</option>
+            </select>
+          </div>
+          <div>
+            <label>Background</label>
+            <input id="charBackground" type="text" placeholder="e.g., Rift Survivor" title="Character's backstory or origin">
+          </div>
+          <div>
+            <label>Appearance</label>
+            <input id="charAppearance" type="text" placeholder="e.g., Cybernetic eye, blue cloak" title="Physical description of the character">
+          </div>
+          <div>
+            <label>Occupation</label>
+            <input id="charOccupation" type="text" placeholder="e.g., Rift Navigator" title="Character's profession or role">
+          </div>
+          <div>
+            <label>Personality & Motivation</label>
+            <textarea id="charPersonality" placeholder="e.g., Curious, seeks to seal rifts" title="Character's personality traits and goals"></textarea>
+          </div>
+          <div>
+            <label>Narrative Milestone</label>
+            <input id="charMilestone" type="text" placeholder="e.g., Sealed first rift" title="Significant event in character's story">
           </div>
         </div>
-<div class="non-attributes-section" style="position: relative;">
-  <div id="statCommitBanner" class="hidden">
-    <div>
-      <strong>Allocate and Commit Stat Points Before Continuing!</strong>
-      <br />
-      <span style="font-size: 1.2rem;">You cannot edit other fields until stat points are committed.</span>
-      <button id="dismissStatCommitBannerBtn" class="dynamic-button" style="margin-left: 10px; padding: 5px 10px;">Dismiss</button>
-    </div>
-  </div>
-  <h2>Derived Stats</h2>
-  <div class="grid">
-    <div>
-      <label>Health (Max HP)</label>
-      <input id="health" type="number" readonly title="Maximum hit points based on CON and level">
-    </div>
-    <div>
-      <label>Sanity (Mental Resilience)</label>
-      <input id="sanity" type="number" readonly title="Mental resilience based on WIS">
-    </div>
-    <div>
-      <label>Defense (AC)</label>
-      <input id="defense" type="number" readonly title="Armor Class based on DEX and armor">
-    </div>
-    <div>
-      <label>Initiative Base</label>
-      <input id="initiative" type="number" readonly title="Initiative bonus based on DEX">
-    </div>
-    <div>
-      <label>Base Attack Rating (BAB)</label>
-      <input id="charBAB" type="number" readonly title="Base Attack Bonus for attacks">
-    </div>
-    <div>
-      <label>Speed (ft/round)</label>
-      <input id="speed" type="number" value="30" readonly title="Movement speed in feet per round">
-    </div>
-    <div>
-      <label>Reflex Save</label>
-      <input id="reflex" type="number" readonly title="Reflex save based on DEX">
-    </div>
-    <div>
-      <label>Fortitude Save</label>
-      <input id="fortitude" type="number" readonly title="Fortitude save based on CON">
-    </div>
-    <div>
-      <label>Willpower Save</label>
-      <input id="willpower" type="number" readonly title="Willpower save based on WIS">
-    </div>
-    <div>
-      <label>Luck Save (Level 4+)</label>
-      <input id="luck" type="number" readonly title="Luck save based on CHA (Level 4+)">
-    </div>
-    <div>
-      <label>Fate Points</label>
-      <input id="fatePointsCurrent" type="number" readonly>
-      <button class="dynamic-button" onclick="spendFatePoint()">Spend Fate Point</button>
-      <button id="fatePointsRegenerate" class="dynamic-button hidden" onclick="regenerateFatePoints()">Regenerate</button>
-      <button id="fatePointsRest" class="dynamic-button hidden" onclick="restCharacter()">Rest (8 Hours)</button>
-    </div>
-    <div>
-      <label>Paradox Points</label>
-      <input id="paradoxPoints" type="number" value="0" readonly>
-      <button class="dynamic-button" onclick="addParadoxPoint()">Add Paradox</button>
-    </div>
-  </div>
-  <h2>Resources</h2>
-  <div id="resourcesContainer"></div>
-  <h2>Inherent Abilities</h2>
-  <div id="inherentAbilitiesContainer"></div>
-  <h2>Skills</h2>
-  <div id="skillPointsDisplay">Skill Points: 20/20</div>
-  <div id="skillsContainer"></div>
-  <button class="add-button" onclick="addSkillField()">Add Skill</button>
-  <h2>Starting Feats</h2>
-  <div id="startingFeatsContainer"></div>
-  <button class="add-button" onclick="addStartingFeatField()">Add Starting Feat</button>
-  <h2>Level-Up Feats</h2>
-  <div id="levelUpFeatsContainer"></div>
-  <button class="add-button" onclick="addLevelUpFeatField()">Add Level-Up Feat</button>
-  <h2>Advantages</h2>
-  <div id="advantageWarning" class="advantage-warning">Select at least one disadvantage before adding advantages.</div>
-  <div id="advantagesContainer"></div>
-  <button class="add-button" onclick="addAdvantageField()">Add Advantage</button>
-  <h2>Disadvantages</h2>
-  <div id="disadvantagesContainer"></div>
-  <button class="add-button" onclick="addDisadvantageField()">Add Disadvantage</button>
-  <h2>Powers/Effects</h2>
-  <div id="powersContainer"></div>
-  <button id="addPowerButton" class="add-button" onclick="addPowerField()">Add Power/Effect</button>
-  <h2>Inventory</h2>
-  <div class="grid">
-    <div>
-      <label>Credits</label>
-      <input id="credits" type="number" value="0" min="0" placeholder="Credits" title="Currency for purchases">
-    </div>
-    <div>
-      <label>Rift Shards</label>
-      <input id="shards" type="number" value="0" min="0" placeholder="Rift Shards" title="Rare magical currency">
-    </div>
-  </div>
-  <div id="inventoryContainer"></div>
-  <button class="add-button" onclick="addInventoryField()">Add Item</button>
-  <h2>Combat</h2>
-  <div id="weaponsContainer"></div>
-  <button class="add-button" onclick="addWeaponField()">Add Weapon</button>
-  <div id="armorContainer"></div>
-  <button class="add-button" onclick="addArmorField()">Add Armor</button>
-  <h2>Progression</h2>
-  <div class="grid">
-    <div>
-      <label>Current XP</label>
-      <input id="currentXP" type="number" value="0" min="0" placeholder="Current XP" title="Experience points earned">
-    </div>
-    <div>
-      <label>Next Level XP</label>
-      <input id="nextLevelXP" type="number" readonly title="XP needed for next level">
-    </div>
-  </div>
-  <h2>Lifestyle</h2>
-  <div class="grid">
-    <div>
-      <label>Lifestyle</label>
-      <select id="charLifestyle" title="Daily living standard">
-        <option value="Squalid">Squalid (0 Credits/day)</option>
-        <option value="Modest">Modest (1 Credit/day)</option>
-        <option value="Comfortable">Comfortable (5 Credits/day)</option>
-        <option value="Luxurious">Luxurious (20 Credits/day)</option>
-      </select>
-    </div>
-    <div>
-      <label>Cost Paid</label>
-      <input id="lifestyleCost" type="number" value="0" min="0" placeholder="Daily Cost" title="Credits spent on lifestyle">
-    </div>
-  </div>
-  <h2>Downtime Activities</h2>
-  <div id="downtimeContainer"></div>
-  <button class="add-button" onclick="addDowntimeField()">Add Downtime Activity</button>
-  <h2>Notes</h2>
-  <textarea id="charNotes" placeholder="e.g., Faction standings, backstory details" title="Additional character notes"></textarea>
-  <div class="button-group">
-    <button onclick="generateCharacterSheet()">Generate Character Sheet</button>
-    <button onclick="saveCharacter()">Save Character</button>
-    <button onclick="document.getElementById('loadCharacterInput').click()">Load Character</button>
-    <input id="loadCharacterInput" type="file" accept=".json" onchange="loadCharacter(event)" style="display: none;">
-    <button onclick="clearSheetFields()">Clear Sheet Fields</button>
-  </div>
-</div>
-</div>
-
-  <div id="results" class="results hidden" role="region" aria-live="polite">
-    <h2>Roll Results</h2>
-    <p id="rollResult" aria-label="Roll result details"></p>
-    <p id="criticalResult" class="critical" aria-label="Critical result"></p>
-    <p id="sanityResult" class="sanity" aria-label="Sanity result"></p>
-    <p id="paradoxResult" class="paradox" aria-label="Paradox result"></p>
-    <p id="levelNote" class="level-note" aria-label="Level note"></p>
-  </div>
-
-  <div id="history" class="history">
-    <h2>Roll History</h2>
-    <ul id="historyList"></ul>
-  </div>
-</div>
-
-  <div id="sheetModal" class="modal">
-    <div class="modal-content">
-      <span class="close-button" onclick="closeModal()">×</span>
-      <h2>Character Sheet Preview</h2>
-      <div id="sheetPreview" class="sheet-preview"></div>
-      <div class="button-group">
-        <button onclick="exportToPDF()">Export to PDF</button>
-        <button onclick="copySheetText()">Copy as Text</button>
+        <h2>Attributes</h2>
+        <div id="statPointAllocation" class="dynamic-group" style="margin-bottom: 10px; display:none;">
+          <label style="margin-right: 1em;"><strong>Unspent Stat Points:</strong> <span id="statPointsAvailable">0</span></label>
+          <button id="commitStatPointsBtn" class="dynamic-button" style="padding:1px 7px; font-size:0.8em; width:auto;" onclick="commitStatPoints()" disabled>Commit</button>
+        </div>
+        <div class="grid">
+          <div>
+            <label>Attribute Method</label>
+            <select id="attrMethod" title="Method for generating attributes" onchange="updateAttributes()">
+              <option value="pointBuy">Point Buy (15 points)</option>
+              <option value="random">Random (4d6 drop lowest)</option>
+              <option value="manual">Manual Input</option>
+              <option value="imported" hidden>Imported</option>
+            </select>
+          </div>
+          <div>
+            <label>Points Remaining (Point Buy)</label>
+            <input id="pointsRemaining" type="text" readonly value="15" title="Remaining points for point buy">
+          </div>
+          <div id="randomRolls" class="hidden">
+            <label>Rolled Stats</label>
+            <input id="rolledStats" type="text" readonly placeholder="e.g., 15, 14, 13, 12, 10, 8" title="Rolled attribute values">
+          </div>
+          <div class="button-group">
+            <button id="rerollButton" class="dynamic-button hidden" onclick="rerollAttributes()">Reroll Stats</button>
+            <button id="confirmAssignments" class="dynamic-button hidden" onclick="confirmAttributes()">Confirm Assignments</button>
+          </div>
+          <div>
+            <label>Strength (STR)</label>
+            <input id="attrSTR" type="number" min="1" max="20" value="10" placeholder="STR (8-18)" title="Strength score (8-18)" readonly>
+            <span id="statPointBtnsSTR"></span>
+            <span id="pointBuyBtnsSTR"></span>
+            <select id="assignSTR" class="hidden" title="Assign rolled stat to Strength" onchange="assignStat('STR')"></select>
+          </div>
+          <div>
+            <label>Dexterity (DEX)</label>
+            <input id="attrDEX" type="number" min="1" max="20" value="10" placeholder="DEX (8-18)" title="Dexterity score (8-18)" readonly>
+            <span id="statPointBtnsDEX"></span>
+            <span id="pointBuyBtnsDEX"></span>
+            <select id="assignDEX" class="hidden" title="Assign rolled stat to Dexterity" onchange="assignStat('DEX')"></select>
+          </div>
+          <div>
+            <label>Constitution (CON)</label>
+            <input id="attrCON" type="number" min="1" max="20" value="10" placeholder="CON (8-18)" title="Constitution score (8-18)" readonly>
+            <span id="statPointBtnsCON"></span>
+            <span id="pointBuyBtnsCON"></span>
+            <select id="assignCON" class="hidden" title="Assign rolled stat to Constitution" onchange="assignStat('CON')"></select>
+          </div>
+          <div>
+            <label>Intelligence (INT)</label>
+            <input id="attrINT" type="number" min="1" max="20" value="10" placeholder="INT (8-18)" title="Intelligence score (8-18)" readonly>
+            <span id="statPointBtnsINT"></span>
+            <span id="pointBuyBtnsINT"></span>
+            <select id="assignINT" class="hidden" title="Assign rolled stat to Intelligence" onchange="assignStat('INT')"></select>
+          </div>
+          <div>
+            <label>Wisdom (WIS)</label>
+            <input id="attrWIS" type="number" min="1" max="20" value="10" placeholder="WIS (8-18)" title="Wisdom score (8-18)" readonly>
+            <span id="statPointBtnsWIS"></span>
+            <span id="pointBuyBtnsWIS"></span>
+            <select id="assignWIS" class="hidden" title="Assign rolled stat to Wisdom" onchange="assignStat('WIS')"></select>
+          </div>
+          <div>
+            <label>Charisma (CHA)</label>
+            <input id="attrCHA" type="number" min="1" max="20" value="10" placeholder="CHA (8-18)" title="Charisma score (8-18)" readonly>
+            <span id="statPointBtnsCHA"></span>
+            <span id="pointBuyBtnsCHA"></span>
+            <select id="assignCHA" class="hidden" title="Assign rolled stat to Charisma" onchange="assignStat('CHA')"></select>
+          </div>
+        </div>
       </div>
-      <textarea id="sheetText" class="copyable-text hidden"></textarea>
+      <div class="non-attributes-section" style="position: relative;">
+        <div id="statCommitBanner" class="hidden">
+          <div>
+            <strong>Allocate and Commit Stat Points Before Continuing!</strong>
+            <br />
+            <span style="font-size: 1.2rem;">You cannot edit other fields until stat points are committed.</span>
+            <button id="dismissStatCommitBannerBtn" class="dynamic-button" style="margin-left: 10px; padding: 5px 10px;">Dismiss</button>
+          </div>
+        </div>
+        <div class="grid">
+          <div>
+            <label>Power Enhancement</label>
+            <select id="powerEnhancement" title="Enhances powers (e.g., +1d4 healing at Tier 1, +2 to Perception for sensory). Costs extra resources, increases paradox DC." onchange="updateSheetInputs();">
+              <option value="none">None</option>
+              <option value="healing">Healing (+1d4)</option>
+              <option value="sensory">Sensory (+2 Perception)</option>
+              <option value="movement">Movement (+10 ft.)</option>
+            </select>
+          </div>
+          <div>
+            <label>Downtime Activity</label>
+            <select id="downtimeActivity" title="Selects downtime activity (e.g., Crafting: 5–20 Credits, DC 15). Risks paradox or faction attention." onchange="updateDowntimeOutcome(downtimeCounter); updateSheetInputs();">
+              <option value="none">None</option>
+              <option value="Crafting">Crafting (DC 15, 5–10 Credits)</option>
+              <option value="Training">Training (DC 15, 5 Credits)</option>
+              <option value="Research">Research (DC 20, 5–15 Credits)</option>
+              <option value="Socializing">Socializing (DC 15, 5–10 Credits)</option>
+              <option value="Maintenance">Maintenance (DC 15, 1–5 Credits)</option>
+            </select>
+          </div>
+          <div>
+            <label>Fatebound Item</label>
+            <input id="fateboundItem" type="text" placeholder="e.g., Locket" title="Tracks Faterunner’s fatebound item (e.g., locket). Loss imposes -2 CHA, +2 paradox DC until recovered." onchange="updateSheetInputs();">
+          </div>
+          <div>
+            <label>Illusion Effect</label>
+            <select id="illusionEffect" title="Creates Harlequin illusions (e.g., Tier 1: no paradox, Tier 2: DC 13–16). Risks superstition penalties." onchange="updateSheetInputs();">
+              <option value="none">None</option>
+              <option value="minor">Minor (No paradox)</option>
+              <option value="moderate">Moderate (DC 13–16)</option>
+            </select>
+          </div>
+          <div>
+            <label>Perception Type</label>
+            <select id="perceptionType" title="Sets Mage Perception (e.g., Fey Sight: +2 Insight). Affects spell effects and risks Gore’s." onchange="updateSheetInputs();">
+              <option value="none">None</option>
+              <option value="FeySight">Fey Sight (+2 Insight)</option>
+              <option value="LatticeSight">Lattice Sight (+2 Technical Expertise)</option>
+              <option value="EssenceSight">Essence Sight (+2 Persuasion/Intimidation)</option>
+            </select>
+          </div>
+          <div>
+            <label>Lifestyle</label>
+            <select id="charLifestyle" title="Sets lifestyle (e.g., Modest: 1 Credit/day, +0 modifiers; Luxurious: +2 Persuasion). Affects downtime and risks." onchange="updateSheetInputs();">
+              <option value="Squalid">Squalid (0 Credits/day)</option>
+              <option value="Modest">Modest (1 Credit/day)</option>
+              <option value="Comfortable">Comfortable (5 Credits/day)</option>
+              <option value="Luxurious">Luxurious (20 Credits/day)</option>
+            </select>
+          </div>
+        </div>
+        <h2>Derived Stats</h2>
+        <div class="grid">
+          <div>
+            <label>Health (Max HP)</label>
+            <input id="health" type="number" readonly title="Maximum hit points based on CON and level">
+          </div>
+          <div>
+            <label>Sanity (Mental Resilience)</label>
+            <input id="sanity" type="number" readonly title="Mental resilience based on WIS">
+          </div>
+          <div>
+            <label>Defense (AC)</label>
+            <input id="defense" type="number" readonly title="Armor Class based on DEX and armor">
+          </div>
+          <div>
+            <label>Initiative Base</label>
+            <input id="initiative" type="number" readonly title="Initiative bonus based on DEX">
+          </div>
+          <div>
+            <label>Base Attack Rating (BAB)</label>
+            <input id="charBAB" type="number" readonly title="Base Attack Bonus for attacks">
+          </div>
+          <div>
+            <label>Speed (ft/round)</label>
+            <input id="speed" type="number" value="30" readonly title="Movement speed in feet per round">
+          </div>
+          <div>
+            <label>Reflex Save</label>
+            <input id="reflex" type="number" readonly title="Reflex save based on DEX">
+          </div>
+          <div>
+            <label>Fortitude Save</label>
+            <input id="fortitude" type="number" readonly title="Fortitude save based on CON">
+          </div>
+          <div>
+            <label>Willpower Save</label>
+            <input id="willpower" type="number" readonly title="Willpower save based on WIS">
+          </div>
+          <div>
+            <label>Luck Save (Level 4+)</label>
+            <input id="luck" type="number" readonly title="Luck save based on CHA (Level 4+)">
+          </div>
+          <div>
+            <label>Fate Points</label>
+            <input id="fatePointsCurrent" type="number" readonly>
+            <button class="dynamic-button" onclick="spendFatePoint()">Spend Fate Point</button>
+            <button id="fatePointsRegenerate" class="dynamic-button hidden" onclick="regenerateFatePoints()">Regenerate</button>
+            <button id="fatePointsRest" class="dynamic-button hidden" onclick="restCharacter()">Rest (8 Hours)</button>
+          </div>
+          <div>
+            <label>Paradox Points</label>
+            <input id="paradoxPoints" type="number" value="0" readonly>
+            <button class="dynamic-button" onclick="addParadoxPoint()">Add Paradox</button>
+          </div>
+        </div>
+        <h2>Resources</h2>
+        <div id="resourcesContainer"></div>
+        <h2>Inherent Abilities</h2>
+        <div id="inherentAbilitiesContainer"></div>
+        <h2>Skills</h2>
+        <div id="skillPointsDisplay">Skill Points: 20/20</div>
+        <div id="skillsContainer"></div>
+        <button class="add-button" onclick="addSkillField()">Add Skill</button>
+        <h2>Starting Feats</h2>
+        <div id="startingFeatsContainer"></div>
+        <button class="add-button" onclick="addStartingFeatField()">Add Starting Feat</button>
+        <h2>Level-Up Feats</h2>
+        <div id="levelUpFeatsContainer"></div>
+        <button class="add-button" onclick="addLevelUpFeatField()">Add Level-Up Feat</button>
+        <h2>Advantages</h2>
+        <div id="advantageWarning" class="advantage-warning">Select at least one disadvantage before adding advantages.</div>
+        <div id="advantagesContainer"></div>
+        <button class="add-button" onclick="addAdvantageField()">Add Advantage</button>
+        <h2>Disadvantages</h2>
+        <div id="disadvantagesContainer"></div>
+        <button class="add-button" onclick="addDisadvantageField()">Add Disadvantage</button>
+        <h2>Powers/Effects</h2>
+        <div id="powersContainer"></div>
+        <button id="addPowerButton" class="add-button" onclick="addPowerField()">Add Power/Effect</button>
+        <h2>Inventory</h2>
+        <div class="grid">
+          <div>
+            <label>Credits</label>
+            <input id="credits" type="number" value="0" min="0" placeholder="Credits" title="Currency for purchases">
+          </div>
+          <div>
+            <label>Rift Shards</label>
+            <input id="shards" type="number" value="0" min="0" placeholder="Rift Shards" title="Rare magical currency">
+          </div>
+        </div>
+        <div id="inventoryContainer"></div>
+        <button class="add-button" onclick="addInventoryField()">Add Item</button>
+        <h2>Combat</h2>
+        <div id="weaponsContainer"></div>
+        <button class="add-button" onclick="addWeaponField()">Add Weapon</button>
+        <div id="armorContainer"></div>
+        <button class="add-button" onclick="addArmorField()">Add Armor</button>
+        <h2>Progression</h2>
+        <div class="grid">
+          <div>
+            <label>Current XP</label>
+            <input id="currentXP" type="number" value="0" min="0" placeholder="Current XP" title="Experience points earned">
+          </div>
+          <div>
+            <label>Next Level XP</label>
+            <input id="nextLevelXP" type="number" readonly title="XP needed for next level">
+          </div>
+        </div>
+        <h2>Lifestyle</h2>
+        <div class="grid">
+          <div>
+            <label>Lifestyle</label>
+            <select id="charLifestyle" title="Sets lifestyle (e.g., Modest: 1 Credit/day, +0 modifiers; Luxurious: +2 Persuasion). Affects downtime and risks." onchange="updateSheetInputs();">
+              <option value="Squalid">Squalid (0 Credits/day)</option>
+              <option value="Modest">Modest (1 Credit/day)</option>
+              <option value="Comfortable">Comfortable (5 Credits/day)</option>
+              <option value="Luxurious">Luxurious (20 Credits/day)</option>
+            </select>
+          </div>
+          <div>
+            <label>Cost Paid</label>
+            <input id="lifestyleCost" type="number" value="0" min="0" placeholder="Daily Cost" title="Credits spent on lifestyle">
+          </div>
+        </div>
+        <h2>Downtime Activities</h2>
+        <div id="downtimeContainer"></div>
+        <button class="add-button" onclick="addDowntimeField()">Add Downtime Activity</button>
+        <h2>Notes</h2>
+        <textarea id="charNotes" placeholder="e.g., Faction standings, backstory details" title="Additional character notes"></textarea>
+        <div class="button-group">
+          <button onclick="generateCharacterSheet()">Generate Character Sheet</button>
+          <button onclick="saveCharacter()">Save Character</button>
+          <button onclick="document.getElementById('loadCharacterInput').click()">Load Character</button>
+          <input id="loadCharacterInput" type="file" accept=".json" onchange="loadCharacter(event)" style="display: none;">
+          <button onclick="clearSheetFields()">Clear Sheet Fields</button>
+        </div>
+      </div>
+    </div>
+    <div id="results" class="results hidden" role="region" aria-live="polite">
+      <h2>Roll Results</h2>
+      <p id="rollResult" aria-label="Roll result details"></p>
+      <p id="criticalResult" class="critical" aria-label="Critical result"></p>
+      <p id="sanityResult" class="sanity" aria-label="Sanity result"></p>
+      <p id="paradoxResult" class="paradox" aria-label="Paradox result"></p>
+      <p id="levelNote" class="level-note" aria-label="Level note"></p>
+    </div>
+    <div id="history" class="history">
+      <h2>Roll History</h2>
+      <ul id="historyList"></ul>
+    </div>
+    <div id="sheetModal" class="modal">
+      <div class="modal-content">
+        <span class="close-button" onclick="closeModal()">×</span>
+        <h2>Character Sheet Preview</h2>
+        <div id="sheetPreview" class="sheet-preview"></div>
+        <div class="button-group">
+          <button onclick="exportToPDF()">Export to PDF</button>
+          <button onclick="copySheetText()">Copy as Text</button>
+        </div>
+        <textarea id="sheetText" class="copyable-text hidden"></textarea>
+      </div>
     </div>
   </div>
-
 <script>
   let statPointsByLevel = [];
   let skillCriticalTracker = {};
@@ -797,10 +1032,1069 @@
   let fatePointsUsedInEncounter = 0;
   let totalResourcesUsedInSession = 0;
 
-  
+  // Initialize stat points
   let statPointsAllocated = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
   let statPointsAvailable = 0;
   let statPointsCommitted = true;
+
+  // Add Artifact 2 variables here
+  window.isSheetInitialized = false;
+  window.manualInputWarned = false;
+  window.isBannerDismissed = false;
+  window.isLoadingCharacter = false;
+  window.isUpdatingStatPointUI = false;
+
+  const gmReferenceTables = {
+  skillDCs: {
+    title: 'Common Skill DCs (Section 3.4.1)',
+    headers: ['Difficulty', 'DC', 'Example'],
+    rows: [
+      ['Easy', '10', 'Recall a legend (Knowledge)'],
+      ['Moderate', '15', 'Tumble past a vendor (Acrobatics: Tumbling)'],
+      ['Hard', '20', 'Forge a fixed point (WIS check)']
+    ]
+  },
+  
+  paradoxRisks: {
+    title: 'Paradox Risks (Sections 3.7, 4.2–4.10, 5.3)',
+    headers: ['Source', 'DC', 'Failure Effect'],
+    rows: [
+      ['Fatemarked Abilities', '15 INT', '-1/-2 to all checks for 1 encounter'],
+      ['Biomatrix Suit Power', '15 INT', '-2 INT-based checks for 1 encounter'],
+      ['Shape Transformation', '15 CHA', '-2 CON-based checks for 1 encounter'],
+      ['Masque Pact', '15 CHA', 'Revenant (AC 14, 30 Health, 1d8 damage)'],
+      ['Dimensional Shift', '15 INT/CHA', '-2 checks or rift (AC 15, 30 Health)']
+    ]
+  },
+  classResources: {
+    title: 'Class Resource Pools (Sections 4.2–4.10)',
+    headers: ['Class', 'Resource', 'Starting Amount', 'Recharge'],
+    rows: [
+      ['Biomatrix Suit', 'Energy Cell', '10 at Level 4, +1/level', '1-hour rest, CON DC 15'],
+      ['Continuum Raider', 'Bio-Energy', '10 at Level 4, +1/level', '1-hour rest in Chaos, CON DC 15'],
+      ['Gunrunner', 'Credits', '10 at Level 4, +1/level', 'Bounties or scavenge, Technical Expertise DC 15'],
+      ['Faterunner', 'Fate Points', '4 at Level 4, +1/level', '8-hour rest in stable dimension'],
+      ['Harlequin', 'Fate Points', '4 at Level 4, +1/level', '8-hour rest in stable dimension'],
+      ['Warrior', 'Chi', '10 at Level 4, +1/level', '1 Chi/round (STR DC 15) or 10-min meditation'],
+      ['Mage', 'Vitality', '10 at Level 4, +1/level', '1-hour rest, WIS DC 15'],
+      ['Shape', 'Pathos', '10 at Level 4, +1/level', '1-hour rest in Chaos, CHA DC 15'],
+      ['Masque', 'Infernium', '10 at Level 4, +1/level', '1-hour rest in Chaos/Balance, WIS DC 15']
+    ]
+  },
+  weaponDamage: {
+    title: 'Weapon Damage (Section 5.2.6)',
+    headers: ['Category', 'Damage', 'Range', 'Traits', 'Effect'],
+    rows: [
+      ['Light Melee', '1d4 + STR/DEX', '5 ft.', 'Finesse, light', 'Bleed (1d4/round, DC 15 CON)'],
+      ['Medium Melee', '1d6 + STR', '5 ft.', 'Versatile (1d8)', 'Stun (lose action, DC 15 WIS)'],
+      ['Heavy Ranged', '1d10 + DEX', '100/300 ft.', 'Heavy, reload', 'Blast (10-ft., DC 15 DEX)'],
+      ['Exotic Melee', '1d12 + STR/CHA', '5–10 ft.', 'Paradox, unique', 'Confusion (DC 15 WIS)']
+    ]
+  },
+  synergyBonuses: {
+    title: 'Synergy Bonuses (Section 5.1.4)',
+    headers: ['Skill (5+ ranks)', 'Bonus to Skill'],
+    rows: [
+      ['Acrobatics', '+2 to Escape Artist'],
+      ['Deception', '+2 to Disguise'],
+      ['Knowledge', '+2 to Research'],
+      ['Survival', '+2 to Navigate']
+    ]
+  },
+  sanityEffects: {
+    title: 'Sanity Effects (Section 5.4)',
+    headers: ['Type', 'Effect', 'Duration'],
+    rows: [
+      ['Temporary: Paranoia', '-2 CHA checks with party', '1 encounter'],
+      ['Temporary: Hallucination', '-2 Perception/attacks', '1 encounter'],
+      ['Permanent: Madness', '-4 Sanity, -2 WIS checks', 'Until fixed point'],
+      ['Permanent: Chaos Bound', '+4 CHA in Chaos, -4 in Order', 'Until fixed point']
+    ]
+  },
+  influencePools: {
+    title: 'Influence Pools (Section 5.6)',
+    headers: ['NPC/Faction', 'Base Pool', 'Modifiers'],
+    rows: [
+      ['Individual', '10 + WIS modifier', '+2 per CR above party, +2 aligned sphere'],
+      ['Faction', '15 + leader’s WIS', '-2 per CR below party, -2 opposed sphere'],
+      ['Paragon (e.g., Roy G. Biv)', '20 + WIS modifier', '+2 in aligned sphere']
+    ]
+  },
+  xpThresholds: {
+    title: 'XP Thresholds (Section 6.2)',
+    headers: ['Level', 'XP to Next Level', 'Total XP'],
+    rows: [
+      ['1 to 2', '100', '100'],
+      ['2 to 3', '200', '300'],
+      ['3 to 4', '450', '750'],
+      ['4 to 5', '600', '1,350'],
+      ['5 to 6', '750', '2,100']
+    ]
+  },
+  downtimeActivityCosts: {
+    title: 'Downtime Activity Costs (Section 6.7)',
+    headers: ['Activity', 'Time', 'Cost', 'Skill Check'],
+    rows: [
+      ['Crafting (Small)', '1–3 days', '5–10 Credits', 'Crafting/Technical Expertise DC 10–20'],
+      ['Training (Skill)', '1 week', '5 Credits', 'INT/WIS DC 15'],
+      ['Research', '1–5 days', '5–15 Credits', 'Research/Knowledge DC 10–25'],
+      ['Socializing', '1–3 days', '5–10 Credits', 'Persuasion DC 10–20'],
+      ['Maintenance', '1–3 days', '1–5 Credits', 'Technical Expertise DC 10–20']
+    ]
+  },
+  lifestyleModifiers: {
+    title: 'Lifestyle Modifiers (Section 6.8)',
+    headers: ['Lifestyle', 'Cost/Day', 'Benefits', 'Penalties'],
+    rows: [
+      ['Squalid', '0 Credits', '+2 Streetwise, +1 Survival', '-2 CON, -1 CHA with elites'],
+      ['Modest', '1 Credit', 'Access to haven services', 'None'],
+      ['Comfortable', '5 Credits', '+2 CHA in havens, +1 INT research', 'None'],
+      ['Luxurious', '20 Credits', '+2 Persuasion with elites, +1 downtime', '-1 Streetwise']
+    ]
+  },
+  powerCreationParameters: {
+    title: 'Power Creation Parameters (Section 6.6.6)',
+    headers: ['Type', 'Tier 1', 'Tier 2', 'Tier 3'],
+    rows: [
+      ['Healing', '1d6 + Attr (Light Ranged)', '1d8 + Attr (Medium Ranged)', '1d10 + Attr (Heavy Ranged)'],
+      ['Stat Enhancement', '+1 to 1 attribute', '+2 to 1 or +1 to 2', '+3 to 1 or +2 to 2'],
+      ['Movement (Ground)', '+10 ft.', '+20 ft. or ignore terrain', '+30 ft. or teleport 60 ft.'],
+      ['Sensory', '+2 to 1 skill', '+4 to 1 or +2 to 2', '+6 to 1 or +4 to 2'],
+      ['Summoning', '1d4 + AttrMod, AC 10 + AttrMod', '1d8 + AttrMod, AC 12 + AttrMod', '1d12 + AttrMod, AC 15 + AttrMod']
+    ]
+  },
+  dimensionalTravelDCs: {
+        title: 'Dimensional Travel DCs (Table 2.5-A, Section 5.7)',
+        headers: ['Destination Type', 'DC', 'Example'],
+        rows: [
+          ['Stable, Known', '15', 'Haven in Balance sphere'],
+          ['Unstable, Known', '18', 'Growth sphere forest'],
+          ['Unknown, Stable', '20', 'Reason sphere archive'],
+          ['Unknown, Unstable', '22', 'Discord sphere wasteland'],
+          ['Hostile/Fractured', '25', 'Dimension mid-Hume Collapse']
+        ]
+      },
+      dimensionalTravelMishaps: {
+        title: 'Dimensional Travel Mishaps (Table 2.5-B, Section 5.7)',
+        headers: ['Failure Margin', 'Mishap Type', 'Effect'],
+        rows: [
+          ['1–5', 'Minor', 'Off-target (DC 15 Survival) or delayed (1d4 hours)'],
+          ['6–10', 'Major', 'Hostile dimension (-2 checks) or rift (AC 15, 30 Health)'],
+          ['11+', 'Catastrophic', 'Major rift (AC 16, 50 Health) or Hume Collapse']
+        ]
+      },
+      currencyConversions: {
+        title: 'Currency Conversions (Section 5.10)',
+        headers: ['Currency', 'Conversion Rate', 'Notes'],
+        rows: [
+          ['Rift Shard', '1 Shard = 5 Credits', 'DC 12–15 INT paradox risk'],
+          ['Eternity Crystal', '1 Crystal = 75 Credits', 'Grants 1 Fate Point, DC 15 INT risk'],
+          ['Gunrunner Credit', '1 Credit = 50 Credits', 'DC 15 Persuasion to convert']
+        ]
+      },
+      sphereModifiers: {
+        title: 'Sphere Modifiers (Section 7.4.1)',
+        headers: ['Sphere', 'Bonus', 'Penalty'],
+        rows: [
+          ['Balance', '+2 Persuasion', 'None'],
+          ['Growth', '+2 CHA', '-2 INT'],
+          ['Discord', '+2 CHA', '-2 WIS'],
+          ['Oppression', '+2 INT', '-2 CHA'],
+          ['Reason', '+2 INT', '-2 CON']
+        ]
+      },
+      paragonStats: {
+        title: 'Paragon Stats (Section 7.4.2)',
+        headers: ['Paragon', 'Class', 'AC', 'Health', 'Key Abilities'],
+        rows: [
+          ['Roy G. Biv', 'Faterunner', '18', '120', 'Prismatic Cascade, Fateful Reweave'],
+          ['Merlin', 'Mage', '17', '120', 'Verdant Genesis, Vitality Bloom'],
+          ['LeFay', 'Harlequin', '18', '130', 'Chaos Mirage, Discordant Veil'],
+          ['Jack Shade', 'Shape', '20', '130', 'Chaos Flux, Hybrid Strike'],
+          ['Klaus', 'Biomatrix Suit', '20', '140', 'Tyrant’s Matrix, Genesis Barrage'],
+          ['Prescott', 'Warrior', '19', '180', 'Logical Onslaught, Chi Precision']
+        ]
+      },
+      knightChampionStats: {
+        title: 'Knight/Champion Stats (Section 7.4.3)',
+        headers: ['Type', 'CR', 'AC', 'Health', 'Damage'],
+        rows: [
+          ['Knight', '5', '15', '50', '2d8'],
+          ['Champion', '10', '18', '80', '3d8']
+        ]
+      },
+      classParadoxRisks: {
+        title: 'Class Paradox Risks (Sections 7.6.5–7.6.9)',
+        headers: ['Class', 'Tier 1 DC', 'Tier 2 DC', 'Tier 3 DC', 'Failure Effect'],
+        rows: [
+          ['Faterunner', '0', '13–16', '18–21', '-1 penalty or minor anomaly'],
+          ['Harlequin', '0', '13–16', '18–21', '-1 penalty or minor anomaly'],
+          ['Warrior', '15', '18', '22', '-2 Self-Control or rift'],
+          ['Mage', '15', '18', '22', '-2 Knowledge or Gore’s'],
+          ['Shape', '15', '18', '22', '-2 CON or Black Heart Echo']
+        ]
+      },
+      magePerceptionEffects: {
+        title: 'Mage Perception Effects (Section 7.6.8)',
+        headers: ['Perception', 'Level', 'Bonus', 'Penalty'],
+        rows: [
+          ['Fey Sight', '4', '+2 Insight', '-1 Persuasion'],
+          ['Lattice Sight', '6', '+2 Technical Expertise', '-1 Insight'],
+          ['Essence Sight', '8', '+2 Persuasion/Intimidation', '-1 Stealth'],
+          ['Flux Sight', '10', '+2 Navigate', '-1 Concentration'],
+          ['Void Sight', '12', '+2 Acrobatics', '-1 Melee'],
+          ['Mind Sight', '14', '+2 Deception/Insight', '-1 Concentration'],
+          ['Seventh Sense', '15', '+4 Any Roll', '-4 Sanity Risk']
+        ]
+      },
+      shapeTransformationRisks: {
+        title: 'Shape Transformation Risks (Section 7.6.9)',
+        headers: ['Risk', 'Level', 'DC', 'Effect'],
+        rows: [
+          ['Instability', '4+', '15 WIS', 'Random form (e.g., mug), -2 CHA'],
+          ['Ennui', '4+', 'None', '-2 CHA for 1d4 hours'],
+          ['Memory Loss', '7+', '15 CON', '-2 INT until rest'],
+          ['Identity Erosion', '11+', '18 CON', '-4 CHA permanent']
+        ]
+      },
+      marketPriceList: {
+        title: 'Market Price List (Section 7.7.4)',
+        headers: ['Item', 'Cost', 'Slots', 'Effect'],
+        rows: [
+          ['Knife', '5 Credits', '1', '1d4 + STR/DEX, Bleed'],
+          ['Chronometric Rifle', '20 Credits', '2', '1d8 + DEX, Slow'],
+          ['Prismatic Cloak', '20 Credits', '2', 'AC 12 + DEX'],
+          ['Stim Syringe', '10 Credits', '0.5', '1d8 + WIS healing'],
+          ['Prismatic Stew', '4 Credits/meal', '1', '+2 CHA in havens'],
+          ['Tech Kit', '10 Credits', '1', '+2 Technical Expertise'],
+          ['Eternity Crystal', '75 Credits', '0.5', '+1 Fate Point']
+        ]
+      },
+      wondrousTableRealities: {
+        title: 'Wondrous Table of Infinite Realities (Section 7.8.2)',
+        headers: ['Category', 'Roll', 'Option', 'Effect'],
+        rows: [
+          ['Topography', '1', 'Floating Islands', 'DC 15 Acrobatics to cross, -2 DEX on failure'],
+          ['Topography', '2', 'Crystalline Caverns', 'DC 15 WIS to navigate, +2 Perception'],
+          ['Cosmic Balance', '1–2', 'Balance', '+2 Persuasion, no penalties'],
+          ['Cosmic Balance', '3–4', 'Growth', '+2 CHA, -2 INT'],
+          ['Technology/Magic', '1–2', 'Primitive', '+2 Survival, no tech/magic bonuses'],
+          ['Technology/Magic', '5–6', 'Technological', '+2 INT tech checks, DC 15 Technical Expertise'],
+          ['Population Density', '1–3', 'Sparse', 'DC 15 Survival to find locals, -2 Persuasion'],
+          ['Population Density', '7–9', 'Dense', '+2 Persuasion/Investigate, -1 Stealth'],
+          ['Other Traits', '3', 'Paradox Nexus', 'DC 15 INT per session, -2 checks on failure'],
+          ['Quirks', '2', 'Whispering Shadows', 'DC 15 Insight to discern, +2 Deception']
+        ]
+      },
+      encounterCRXPAwards: {
+        title: 'Encounter CR/XP Awards (Section 7.9.4)',
+        headers: ['CR', 'Base XP per Player (Party of 4)', 'Difficulty at Level 4'],
+        rows: [
+          ['1', '10', 'Easy'],
+          ['2', '20', 'Easy'],
+          ['3', '30', 'Moderate'],
+          ['4', '50', 'Moderate'],
+          ['5', '75', 'Hard'],
+          ['6', '100', 'Hard'],
+          ['8', '200', 'Deadly']
+        ]
+      },
+      commonConditions: {
+        title: 'Common Conditions (Section 8.5)',
+        headers: ['Condition', 'Effect', 'Recovery'],
+        rows: [
+          ['Disoriented', '-2 to all checks', 'DC 15 WIS check or 1-hour rest'],
+          ['Exhausted', '-2 to STR and CON-based checks', '8-hour rest or DC 15 CON check']
+        ]
+      },
+      skillsList: {
+        title: 'Skills List (Section 8.2)',
+        headers: ['Skill', 'Attribute', 'Specializations'],
+        rows: [
+          ['Acrobatics', 'DEX', 'Tumbling, Balance'],
+          ['Animal Handling', 'WIS', 'Training, Calming, Falconry, Large Saurians'],
+          ['Appraise', 'INT', 'Artifacts, Trade Goods, Jewelry, Antiquities'],
+          ['Athletics', 'STR', 'Climbing, Jumping, Swimming, Running, Lifting'],
+          ['Concentration', 'WIS', 'None'],
+          ['Crafting', 'INT', 'Blacksmithing, Mechanics, Alchemy, Calligraphy'],
+          ['Deception', 'CHA', 'None'],
+          ['Knowledge', 'INT', 'Arcana, History, Culture, Nature, Religion, Engineering'],
+          ['Persuade', 'CHA', 'Charm, Inspiration'],
+          ['Technical Expertise', 'INT', 'Electronics, Mechanics, Hacking']
+        ]
+      }
+};
+function getGMTable(tableId) {
+  return gmReferenceTables[tableId] || null;
+}
+
+function calculatePowerCost(className, powerLevel, powerType = 'standard') {
+  const powerCosts = {
+    'Biomatrix Suit': {
+      standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } },
+      healing: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } }
+    },
+    'Continuum Raider': { standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } } },
+    'Gunrunner': { standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } } },
+    'Faterunner': {
+      standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } },
+      healing: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } }
+    },
+    'Harlequin': {
+      standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } },
+      healing: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } }
+    },
+    'Warrior': {
+      standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } },
+      healing: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } }
+    },
+    'Mage': {
+      standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } },
+      healing: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } }
+    },
+    'Shape': {
+      standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } },
+      healing: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } }
+    },
+    'Masque': { standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } } }
+  };
+
+  if (!powerCosts[className] || !powerCosts[className][powerType] || !powerCosts[className][powerType][`pl${powerLevel}`]) {
+    return { error: 'Invalid class, power type, or power level' };
+  }
+
+  return powerCosts[className][powerType][`pl${powerLevel}`];
+}
+
+function calculateCombatModifiers(options = {}) {
+  const { cover, concealment, nonLethal, aoO } = options;
+  let modifiers = { acBonus: 0, missChance: 0, attackPenalty: 0, notes: [] };
+
+  if (cover === 'partial') {
+    modifiers.acBonus += 2;
+    modifiers.notes.push('+2 AC, +1 Reflex save (partial cover)');
+  } else if (cover === 'half') {
+    modifiers.acBonus += 4;
+    modifiers.notes.push('+4 AC, +2 Reflex save (half cover)');
+  } else if (cover === 'total') {
+    modifiers.notes.push('Cannot be targeted (total cover)');
+  }
+
+  if (concealment === 'partial') {
+    modifiers.missChance = 20;
+    modifiers.notes.push('20% miss chance (partial concealment)');
+  } else if (concealment === 'total') {
+    modifiers.missChance = 50;
+    modifiers.notes.push('50% miss chance (total concealment)');
+  }
+
+  if (nonLethal) {
+    modifiers.attackPenalty -= 4;
+    modifiers.notes.push('-4 attack for non-lethal damage');
+  }
+
+  if (aoO) {
+    modifiers.notes.push('Triggers AoO (melee attack vs. AC)');
+  }
+
+  return modifiers;
+}
+
+function calculateSocialOutcome(options = {}) {
+  const { chaModifier, rollResult, influencePool, reputation, success } = options;
+  let outcome = { poolReduction: 0, newPool: influencePool, reputationShift: 0, notes: [] };
+
+  if (success) {
+    const reduction = Math.floor(Math.random() * 4) + 1 + chaModifier;
+    outcome.poolReduction = rollResult === 20 ? 2 * reduction : reduction;
+    outcome.newPool = Math.max(0, influencePool - outcome.poolReduction);
+    outcome.notes.push(`Reduced Influence Pool by ${outcome.poolReduction}`);
+    if (rollResult === 20) outcome.notes.push('Critical success: double reduction');
+  } else if (rollResult === 1) {
+    outcome.notes.push('Critical failure: -2 CHA checks for session');
+  }
+
+  if (success && outcome.newPool === 0) {
+    outcome.reputationShift = reputation >= 0 ? 1 : -1;
+    outcome.notes.push(`Reputation shift: ${outcome.reputationShift}`);
+  } else if (!success && rollResult === 1) {
+    outcome.reputationShift = reputation <= 0 ? -1 : 1;
+    outcome.notes.push(`Reputation shift: ${outcome.reputationShift}`);
+  }
+
+  return outcome;
+}
+
+function generateWeapon(options = {}) {
+  const { tier = 'random', sphere = 'neutral' } = options;
+  const tiers = ['minor', 'standard', 'major', 'epic'];
+  const selectedTier = tier === 'random' ? tiers[Math.floor(Math.random() * tiers.length)] : tier;
+
+  const weapons = {
+    minor: [
+      { category: 'Light Melee', damage: '1d4 + STR/DEX', traits: 'Finesse, light', effect: 'Bleed (1d4/round, DC 15 CON)', name: 'Bone Dagger' },
+      { category: 'Light Ranged', damage: '1d6 + DEX', traits: 'Light', effect: 'Burn (1d6 fire, DC 15 DEX)', name: 'Laser Pistol' }
+    ],
+    standard: [
+      { category: 'Medium Melee', damage: '1d6 + STR', traits: 'Versatile (1d8)', effect: 'Stun (lose action, DC 15 WIS)', name: 'Plasma Sword' },
+      { category: 'Medium Ranged', damage: '1d8 + DEX', traits: 'Ammo', effect: 'Daze (-2 attacks, DC 15 CON)', name: 'Gauss Rifle' }
+    ],
+    major: [
+      { category: 'Heavy Melee', damage: '1d8 + STR', traits: 'Heavy', effect: 'Knockdown (prone, DC 15 STR)', name: 'Singularity Axe' },
+      { category: 'Heavy Ranged', damage: '1d10 + DEX', traits: 'Heavy, reload', effect: 'Blast (10-ft., DC 15 DEX)', name: 'Railgun' }
+    ],
+    epic: [
+      { category: 'Exotic Melee', damage: '1d12 + STR/CHA', traits: 'Paradox, unique', effect: 'Confusion (DC 15 WIS)', name: 'Riftblade' },
+      { category: 'Heavy Ordnance', damage: '2d12 + INT', traits: 'Stationary, paradox, crew', effect: 'Massive (30-ft., DC 20 CON)', name: 'Singularity Cannon' }
+    ]
+  };
+
+  const weapon = weapons[selectedTier][Math.floor(Math.random() * weapons[selectedTier].length)];
+  weapon.sphere = sphere;
+  return weapon;
+}
+
+function calculateSkillPoints(intModifier, level, optionalBonus = false) {
+  if (level < 1 || level > 15) return { error: 'Invalid level' };
+    const startingPoints = (5 + intModifier) * 4;
+    const levelUpPoints = level > 1 ? (level - 1) * (2 + intModifier) : 0;
+    const bonusPoints = optionalBonus ? level : 0;
+    return {
+      totalPoints: startingPoints + levelUpPoints + bonusPoints,
+      startingPoints,
+      levelUpPoints,
+      bonusPoints
+    };
+  }
+
+  // Calculate paradox risk DC (Sections 3.7, 4.2–4.10, 5.3)
+  function calculateParadoxDC(options = {}) {
+    const { powerLevel, className, usesInEncounter, sphere, isDimensionalShift } = options;
+    let baseDC = 15;
+    if (powerLevel === 2) baseDC = 18;
+    else if (powerLevel === 3) baseDC = 22;
+    if (['Faterunner', 'Harlequin'].includes(className)) {
+      if (powerLevel === 1) return { dc: 0, notes: ['No paradox risk for Tier 1'] };
+      if (powerLevel === 2) baseDC = Math.max(13, baseDC - (options.level >= 11 ? 3 : options.level >= 7 ? 2 : 0));
+      if (powerLevel === 3) baseDC = Math.max(18, baseDC - (options.level >= 11 ? 3 : 0));
+    }
+    const frequencyPenalty = usesInEncounter > options.level ? (usesInEncounter - options.level) * 2 : 0;
+    let sphereModifier = 0;
+    if (sphere === 'Chaos') sphereModifier = 2;
+    else if (sphere === 'Balance') sphereModifier = -2;
+    const shiftModifier = isDimensionalShift ? 2 : 0;
+    return {
+      dc: baseDC + frequencyPenalty + sphereModifier + shiftModifier,
+      notes: [
+        `Base DC: ${baseDC}`,
+        frequencyPenalty ? `+${frequencyPenalty} for ${usesInEncounter} uses` : '',
+        sphereModifier ? `${sphereModifier} for ${sphere} sphere` : '',
+        shiftModifier ? '+2 for dimensional shift' : ''
+      ].filter(note => note)
+    };
+  }
+
+  // Calculate encumbrance penalties (Section 5.8)
+  function calculateEncumbrance(strScore, totalWeight, totalSlots, sphere = 'neutral') {
+    const normalLoad = strScore * 10;
+    const heavyLoad = strScore * 20;
+    let weightModifier = sphere === 'Oppression' ? 0.9 : sphere === 'Chaos' ? 1.1 : 1;
+    const adjustedNormal = normalLoad * weightModifier;
+    const adjustedHeavy = heavyLoad * weightModifier;
+    let penalties = { dexPenalty: 0, movePenalty: 0, athleticsPenalty: 0, notes: [] };
+    if (totalWeight > adjustedHeavy) {
+      penalties.notes.push('Overloaded: immobile, no mobility actions');
+      return penalties;
+    } else if (totalWeight > adjustedNormal) {
+      penalties.dexPenalty = -2;
+      penalties.movePenalty = -10;
+      penalties.notes.push(`Heavy load: -2 DEX checks, -10 ft. movement`);
+    }
+    if (totalSlots > 10) {
+      penalties.athleticsPenalty = -2 * (totalSlots - 10);
+      penalties.notes.push(`Excess slots: ${penalties.athleticsPenalty} Athletics/Acrobatics`);
+    }
+    return penalties;
+  }
+
+  // Calculate XP needed for level-up (Section 6.2)
+  function calculateXP(currentLevel) {
+    if (currentLevel < 1 || currentLevel > 14) return { error: 'Invalid level' };
+    const thresholds = [
+      { level: 1, xpToNext: 100, total: 100 },
+      { level: 2, xpToNext: 200, total: 300 },
+      { level: 3, xpToNext: 450, total: 750 },
+      { level: 4, xpToNext: 600, total: 1350 },
+      { level: 5, xpToNext: 750, total: 2100 },
+      { level: 6, xpToNext: 450, total: 2550 },
+      { level: 7, xpToNext: 525, total: 3075 },
+      { level: 8, xpToNext: 600, total: 3675 },
+      { level: 9, xpToNext: 675, total: 4350 },
+      { level: 10, xpToNext: 750, total: 5100 },
+      { level: 11, xpToNext: 550, total: 5650 },
+      { level: 12, xpToNext: 600, total: 6250 },
+      { level: 13, xpToNext: 650, total: 6900 },
+      { level: 14, xpToNext: 700, total: 7600 }
+    ];
+    return thresholds.find(t => t.level === currentLevel);
+  }
+
+  // Generate random dimension (Sections 5.7, 7.8.2)
+  function generateReality(options = {}) {
+    const { stability = 'random', sphere = 'random' } = options;
+    const stabilities = ['Stable', 'Unstable', 'Hostile'];
+    const spheres = ['Balance', 'Growth', 'Discord', 'Oppression', 'Reason'];
+    const selectedStability = stability === 'random' ? stabilities[Math.floor(Math.random() * stabilities.length)] : stability;
+    const selectedSphere = sphere === 'random' ? spheres[Math.floor(Math.random() * spheres.length)] : sphere;
+    const dimensions = {
+      Stable: {
+        Balance: { name: 'Prismatic Haven', dc: 15, description: 'A serene hub glowing with harmonic rifts.' },
+        Growth: { name: 'Verdant Nexus', dc: 15, description: 'A lush forest with living rifts.' }
+      },
+      Unstable: {
+        Discord: { name: 'Chaos Wastes', dc: 22, description: 'A wasteland of jagged, chaotic rifts.' },
+        Oppression: { name: 'Iron Fortress', dc: 18, description: 'A steel citadel with mechanical rifts.' }
+      },
+      Hostile: {
+        Reason: { name: 'Fractured Archive', dc: 25, description: 'A crystalline library mid-Hume Collapse.' }
+      }
+    };
+    return dimensions[selectedStability][selectedSphere] || { name: 'Unknown Realm', dc: 20, description: 'A mysterious dimension.' };
+  }
+
+  // Generate random power (Section 6.6)
+  function generatePower(options = {}) {
+    const { className, tier = 'random' } = options;
+    const tiers = [1, 2, 3];
+    const selectedTier = tier === 'random' ? tiers[Math.floor(Math.random() * tiers.length)] : tier;
+    const powers = {
+      'Biomatrix Suit': {
+        1: { name: 'Nano Pulse', damage: '1d6 + INT', type: 'Light Ranged', effect: 'Shock (lose action, DC 15 CON)', cost: 1 },
+        2: { name: 'Energy Burst', damage: '1d8 + INT', type: 'Medium Ranged', effect: 'Daze (-2 attacks, DC 15 CON)', cost: 2 },
+        3: { name: 'Suit Evolution', damage: '1d10 + INT', type: 'Heavy Ranged', effect: 'Blast (10-ft., DC 15 DEX)', cost: 3 }
+      },
+      'Masque': {
+        1: { name: 'Chaos Bolt', damage: '1d6 + CHA', type: 'Light Ranged', effect: 'Confusion (DC 15 WIS)', cost: 1 },
+        2: { name: 'Infernal Surge', damage: '1d8 + CHA', type: 'Medium Ranged', effect: 'Fear (-2 attacks, DC 15 WIS)', cost: 2 },
+        3: { name: 'Chaos Storm', damage: '1d10 + CHA', type: 'Heavy Ranged', effect: 'Blast (10-ft., DC 15 DEX)', cost: 3 }
+      }
+    };
+    const powerList = powers[className] ? powers[className][selectedTier] : null;
+    return powerList || { error: 'Invalid class or tier' };
+  }
+
+  // Generate random dimensional travel mishap (Section 5.7)
+  function generateMishap(failureMargin) {
+    const mishaps = [
+      { margin: [1, 5], type: 'Minor', effect: 'Off-target (DC 15 Survival to reorient) or delayed (1d4 hours)' },
+      { margin: [6, 10], type: 'Major', effect: 'Hostile dimension (DC 15 CON save or -2 checks) or paradox rift (AC 15, 30 Health, 1d8 damage)' },
+      { margin: [11, Infinity], type: 'Catastrophic', effect: 'Major paradox rift (AC 16, 50 Health, 2d8 damage) or Hume Collapse (DC 20 group check)' }
+    ];
+    return mishaps.find(m => failureMargin >= m.margin[0] && failureMargin <= m.margin[1]) || { error: 'Invalid failure margin' };
+  }
+
+  // Calculate power creation cost (Sections 4.2–4.10, 6.6)
+  function calculatePowerCost(className, powerLevel, powerType = 'standard') {
+    const powerCosts = {
+      'Biomatrix Suit': {
+        standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } },
+        healing: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } }
+      },
+      'Continuum Raider': { standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } } },
+      'Gunrunner': { standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } } },
+      'Faterunner': {
+        standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } },
+        healing: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } }
+      },
+      'Harlequin': {
+        standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } },
+        healing: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } }
+      },
+      'Warrior': {
+        standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } },
+        healing: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } }
+      },
+      'Mage': {
+        standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } },
+        healing: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } }
+      },
+      'Shape': {
+        standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } },
+        healing: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } }
+      },
+      'Masque': { standard: { pl1: { fate: 1, resource: 1 }, pl2: { fate: 2, resource: 2 }, pl3: { fate: 3, resource: 3 } } }
+    };
+    if (!powerCosts[className] || !powerCosts[className][powerType] || !powerCosts[className][powerType][`pl${powerLevel}`]) {
+      return { error: 'Invalid class, power type, or power level' };
+    }
+    return powerCosts[className][powerType][`pl${powerLevel}`];
+  }
+
+  // Calculate downtime activity outcomes (Section 6.7)
+  function calculateDowntimeOutcome(options = {}) {
+    const { activity, skillCheck, rollResult, sphere = 'neutral' } = options;
+    let outcome = { success: false, resourcesLost: 0, timeLost: 0, notes: [] };
+    const activities = {
+      Crafting: { dc: 15, credits: 10, time: 3, skill: 'Technical Expertise' },
+      Training: { dc: 15, credits: 5, time: 7, skill: 'INT/WIS' },
+      Research: { dc: 20, credits: 10, time: 3, skill: 'Knowledge' },
+      Socializing: { dc: 15, credits: 5, time: 2, skill: 'Persuasion' },
+      Maintenance: { dc: 15, credits: 1, time: 2, skill: 'Technical Expertise' }
+    };
+    if (!activities[activity]) return { error: 'Invalid activity' };
+    const { dc, credits, time } = activities[activity];
+    const sphereModifier = sphere === 'Discord' ? 2 : sphere === 'Balance' ? -2 : 0;
+    const adjustedDC = dc + sphereModifier;
+    if (rollResult >= adjustedDC) {
+      outcome.success = true;
+      outcome.notes.push(`Success: ${activity} completed`);
+    } else {
+      outcome.resourcesLost = credits / 2;
+      outcome.timeLost = time / 2;
+      outcome.notes.push(`Failure: Lose ${outcome.resourcesLost} Credits, ${outcome.timeLost} days`);
+      if (rollResult === 1) {
+        outcome.notes.push('Critical failure: Paradox risk (DC 15 INT/CHA)');
+      }
+    }
+    if (sphereModifier) outcome.notes.push(`${sphereModifier} DC for ${sphere} sphere`);
+    return outcome;
+  }
+
+  // Calculate lifestyle effects (Section 6.8)
+  function calculateLifestyleEffects(options = {}) {
+    const { lifestyle, sphere = 'neutral', stealthRoll } = options;
+    let effects = { modifiers: {}, risks: [], notes: [] };
+    const lifestyles = {
+      Squalid: {
+        cost: 0,
+        modifiers: { Streetwise: 2, Survival: 1, CON: -2, CHA: -1 },
+        risks: ['Weekly DC 15 CON check (illness: -1 checks for 1 session)']
+      },
+      Modest: {
+        cost: 1,
+        modifiers: {},
+        risks: ['DC 15 Persuasion with elites (-1 CHA for 1 session on failure)']
+      },
+      Comfortable: {
+        cost: 5,
+        modifiers: { CHA: 2, INT: 1 },
+        risks: ['Weekly DC 15 Stealth check (rival attention: CR 5 encounter)']
+      },
+      Luxurious: {
+        cost: 20,
+        modifiers: { Persuasion: 2, Downtime: 1, Streetwise: -1 },
+        risks: ['Weekly DC 15 Stealth check (Paragon agents: CR 5 encounter)']
+      }
+    };
+    if (!lifestyles[lifestyle]) return { error: 'Invalid lifestyle' };
+    effects.modifiers = lifestyles[lifestyle].modifiers;
+    effects.risks = lifestyles[lifestyle].risks;
+    if (lifestyle !== 'Modest' && stealthRoll && stealthRoll < 15) {
+      effects.notes.push(`Failed Stealth check: ${lifestyle} risks triggered`);
+    }
+    if (sphere === 'Oppression') effects.notes.push('+1 Credit/day for surveillance fees');
+    else if (sphere === 'Growth') effects.notes.push('+2 Survival for Squalid, +2 Persuasion for Luxurious');
+    return effects;
+  }
+
+  // Generate random summoned entity (Section 6.6.6)
+  function generateSummonedEntity(options = {}) {
+    const { className, tier, attrModifier = 0 } = options;
+    const entities = {
+      'Biomatrix Suit': {
+        1: { name: 'Nano Drone', damage: '1d4 + AttrMod', type: 'Light Melee', effect: 'Shock (DC 15 CON)', ac: 10 + attrModifier, health: 15 + 5 * attrModifier },
+        2: { name: 'Kinetic Drone', damage: '1d8 + AttrMod', type: 'Medium Ranged', effect: 'Impact (DC 15 STR)', ac: 12 + attrModifier, health: 30 + 5 * attrModifier },
+        3: { name: 'Plasma Construct', damage: '1d12 + AttrMod', type: 'Exotic Ranged', effect: 'Melt (DC 18 CON)', ac: 15 + attrModifier, health: 60 + 5 * attrModifier }
+      },
+      'Masque': {
+        1: { name: 'Chaos Spark', damage: '1d4 + AttrMod', type: 'Light Melee', effect: 'Fear (DC 15 WIS)', ac: 10 + attrModifier, health: 15 + 5 * attrModifier },
+        2: { name: 'Infernal Wraith', damage: '1d8 + AttrMod', type: 'Medium Ranged', effect: 'Confusion (DC 15 WIS)', ac: 12 + attrModifier, health: 30 + 5 * attrModifier },
+        3: { name: 'Chaos Fiend', damage: '1d12 + AttrMod', type: 'Exotic Melee', effect: 'Confusion (DC 18 WIS)', ac: 15 + attrModifier, health: 60 + 5 * attrModifier }
+      }
+    };
+    if (!entities[className] || !entities[className][tier]) return { error: 'Invalid class or tier' };
+    return entities[className][tier];
+  }
+
+  // Calculate NPC stat adjustments by CR (Section 7.5.1)
+  function calculateNPCStats(options = {}) {
+    const { cr, type = 'standard', paragon = null } = options;
+    let stats = { ac: 12, health: 20, damage: '1d6', notes: [] };
+    const crAdjustments = {
+      3: { ac: 14, health: 30, damage: '1d8' },
+      4: { ac: 14, health: 40, damage: '1d10' },
+      5: { ac: 15, health: 50, damage: '2d8' },
+      6: { ac: 16, health: 60, damage: '2d10' },
+      8: { ac: 17, health: 70, damage: '3d8' },
+      10: { ac: 18, health: 80, damage: '3d8' }
+    };
+    if (!crAdjustments[cr]) return { error: 'Invalid CR' };
+    stats = { ...stats, ...crAdjustments[cr] };
+    if (type === 'knight') {
+      stats.notes.push('Knight: +2 attack in aligned sphere, DC 15 save for effect');
+    } else if (type === 'champion') {
+      stats.ac += 3;
+      stats.health += 20;
+      stats.damage = '3d8';
+      stats.notes.push('Champion: +4 sphere bonuses, PL 2/3 power');
+    }
+    if (paragon) {
+      stats.notes.push(`${paragon} influence: +4 aligned checks, -4 opposed`);
+    }
+    return stats;
+  }
+
+  // Generate random NPC trait (Section 7.5.1)
+  function generateNPCTrait() {
+    const traits = [
+      { type: 'Voice', description: 'Raspy whisper' },
+      { type: 'Feature', description: 'Scarred hands' },
+      { type: 'Habit', description: 'Fidgets with broken rift shard' },
+      { type: 'Emotion', description: 'Paranoid about Order agents' },
+      { type: 'Item', description: 'Pendant glowing in Chaos realms' },
+      { type: 'Motive', description: 'Secretly serves LeFay' }
+    ];
+    return traits[Math.floor(Math.random() * traits.length)];
+  }
+
+  // Generate Knight/Champion encounter (Section 7.4.3)
+  function generateEncounter(options = {}) {
+    const { type = 'knight', paragon = 'random', partyLevel = 4 } = options;
+    const paragons = ['Roy G. Biv', 'Merlin', 'LeFay', 'Jack Shade', 'Klaus', 'Prescott'];
+    const selectedParagon = paragon === 'random' ? paragons[Math.floor(Math.random() * paragons.length)] : paragon;
+    const encounters = {
+      knight: {
+        cr: 5,
+        ac: 15,
+        health: 50,
+        damage: '2d8',
+        effect: `DC 15 save (${selectedParagon} effect)`,
+        xp: 75 * 4
+      },
+      champion: {
+        cr: partyLevel >= 8 ? 10 : 8,
+        ac: 18,
+        health: partyLevel >= 8 ? 80 : 60,
+        damage: '3d8',
+        effect: `PL ${partyLevel >= 8 ? '2/3' : '1'} power`,
+        xp: partyLevel >= 8 ? 300 * 4 : 200 * 4
+      }
+    };
+    return {
+      ...encounters[type],
+      paragon: selectedParagon,
+      notes: [`${selectedParagon} agent: +4 aligned checks, -4 opposed`]
+    };
+  }
+
+  // Calculate class-specific power risks (Sections 7.6.5–7.6.9)
+  function calculateClassPowerRisk(options = {}) {
+    const { className, powerLevel, usesInEncounter, characterLevel, sphere = 'neutral' } = options;
+    let outcome = { dc: 0, effect: '', notes: [] };
+    const classRisks = {
+      Faterunner: {
+        tier1: { dc: 0, effect: 'None' },
+        tier2: { dc: 13, effect: '-1 penalty or minor anomaly', reduceBy: characterLevel >= 11 ? 3 : characterLevel >= 7 ? 2 : 0 },
+        tier3: { dc: 18, effect: '-1 penalty or moderate anomaly (AC 12, 20 Health, 1d6)', reduceBy: characterLevel >= 11 ? 3 : 0, limit: 'once per session' }
+      },
+      Harlequin: {
+        tier1: { dc: 0, effect: 'None' },
+        tier2: { dc: 13, effect: '-1 penalty or minor anomaly', reduceBy: characterLevel >= 11 ? 3 : characterLevel >= 7 ? 2 : 0 },
+        tier3: { dc: 18, effect: '-1 penalty or moderate anomaly (AC 12, 20 Health, 1d6)', reduceBy: characterLevel >= 11 ? 3 : 0, limit: 'once per session' }
+      },
+      Warrior: {
+        tier1: { dc: 15, effect: '-2 Self-Control' },
+        tier2: { dc: 18, effect: '-2 Self-Control' },
+        tier3: { dc: 22, effect: 'Rift (AC 15, 30 Health, 1d8)' }
+      },
+      Mage: {
+        tier1: { dc: 15, effect: '-2 Knowledge' },
+        tier2: { dc: 18, effect: '-2 Knowledge' },
+        tier3: { dc: 22, effect: 'Gore’s (AC 14, 30 Health, 1d8 psychic)' }
+      },
+      Shape: {
+        tier1: { dc: 15, effect: '-2 CON' },
+        tier2: { dc: 18, effect: '-2 CON' },
+        tier3: { dc: 22, effect: 'Black Heart Echo (AC 15, 30 Health, 1d8)' }
+      }
+    };
+    if (!classRisks[className] || !classRisks[className][`tier${powerLevel}`]) return { error: 'Invalid class or power level' };
+    const risk = classRisks[className][`tier${powerLevel}`];
+    outcome.dc = risk.dc - (risk.reduceBy || 0);
+    outcome.effect = risk.effect;
+    if (risk.limit) outcome.notes.push(risk.limit);
+    if (sphere === 'Chaos' && ['Warrior', 'Mage', 'Shape'].includes(className)) outcome.dc += 2;
+    else if (sphere === 'Order' && ['Warrior', 'Mage', 'Shape'].includes(className)) outcome.dc += 2;
+    if (usesInEncounter > 3 && ['Faterunner', 'Harlequin'].includes(className)) {
+      outcome.notes.push('Overuse: DC 15 CHA check or effect inverts');
+    } else if (usesInEncounter > 3 && className === 'Warrior') {
+      outcome.notes.push('Overuse: DC 15 WIS check or -2 STR');
+    } else if (usesInEncounter > 3 && className === 'Mage') {
+      outcome.notes.push('Overuse: DC 15 INT check or -2 spell checks');
+    } else if (usesInEncounter > 3 && className === 'Shape') {
+      outcome.notes.push('Overuse: DC 15 CHA check or -2 CON');
+    }
+    return outcome;
+  }
+
+  // Generate random Shape transformation form (Section 7.6.9)
+  function generateShapeTransformation(options = {}) {
+    const { level = 4 } = options;
+    const forms = {
+      novice: [
+        { form: 'Brick Wall', effect: '+2 AC', penalty: '-10 ft. movement' },
+        { form: 'Alley Cat', effect: '+2 Stealth', penalty: '-2 damage' },
+        { form: 'Rusty Hinge', effect: '+2 to resist forced movement', penalty: '-2 CHA' }
+      ],
+      adept: [
+        { form: 'Scarecrow', effect: '+2 Intimidation', penalty: '-2 DEX' },
+        { form: 'Shattered Mirror', effect: '+2 Deception', penalty: '-2 WIS' },
+        { form: 'Starling Flock', effect: '+10 ft. movement', penalty: '-2 AC' }
+      ],
+      master: [
+        { form: 'Sinew-Steel Hybrid', effect: '+4 melee damage', penalty: '-2 AC' },
+        { form: 'Thunder-Bramble Creature', effect: '+2d6 area damage', penalty: '-2 CON' },
+        { form: 'Lightning Engine', effect: '+20 ft. movement', penalty: '-2 INT' }
+      ]
+    };
+    const tier = level >= 11 ? 'master' : level >= 7 ? 'adept' : 'novice';
+    return forms[tier][Math.floor(Math.random() * forms[tier].length)];
+  }
+
+  // Calculate market transaction outcomes (Section 7.7.4)
+  function calculateMarketTransaction(options = {}) {
+    const { itemCost, sphere = 'neutral', persuasionRoll, stealthRoll, havenSize = 'medium', isSelling = false } = options;
+    let outcome = { finalCost: itemCost, success: true, notes: [] };
+    const sphereModifiers = {
+      Balance: 0.9,
+      Growth: sphere === 'Growth' && itemCost <= 10 ? 0.8 : 1.2,
+      Oppression: 1.2,
+      Reason: sphere === 'Reason' && itemCost >= 20 ? 0.9 : 1,
+      Discord: 0.8
+    };
+    outcome.finalCost *= sphereModifiers[sphere] || 1;
+    if (persuasionRoll < 15) {
+      outcome.success = false;
+      outcome.notes.push('Scam: Item effectiveness halved');
+    } else if (persuasionRoll >= 20) {
+      outcome.finalCost *= 0.9;
+      outcome.notes.push('Haggle: 10% discount');
+    }
+    if (['Oppression', 'Reason'].includes(sphere) && stealthRoll < 15) {
+      const tax = Math.ceil(outcome.finalCost * 0.1);
+      outcome.finalCost += tax;
+      outcome.notes.push(`Tax: +${tax} Credits`);
+    }
+    if (isSelling) {
+      outcome.finalCost = outcome.finalCost * 0.5;
+      if (persuasionRoll >= 20) {
+        outcome.finalCost *= 1.1;
+        outcome.notes.push('Good sale: +10% value');
+      }
+    }
+    const havenLimits = {
+      small: 20,
+      medium: 100,
+      large: 200
+    };
+    if (outcome.finalCost > havenLimits[havenSize]) {
+      outcome.success = false;
+      outcome.notes.push('Item unavailable in this haven size');
+    }
+    return outcome;
+  }
+
+  // Generate random haven market inventory (Section 7.7.4)
+  function generateMarketInventory(options = {}) {
+    const { havenSize = 'medium', sphere = 'neutral' } = options;
+    const inventory = [];
+    const items = [
+      { name: 'Knife', cost: 5, slots: 1 },
+      { name: 'Chronometric Rifle', cost: 20, slots: 2 },
+      { name: 'Prismatic Cloak', cost: 20, slots: 2 },
+      { name: 'Stim Syringe', cost: 10, slots: 0.5 },
+      { name: 'Prismatic Stew', cost: 4, slots: 1 },
+      { name: 'Tech Kit', cost: 10, slots: 1 },
+      { name: 'Eternity Crystal', cost: 75, slots: 0.5 }
+    ];
+    const stockLimits = {
+      small: { credits: 20, items: 3, artifacts: 0 },
+      medium: { credits: 100, items: 6, artifacts: 2 },
+      large: { credits: 200, items: 10, artifacts: 5 }
+    };
+    const limit = stockLimits[havenSize] || stockLimits.medium;
+    let totalCost = 0;
+    const maxItems = limit.items + limit.artifacts;
+    while (inventory.length < maxItems && totalCost < limit.credits) {
+      const item = items[Math.floor(Math.random() * items.length)];
+      if (totalCost + item.cost <= limit.credits && !(sphere === 'Balance' && item.cost > 50)) {
+        inventory.push({ ...item, quantity: Math.floor(Math.random() * 3) + 1 });
+        totalCost += item.cost * inventory[inventory.length - 1].quantity;
+      }
+    }
+    return { inventory, notes: [`Sphere: ${sphere}, Haven Size: ${havenSize}`] };
+  }
+
+  // Calculate encounter difficulty and XP (Section 7.9.4)
+  function calculateEncounterDifficulty(options = {}) {
+    const { partyLevel = 4, partySize = 4, cr, enemyCount = 1 } = options;
+    let outcome = { xp: 0, difficulty: '', notes: [] };
+    const crXP = {
+      1: 10,
+      2: 20,
+      3: 30,
+      4: 50,
+      5: 75,
+      6: 100,
+      7: 150,
+      8: 200,
+      9: 250,
+      10: 300
+    };
+    if (!crXP[cr]) return { error: 'Invalid CR' };
+    let adjustedCR = cr + Math.floor((enemyCount - 1) / 2);
+    let baseXP = crXP[cr] || crXP[10] + (cr - 10) * 50;
+    let xp = baseXP;
+    if (partyLevel >= cr) {
+      xp *= (1 + (partyLevel - cr) * 0.1);
+    }
+    xp = Math.round(xp * (4 / partySize));
+    outcome.xp = xp;
+    if (adjustedCR <= partyLevel) outcome.difficulty = 'Moderate';
+    else if (adjustedCR <= partyLevel + 2) outcome.difficulty = 'Hard';
+    else outcome.difficulty = 'Deadly';
+    outcome.notes.push(`Adjusted CR: ${adjustedCR}, XP per player: ${xp}`);
+    return outcome;
+  }
+
+  // Generate random dimension traits (Section 7.8.2)
+  function generateDimension() {
+    const topographies = [
+      { name: 'Floating Islands', effect: 'DC 15 Acrobatics to cross, -2 DEX on failure' },
+      { name: 'Crystalline Caverns', effect: 'DC 15 WIS to navigate, +2 Perception' },
+      { name: 'Endless Ocean', effect: 'DC 15 Swim to explore, +2 Survival' }
+    ];
+    const balances = [
+      { name: 'Balance', effect: '+2 Persuasion, no penalties' },
+      { name: 'Growth', effect: '+2 CHA, -2 INT' },
+      { name: 'Discord', effect: '+2 CHA, -2 WIS' }
+    ];
+    const techMagics = [
+      { name: 'Primitive', effect: '+2 Survival, no tech/magic bonuses' },
+      { name: 'Technological', effect: '+2 INT tech checks, DC 15 Technical Expertise' },
+      { name: 'Hybrid', effect: '+1 tech/magic checks, DC 15 Technical Expertise/CHA' }
+    ];
+    const quirks = [
+      { name: 'Whispering Shadows', effect: 'DC 15 Insight to discern, +2 Deception' },
+      { name: 'Paradox Nexus', effect: 'DC 15 INT per session, -2 checks on failure' }
+    ];
+    return {
+      topography: topographies[Math.floor(Math.random() * topographies.length)],
+      cosmicBalance: balances[Math.floor(Math.random() * balances.length)],
+      techMagic: techMagics[Math.floor(Math.random() * techMagics.length)],
+      quirk: quirks[Math.floor(Math.random() * quirks.length)]
+    };
+  }
+
+    function calculateDerivedStats(options = {}) {
+    const { level = 1, str = 10, dex = 10, con = 10, wis = 10, cha = 10, armorBonus = 0, classBonuses = {}, maxHealth = false } = options;
+    let outcome = { health: 0, sanity: 0, ac: 0, initiative: 0, bab: 0, speed: 30, saves: {}, luck: 0 };
+    const conMod = Math.floor((con - 10) / 2);
+    outcome.health = maxHealth ? (18 + conMod) + (level - 1) * 5 : (10 + conMod) + (level - 1) * 5;
+    const wisMod = Math.floor((wis - 10) / 2);
+    outcome.sanity = (10 + wisMod) + (level - 1) * 2;
+    const dexMod = Math.floor((dex - 10) / 2);
+    outcome.ac = 10 + dexMod + armorBonus + (classBonuses.ac || 0);
+    outcome.initiative = dexMod;
+    outcome.bab = classBonuses.bab || 0;
+    outcome.speed = 30 - (classBonuses.speedPenalty || 0);
+    outcome.saves = {
+      reflex: 1 + dexMod + (classBonuses.reflex || 0),
+      fortitude: 1 + conMod + (classBonuses.fortitude || 0),
+      willpower: 1 + wisMod + (classBonuses.willpower || 0)
+    };
+    const chaMod = Math.floor((cha - 10) / 2);
+    outcome.luck = level >= 4 ? chaMod + 2 : 0;
+    return outcome;
+  }
+
+  // Generate random character backstory details (Section 8.2)
+  function generateBackstory() {
+    const backgrounds = [
+      { type: 'Drifter', description: 'Wandered rifts, seeking purpose' },
+      { type: 'Exile', description: 'Banished from a haven for defying authority' },
+      { type: 'Scholar', description: 'Studied ancient relics in a Reason archive' }
+    ];
+    const occupations = [
+      { type: 'Scavenger', description: 'Hunts for Rift Shards in Discord wastes' },
+      { type: 'Courier', description: 'Delivers messages across dimensions' },
+      { type: 'Mechanic', description: 'Repairs tech in haven workshops' }
+    ];
+    const motivations = [
+      { type: 'Redemption', description: 'Seeks to atone for past mistakes' },
+      { type: 'Freedom', description: 'Fights to escape Primordial control' },
+      { type: 'Discovery', description: 'Driven to uncover Continuum secrets' }
+    ];
+    return {
+      background: backgrounds[Math.floor(Math.random() * backgrounds.length)],
+      occupation: occupations[Math.floor(Math.random() * occupations.length)],
+      motivation: motivations[Math.floor(Math.random() * motivations.length)]
+    };
+  }
+
+  // Calculate condition recovery outcomes (Section 8.5)
+  function calculateConditionRecovery(options = {}) {
+    const { condition = 'Disoriented', wis = 10, con = 10, restTime = 0 } = options;
+    let outcome = { success: false, dc: 15, notes: [] };
+    const conditions = {
+      Disoriented: { dc: 15, attribute: 'wis', rest: 1 },
+      Exhausted: { dc: 15, attribute: 'con', rest: 8 }
+    };
+    if (!conditions[condition]) return { error: 'Invalid condition' };
+    const cond = conditions[condition];
+    outcome.dc = cond.dc;
+    if (restTime >= cond.rest) {
+      outcome.success = true;
+      outcome.notes.push(`Recovered via ${cond.rest}-hour rest`);
+      return outcome;
+    }
+    const mod = Math.floor((cond.attribute === 'wis' ? wis : con - 10) / 2);
+    const rollNeeded = cond.dc - mod;
+    outcome.notes.push(`Need d20 roll ≥ ${rollNeeded} with ${cond.attribute.toUpperCase()} modifier ${mod >= 0 ? '+' : ''}${mod}`);
+    return outcome;
+  }
+
+  // Generate random NPC stat block (Section 8.4)
+  function generateNPCStatBlock(options = {}) {
+    const { cr = 3 } = options;
+    const types = [
+      { name: 'Rift Beast', description: 'Prismatic-scaled creature with chaotic claws', alignment: 'Neutral (Discord)' },
+      { name: 'Cultist', description: 'Zealous follower chanting chaotic rituals', alignment: 'Chaos (Discord)' },
+      { name: 'Drone', description: 'Mechanical enforcer with glowing sensors', alignment: 'Order (Oppression)' }
+    ];
+    const type = types[Math.floor(Math.random() * types.length)];
+    const ac = 12 + cr;
+    const health = cr * 10;
+    const damage = `1d${cr * 2 + 4} + ${Math.floor(cr / 2)}`;
+    const xp = cr * 10;
+    return {
+      name: type.name,
+      cr,
+      description: type.description,
+      alignment: type.alignment,
+      ac,
+      health,
+      speed: 30,
+      attributes: { str: 10 + cr * 2, dex: 10 + cr, con: 10 + cr * 2, int: 6, wis: 10, cha: 8 },
+      skills: { Perception: cr, Stealth: cr + 1 },
+      abilities: [
+        { name: 'Primary Attack', effect: `Melee, +${cr + 2} to hit (${damage} damage)` },
+        { name: 'Special Ability', effect: `Area effect, DC ${12 + cr} save or ${cr}d4 damage` }
+      ],
+      loot: cr >= 3 ? '1 Rift Shard (5 Credits)' : 'None',
+      xp
+    };
+  }
 
   // Calculate stat points for a given level
   function getStatPointsForLevel(level) {
@@ -2500,11 +3794,18 @@ function resetStatPointsOnLevelChange() {
   function toggleCharacterSheet() {
     try {
       const sheet = document.querySelector('.character-sheet');
-      sheet.classList.toggle('collapsed');
-      if (!sheet.classList.contains('collapsed')) {
-        resetStatPointsOnLevelChange();
-        updateStatPointUI();
+      if (!sheet) {
+        console.warn('Character sheet element not found');
+        return;
       }
+      const wasCollapsed = sheet.classList.contains('collapsed');
+      sheet.classList.toggle('collapsed');
+      if (wasCollapsed && !window.isSheetInitialized && !attributesConfirmed) {
+        console.log('toggleCharacterSheet: Initializing character sheet on first expansion');
+        window.isSheetInitialized = true;
+        updateAttributes();
+      }
+      console.log(`toggleCharacterSheet: Sheet ${sheet.classList.contains('collapsed') ? 'collapsed' : 'expanded'}`);
     } catch (e) {
       console.error('Error toggling character sheet:', e);
       alert('Failed to toggle character sheet.');
@@ -5240,107 +6541,114 @@ function removePowerField(button) {
     }
   }
 
-  function displayTable(tableName) {
-    try {
-      let output = `<strong>${tableName.replace(/([A-Z])/g, ' $1').trim()}</strong><br>`;
-      if (tableName === 'attributeModifiers') {
-        const modifiers = [
-          { range: '1-2', modifier: '-4' }, { range: '3-4', modifier: '-3' }, { range: '5-6', modifier: '-2' },
-          { range: '7-8', modifier: '-1' }, { range: '9-10', modifier: '0' }, { range: '11-12', modifier: '+1' },
-          { range: '13-14', modifier: '+2' }, { range: '15-16', modifier: '+3' }, { range: '17-18', modifier: '+4' },
-          { range: '19-20', modifier: '+5' }
-        ];
-        output += '<table><tr><th>Attribute Score</th><th>Modifier</th></tr>';
-        modifiers.forEach(m => output += `<tr><td>${m.range}</td><td>${m.modifier}</td></tr>`);
-        output += '</table>';
-      } else if (tableName === 'combatDCs') {
-        const combatDCs = [
-          { category: 'Moderate Attack (AC)', value: '15', notes: 'Rift beasts, cultists.' },
-          { category: 'Difficult Attack (AC)', value: '20', notes: 'Knights, elites.' },
-          { category: 'Basic Melee Damage', value: '1d6 + STR', notes: 'Standard melee.' },
-          { category: 'Basic Ranged Damage', value: '1d6 + DEX', notes: 'Standard ranged.' }
-        ];
-        output += '<table><tr><th>Category</th><th>Value</th><th>Notes</th></tr>';
-        combatDCs.forEach(c => output += `<tr><td>${c.category}</td><td>${c.value}</td><td>${c.notes}</td></tr>`);
-        output += '</table>';
-      } else if (tableName === 'sanityDCs') {
-        const sanityDCs = [
-          { situation: 'Minor Paradox', dc: '15', notes: 'PL 1/Tier 1 powers.' },
-          { situation: 'Major Paradox', dc: '18', notes: 'PL 2/Tier 2 powers.' },
-          { situation: 'Hume Collapse', dc: '20', notes: 'Reality unmade.' }
-        ];
-        output += '<table><tr><th>Situation</th><th>DC</th><th>Notes</th></tr>';
-        sanityDCs.forEach(s => output += `<tr><td>${s.situation}</td><td>${s.dc}</td><td>${s.notes}</td></tr>`);
-        output += '</table>';
-      } else if (tableName === 'paradoxConsequences') {
-        const consequences = [
-          { failure: 'Minor Failure', consequence: '-2 penalty for 1 encounter.', adjustments: 'Faterunners/Harlequins: -1.' },
-          { failure: 'Major Failure', consequence: 'Minor rift (whispers, portal).', adjustments: 'Faterunners/Harlequins: Whispers only.' },
-          { failure: 'Epic Failure', consequence: 'Dimensional beast (AC 15, 30 Health).', adjustments: 'Faterunners/Harlequins: AC 14, 20 Health.' }
-        ];
-        output += '<table><tr><th>Failure Type</th><th>Consequence</th><th>Adjustments</th></tr>';
-        consequences.forEach(c => output += `<tr><td>${c.failure}</td><td>${c.consequence}</td><td>${c.adjustments}</td></tr>`);
-        output += '</table>';
-      } else if (tableName === 'powerCreation') {
-        const powerCosts = [
-          { pl: 'PL 1', cost: '1', dc: '15', limit: 'None' },
-          { pl: 'PL 2', cost: '2', dc: '18', limit: 'None' },
-          { pl: 'PL 3', cost: '3', dc: '22', limit: 'Once per session' }
-        ];
-        output += '<table><tr><th>Power Level</th><th>Fate Point Cost</th><th>DC</th><th>Limit</th></tr>';
-        powerCosts.forEach(p => output += `<tr><td>${p.pl}</td><td>${p.cost}</td><td>${p.dc}</td><td>${p.limit}</td></tr>`);
-        output += '</table>';
-      } else if (tableName === 'levelCaps') {
-        const levelCaps = [
-          { level: '1-3', fatePoints: '0 (innate)', maxPowers: '0' },
-          { level: '4', fatePoints: '4', maxPowers: '4' },
-          { level: '5', fatePoints: '5', maxPowers: '5' },
-          { level: '15', fatePoints: '15', maxPowers: '15' }
-        ];
-        output += '<table><tr><th>Level</th><th>Fate Points</th><th>Max Powers</th></tr>';
-        levelCaps.forEach(l => output += `<tr><td>${l.level}</td><td>${l.fatePoints}</td><td>${l.maxPowers}</td></tr>`);
-        output += '</table>';
-      } else if (tableName === 'fatemarkedAbilities') {
-        const abilities = [
-          { level: '1', ability: 'Fate\'s Edge', effect: 'Advantage on one roll/encounter.', constraint: '1 min focus.', risk: 'INT DC 15, -1 penalty.' },
-          { level: '2', ability: 'Fate\'s Influence', effect: 'As above, plus disadvantage on enemy roll.', constraint: '30 ft, visible.', risk: 'INT DC 15, -1 or anomaly.' },
-          { level: '3', ability: 'Fate\'s Reach', effect: 'As above, plus any roll.', constraint: 'Dramatic declaration.', risk: 'INT DC 15, -2 or rift.' }
-        ];
-        output += '<table><tr><th>Level</th><th>Ability</th><th>Effect</th><th>Constraint</th><th>Risk</th></tr>';
-        abilities.forEach(a => output += `<tr><td>${a.level}</td><td>${a.ability}</td><td>${a.effect}</td><td>${a.constraint}</td><td>${a.risk}</td></tr>`);
-        output += '</table>';
-      } else if (tableName === 'challengeRatings') {
-        const crs = [
-          { type: 'Moderate', cr: 'Party Level', xp: '50/player', stats: 'AC 15, Health 20, Attack +5 (1d6)' },
-          { type: 'Hard', cr: 'Party Level +2', xp: '100/player', stats: 'AC 18, Health 40, Attack +7 (1d8)' },
-          { type: 'Deadly', cr: 'Party Level +4', xp: '200/player', stats: 'AC 20, Health 60, Attack +9 (2d6)' }
-        ];
-        output += '<table><tr><th>Type</th><th>Challenge Rating</th><th>XP</th><th>Stats</th></tr>';
-        crs.forEach(c => output += `<tr><td>${c.type}</td><td>${c.cr}</td><td>${c.xp}</td><td>${c.stats}</td></tr>`);
-        output += '</table>';
-      } else if (tableName === 'classResources') {
-        const resources = [
-          { class: 'Biomatrix Suit', resource: 'Energy Cell (1-hour rest)' },
-          { class: 'Continuum Raider', resource: 'Bio-Energy Pool (1-hour rest)' },
-          { class: 'Gunrunner', resource: 'Credit Pool (DC 15 check)' },
-          { class: 'Warrior', resource: 'Chi Pool (1-hour meditation)' },
-          { class: 'Mage', resource: 'Vitality Pool (1-hour rest)' },
-          { class: 'Shape', resource: 'Pathos Pool/Darkwell (1-hour ritual)' },
-          { class: 'Masque', resource: 'Soulshard Pool (1-hour ritual)' },
-          { class: 'Faterunner', resource: 'Fate Points (8-hour rest)' },
-          { class: 'Harlequin', resource: 'Fate Points (8-hour rest)' },
-          { class: 'Adventurer', resource: 'None' }
-        ];
-        output += '<table><tr><th>Class</th><th>Resource</th></tr>';
-        resources.forEach(r => output += `<tr><td>${r.class}</td><td>${r.resource}</td></tr>`);
-        output += '</table>';
+  function displayTable(tableId) {
+  try {
+    const tableData = getGMTable(tableId) || {
+      combatDCs: {
+        title: 'Combat Difficulty Classes',
+        headers: ['Category', 'Value', 'Notes'],
+        rows: [
+          ['Moderate Attack (AC)', '15', 'Rift beasts, cultists.'],
+          ['Difficult Attack (AC)', '20', 'Knights, elites.'],
+          ['Basic Melee Damage', '1d6 + STR', 'Standard melee.'],
+          ['Basic Ranged Damage', '1d6 + DEX', 'Standard ranged.'],
+          ['Disarm', '15', 'Opponent drops weapon'],
+          ['Grapple', '15', 'Opponent is pinned'],
+          ['Trip', '15', 'Opponent is prone'],
+          ['Bull Rush', '15', 'Push opponent 5 ft.']
+        ]
+      },
+      sanityDCs: {
+        title: 'Sanity Difficulty Classes',
+        headers: ['Situation', 'DC', 'Notes'],
+        rows: [
+          ['Minor Paradox', '15', 'PL 1/Tier 1 powers.'],
+          ['Major Paradox', '18', 'PL 2/Tier 2 powers.'],
+          ['Hume Collapse', '20', 'Reality unmade.']
+        ]
+      },
+      paradoxConsequences: {
+        title: 'Paradox Consequences',
+        headers: ['Failure Type', 'Consequence', 'Adjustments'],
+        rows: [
+          ['Minor Failure (1–5)', '-2 to checks for 1 encounter', 'Faterunners/Harlequins: -1.'],
+          ['Major Failure (6–10)', 'Minor rift (AC 15, 30 Health)', 'Faterunners/Harlequins: Whispers only.'],
+          ['Epic Failure (11+)', 'Major rift (AC 16, 50 Health)', 'Faterunners/Harlequins: AC 14, 20 Health.']
+        ]
+      },
+      powerCreation: {
+        title: 'Power Creation Costs',
+        headers: ['Power Level', 'Fate Point Cost', 'DC', 'Limit'],
+        rows: [
+          ['PL 1', '1', '15', 'None'],
+          ['PL 2', '2', '18', '>= Level 7'],
+          ['PL 3', '3', '22', '>= Level 11, once per session']
+        ]
+      },
+      levelCaps: {
+        title: 'Level Capabilities',
+        headers: ['Level', 'Fate Points', 'Max Powers'],
+        rows: [
+          ['1-3', '0 (innate)', '0'],
+          ['4', '4', '4'],
+          ['5', '5', '5'],
+          ['15', '15', '15']
+        ]
+      },
+      fatemarkedAbilities: {
+        title: 'Fatemarked Abilities',
+        headers: ['Level', 'Ability', 'Effect', 'Constraint', 'Risk'],
+        rows: [
+          ['1', 'Fate\'s Edge', 'Advantage on one roll/encounter.', '1 min focus.', 'INT DC 15, -1 penalty.'],
+          ['2', 'Fate\'s Influence', 'As above, plus disadvantage on enemy roll.', '30 ft, visible.', 'INT DC 15, -1 or anomaly.'],
+          ['3', 'Fate\'s Reach', 'As above, plus any roll.', 'Dramatic declaration.', 'INT DC 15, -2 or rift.']
+        ]
+      },
+      challengeRatings: {
+        title: 'Challenge Ratings',
+        headers: ['Type', 'Challenge Rating', 'XP', 'Stats'],
+        rows: [
+          ['Moderate', 'Party Level', '50/player', 'AC 15, Health 20, Attack +5 (1d6)'],
+          ['Hard', 'Party Level +2', '100/player', 'AC 18, Health 40, Attack +7 (1d8)'],
+          ['Deadly', 'Party Level +4', '200/player', 'AC 20, Health 60, Attack +9 (2d6)']
+        ]
       }
-      document.getElementById('gmReferenceOutput').innerHTML = output;
-    } catch (e) {
-      console.error('Error displaying table:', e);
+    }[tableId];
+
+    if (!tableData) {
+      console.error(`Table ${tableId} not found`);
       alert('Failed to display table.');
+      return;
     }
+
+    const title = tableData.title || tableId.replace(/([A-Z])/g, ' $1').trim();
+    const output = `
+      <h2>${title}</h2>
+      <table>
+        <tr>${tableData.headers.map(h => `<th>${h}</th>`).join('')}</tr>
+        ${tableData.rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}
+      </table>
+    `;
+
+    const modal = document.getElementById('tableModal');
+    if (modal && document.getElementById('modalContent')) {
+      const modalContent = document.getElementById('modalContent');
+      modalContent.innerHTML = output;
+      modal.style.display = 'block';
+    } else {
+      const gmOutput = document.getElementById('gmReferenceOutput');
+      if (gmOutput) {
+        gmOutput.innerHTML = `<strong>${title}</strong><br>${output}`;
+      } else {
+        console.error('Neither tableModal nor gmReferenceOutput found');
+        alert('Failed to display table.');
+      }
+    }
+  } catch (e) {
+    console.error(`Error displaying table ${tableId}:`, e);
+    alert('Failed to display table.');
   }
+}
 
   // Duplicate generateCharacterSheet function removed to prevent errors.
 
@@ -6561,6 +7869,304 @@ function removePowerField(button) {
       alert('Failed to clear sheet fields.');
     }
   }
+
+  window.guideMode = {
+  'input-section': false,
+  'gm-reference': false,
+  'character-sheet': false
+};
+
+  function toggleGuideMode(section) {
+    try {
+      window.guideMode[section] = !window.guideMode[section];
+      const button = document.querySelector(`.${section} .guide-button`);
+      if (button) {
+        button.classList.toggle('active', window.guideMode[section]);
+      }
+      updateGuidePopups(section);
+      console.log(`Toggled guide mode for ${section}: ${window.guideMode[section]}`);
+    } catch (e) {
+      console.error(`Error toggling guide mode for ${section}:`, e);
+    }
+  }
+
+  const guideContent = {
+  'rollType': {
+    description: 'Selects roll type (e.g., skill check, attack, opposed/extended test). Uses d20 + Attribute modifier + skill rank vs. DC/opponent. Critical success (20) grants skill points; Epic Fail (double 1) risks setbacks.',
+    rulebookRef: 'Section 5.1, Core Resolution System'
+  },
+  'characterLevel': {
+    description: 'Sets level (1–15). Affects BAB, skill ranks (max 3 + level), feats, powers, Sanity (+2/level), and XP (e.g., Level 3 to 4: 450 XP).',
+    rulebookRef: 'Section 6.2, Leveling Up'
+  },
+  'characterClass': {
+    description: 'Chooses class (Fatemarked Levels 1–3, Advanced Class Level 4+). Fatemarked use innate abilities; Advanced Classes use resources (e.g., Pathos, Infernium).',
+    rulebookRef: 'Sections 3.1, 4.1–4.10'
+  },
+  'combatModifiers': {
+    description: 'Applies modifiers: cover (+2/+4 AC), concealment (20%/50% miss chance), non-lethal (-4 attack), AoO.',
+    rulebookRef: 'Section 5.2, Combat'
+  },
+  'paradoxRisk': {
+    description: 'Tracks paradox for powers (e.g., PL 1 DC 15 INT/CHA, +2 per extra use). Failure: -2 penalty or rift (AC 15, 30 Health).',
+    rulebookRef: 'Section 5.3, Paradox Risk'
+  },
+  'inventorySlots': {
+    description: 'Tracks inventory (10 slots). Tiny (0.5 slots), Small (1 slot), Medium (2 slots). Excess slots: -2 Athletics/Acrobatics per slot.',
+    rulebookRef: 'Section 5.8, Inventory and Encumbrance'
+  },
+  'currencyType': {
+    description: 'Selects currency (e.g., Credits, Rift Shards). 1 Shard = 5 Credits; Gunrunner Credit = 50 Credits. Shards risk paradox (DC 12–15 INT).',
+    rulebookRef: 'Section 5.9, Monetary System'
+  },
+  'powerCreation': {
+    description: 'Creates powers/effects (e.g., PL 1: 1 resource, DC 10). Aligns with weapon chart (e.g., Tier 1: 1d6 + attribute). Paradox risk by tier.',
+    rulebookRef: 'Section 6.6, Expanded Power Creation Framework'
+  },
+  'powerEnhancement': {
+    description: 'Enhances powers (e.g., +1d4 healing at Tier 1, +2 to Perception for sensory). Costs extra resources, increases paradox DC.',
+    rulebookRef: 'Section 6.6.6, Power Creation Guidelines'
+  },
+  'downtimeActivity': {
+    description: 'Selects downtime activity (e.g., Crafting: 5–20 Credits, DC 15). Risks paradox or faction attention.',
+    rulebookRef: 'Section 6.7, Downtime Activities'
+  },
+  'lifestyleType': {
+    description: 'Sets lifestyle (e.g., Modest: 1 Credit/day, +0 modifiers; Luxurious: +2 Persuasion). Affects downtime and risks.',
+    rulebookRef: 'Section 6.8, Lifestyle Mechanics'
+  },
+  'attrMethod': {
+    description: 'Selects attribute generation: Random (4d6 drop lowest), Points (15 points, max 18), Manual (GM approval). Modifiers affect rolls.',
+    rulebookRef: 'Section 3.3, Abilities'
+  },
+  'charLevel': {
+    description: 'Sets sheet level, synced with roll section. Impacts Health, skill points, Sanity, feats.',
+    rulebookRef: 'Section 3.6, Final Details'
+  },
+  'charClass': {
+    description: 'Defines sheet class. Fatemarked use Fate’s Edge; Advanced Classes define power themes (e.g., Masque’s Chaos Bolt).',
+    rulebookRef: 'Sections 3.1, 4.1–4.10'
+  },
+  'generateReality': {
+    description: 'Generates dimension with rifts (Navigate DC 15–25). Mishaps: off-target (DC 15 Survival) or rift beast.',
+    rulebookRef: 'Sections 5.7, 7.8.2'
+  },
+  'attributeModifiers': {
+    description: 'Displays modifier table (e.g., 9–10 = +0). Used for skills, attacks, saves.',
+    rulebookRef: 'Section 3.3, Abilities'
+  },
+  powerEnhancement: {
+      description: 'Enhances powers (e.g., +1d4 healing at Tier 1, +2 to Perception for sensory). Costs extra resources, increases paradox DC.',
+      rulebookRef: 'Section 6.6.6, Power Creation Guidelines'
+    },
+    downtimeActivity: {
+      description: 'Selects downtime activity (e.g., Crafting: 5–20 Credits, DC 15). Risks paradox or faction attention.',
+      rulebookRef: 'Section 6.7, Downtime Activities'
+    },
+    lifestyleType: {
+      description: 'Sets lifestyle (e.g., Modest: 1 Credit/day, +0 modifiers; Luxurious: +2 Persuasion). Affects downtime and risks.',
+      rulebookRef: 'Section 6.8, Lifestyle Mechanics'
+    },
+    attrMethod: {
+      description: 'Selects attribute generation: Random (4d6 drop lowest), Points (15 points, max 18), Manual (GM approval). Modifiers affect rolls.',
+      rulebookRef: 'Section 3.3, Abilities'
+    },
+    charLevel: {
+      description: 'Sets sheet level, synced with roll section. Impacts Health, skill points, Sanity, feats.',
+      rulebookRef: 'Section 3.6, Final Details'
+    },
+    charClass: {
+      description: 'Defines sheet class. Fatemarked use Fate’s Edge; Advanced Classes define power themes (e.g., Masque’s Chaos Bolt).',
+      rulebookRef: 'Sections 3.1, 4.1–4.10'
+    },
+    generateReality: {
+      description: 'Generates dimension with rifts (Navigate DC 15–25). Mishaps: off-target (DC 15 Survival) or rift beast.',
+      rulebookRef: 'Sections 5.7, 7.8.2'
+    },
+    attributeModifiers: {
+      description: 'Displays modifier table (e.g., 9–10 = +0). Used for skills, attacks, saves.',
+      rulebookRef: 'Section 3.3, Abilities'
+    },
+    sphereInfluence: {
+      description: 'Sets sphere modifiers (e.g., Balance: +2 Persuasion, Discord: -2 WIS). Affects checks and paradox risks.',
+      rulebookRef: 'Section 7.4.1, Spheres of Influence'
+    },
+    socialEncounter: {
+      description: 'Manages social conflicts (e.g., DC 15 Persuasion, Influence Pool 10 + WIS). Affects Reputation and narrative.',
+      rulebookRef: 'Section 7.5.4, Managing Social Encounters'
+    },
+    classPower: {
+      description: 'Activates class-specific powers (e.g., Biomatrix Suit: Energy Cells, Faterunner: Fate Points). Includes narrative risks.',
+      rulebookRef: 'Section 7.6, Gamemastering Advanced Classes'
+    },
+    fateboundItem: {
+      description: 'Tracks Faterunner’s fatebound item (e.g., locket). Loss imposes -2 CHA, +2 paradox DC until recovered.',
+      rulebookRef: 'Section 7.6.5, Faterunners'
+    },
+    illusionEffect: {
+      description: 'Creates Harlequin illusions (e.g., Tier 1: no paradox, Tier 2: DC 13–16). Risks superstition penalties.',
+      rulebookRef: 'Section 7.6.6, Harlequins'
+    },
+    perceptionType: {
+      description: 'Sets Mage Perception (e.g., Fey Sight: +2 Insight). Affects spell effects and risks Gore’s.',
+      rulebookRef: 'Section 7.6.8, Mages'
+    },
+    characterLevel: {
+      description: 'Sets level (1–15). Affects BAB, skill ranks (max 3 + level), feats, powers, Sanity (+2/level), and XP (e.g., Level 3 to 4: 450 XP). Synced with character sheet.',
+      rulebookRef: 'Sections 3.6, 6.2, 8.2, 8.3, Leveling Up'
+    },
+    paradoxRisk: {
+      description: 'Tracks paradox for powers (e.g., PL 1 DC 15 INT/CHA, +2 per extra use). Failure: -2 penalty or rift (AC 15, 30 Health). Varies by class.',
+      rulebookRef: 'Sections 5.3, 8.3, Paradox Risk'
+    },
+    powerEnhancement: {
+      description: 'Enhances powers (e.g., +1d4 healing at Tier 1, +2 to Perception for sensory). Costs extra resources, increases paradox DC.',
+      rulebookRef: 'Section 6.6.6, Power Creation Guidelines'
+    },
+    downtimeActivity: {
+      description: 'Selects downtime activity (e.g., Crafting: 5–20 Credits, DC 15). Risks paradox or faction attention.',
+      rulebookRef: 'Section 6.7, Downtime Activities'
+    },
+    lifestyleType: {
+      description: 'Sets lifestyle (e.g., Modest: 1 Credit/day, +0 modifiers; Luxurious: +2 Persuasion). Affects downtime and risks.',
+      rulebookRef: 'Section 6.8, Lifestyle Mechanics'
+    },
+    attrMethod: {
+      description: 'Selects attribute generation: Random (4d6 drop lowest), Points (15 points, max 18), Manual (GM approval). Modifiers affect rolls.',
+      rulebookRef: 'Section 3.3, Abilities'
+    },
+    charLevel: {
+      description: 'Sets sheet level, synced with roll section. Impacts Health, skill points, Sanity, feats.',
+      rulebookRef: 'Section 3.6, Final Details'
+    },
+    charClass: {
+      description: 'Defines sheet class. Fatemarked use Fate’s Edge; Advanced Classes define power themes (e.g., Masque’s Chaos Bolt).',
+      rulebookRef: 'Sections 3.1, 4.1–4.10'
+    },
+    generateReality: {
+      description: 'Generates dimension with rifts (Navigate DC 15–25). Mishaps: off-target (DC 15 Survival) or rift beast.',
+      rulebookRef: 'Sections 5.7, 7.8.2'
+    },
+    attributeModifiers: {
+      description: 'Displays modifier table (e.g., 9–10 = +0). Used for skills, attacks, saves.',
+      rulebookRef: 'Section 3.3, Abilities'
+    },
+    sphereInfluence: {
+      description: 'Sets sphere modifiers (e.g., Balance: +2 Persuasion, Discord: -2 WIS). Affects checks and paradox risks.',
+      rulebookRef: 'Section 7.4.1, Spheres of Influence'
+    },
+    socialEncounter: {
+      description: 'Manages social conflicts (e.g., DC 15 Persuasion, Influence Pool 10 + WIS). Affects Reputation and narrative.',
+      rulebookRef: 'Section 7.5.4, Managing Social Encounters'
+    },
+    classPower: {
+      description: 'Activates class-specific powers (e.g., Biomatrix Suit: Energy Cells, Faterunner: Fate Points). Includes narrative risks.',
+      rulebookRef: 'Section 7.6, Gamemastering Advanced Classes'
+    },
+    fateboundItem: {
+      description: 'Tracks Faterunner’s fatebound item (e.g., locket). Loss imposes -2 CHA, +2 paradox DC until recovered.',
+      rulebookRef: 'Section 7.6.5, Faterunners'
+    },
+    illusionEffect: {
+      description: 'Creates Harlequin illusions (e.g., Tier 1: no paradox, Tier 2: DC 13–16). Risks superstition penalties.',
+      rulebookRef: 'Section 7.6.6, Harlequins'
+    },
+    perceptionType: {
+      description: 'Sets Mage Perception (e.g., Fey Sight: +2 Insight). Affects spell effects and risks Gore’s.',
+      rulebookRef: 'Section 7.6.8, Mages'
+    },
+    pactEffect: {
+      description: 'Creates Masque Pacts (e.g., Chaos Bolt: 1d8 + CHA). Risks Revenant spawns.',
+      rulebookRef: 'Section 7.6.10, Masques'
+    },
+    marketPurchase: {
+      description: 'Handles haven market transactions (e.g., Chronometric Rifle: 20 Credits). Risks scams/taxes.',
+      rulebookRef: 'Section 7.7.4, Haven Markets'
+    },
+    xpTracker: {
+      description: 'Tracks XP for leveling (e.g., Level 3 to 4: 450 XP). Requires narrative milestones.',
+      rulebookRef: 'Section 7.7.2, Experience Awards'
+    },
+    worldTopography: {
+      description: 'Sets dimension topography (e.g., Floating Islands: DC 15 Acrobatics). Affects navigation and encounters.',
+      rulebookRef: 'Section 7.8.2, Wondrous Table of Infinite Realities'
+    },
+    adventureObjective: {
+      description: 'Defines adventure goal (e.g., Seal rift: DC 15 group check). Drives narrative and rewards.',
+      rulebookRef: 'Section 7.9.3, Creating an Adventure'
+    },
+    derivedStats: {
+      description: 'Tracks Health, Sanity, AC, etc. (e.g., Health: 10 + CON modifier at Level 1). Affects combat and survival.',
+      rulebookRef: 'Section 8.2, Sample Character Sheet'
+    },
+    skillPoints: {
+      description: 'Manages skill points (e.g., 5 + INT modifier × 4 at Level 1). Used for skill ranks and specializations.',
+      rulebookRef: 'Section 8.2, Sample Character Sheet'
+    },
+    paradoxConsequence: {
+      description: 'Tracks paradox failure effects (e.g., Minor: -2 penalty). Varies by class and severity.',
+      rulebookRef: 'Section 8.3, Quick Reference Tables'
+    },
+    conditionStatus: {
+      description: 'Applies status effects (e.g., Disoriented: -2 checks). Includes recovery methods.',
+      rulebookRef: 'Section 8.5, Common Conditions'
+    }
+};
+
+  function updateGuidePopups(section) {
+    try {
+      const sectionEl = document.querySelector(`.${section}`);
+      if (!sectionEl) return;
+      const elements = sectionEl.querySelectorAll('[id]');
+      elements.forEach(el => {
+        el.removeEventListener('mouseenter', showGuidePopup);
+        el.removeEventListener('mouseleave', hideGuidePopup);
+        if (window.guideMode[section] && guideContent[el.id]) {
+          el.addEventListener('mouseenter', showGuidePopup);
+          el.addEventListener('mouseleave', hideGuidePopup);
+        }
+      });
+    } catch (e) {
+      console.error(`Error updating guide popups for ${section}:`, e);
+    }
+  }
+
+  function showGuidePopup(event) {
+    try {
+      const el = event.target;
+      const content = guideContent[el.id];
+      if (!content) return;
+      let popup = document.getElementById(`guide-popup-${el.id}`);
+      if (!popup) {
+        popup = document.createElement('div');
+        popup.id = `guide-popup-${el.id}`;
+        popup.className = 'guide-popup';
+        popup.innerHTML = `
+          <strong>${el.id.replace(/([A-Z])/g, ' $1').trim()}</strong><br>
+          ${content.description}<br>
+          <em>${content.rulebookRef}</em>
+        `;
+        document.body.appendChild(popup);
+      }
+      const rect = el.getBoundingClientRect();
+      popup.style.top = `${rect.bottom + window.scrollY + 5}px`;
+      popup.style.left = `${rect.left + window.scrollX}px`;
+      popup.classList.add('show');
+    } catch (e) {
+      console.error('Error showing guide popup:', e);
+    }
+  }
+
+  function hideGuidePopup(event) {
+    try {
+      const popup = document.getElementById(`guide-popup-${event.target.id}`);
+      if (popup) {
+        popup.classList.remove('show');
+      }
+    } catch (e) {
+      console.error('Error hiding guide popup:', e);
+    }
+  }
   // Initialize on page load
   document.addEventListener('DOMContentLoaded', () => {
     try {
@@ -6622,6 +8228,11 @@ function removePowerField(button) {
     updateSkillSpecOptions();
     updateFeats();
     updateClassAbilities();
+
+    // Initialize guide mode for Guide Tool
+    ['input-section', 'gm-reference', 'character-sheet'].forEach(section => {
+      updateGuidePopups(section);
+    });
 
     // Call updateStatPointUI once at the end
     updateStatPointUI();
