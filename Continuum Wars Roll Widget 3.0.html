@@ -283,316 +283,316 @@
   <h1>Continuum Wars Roll Widget</h1>
   <div class="input-section" style="position: relative;">
     <div class="guide-button" onclick="toggleGuideMode('input-section')" title="Toggle Guide Mode">?</div>
-    <h2>Configure Your Roll</h2>
-    <div class="grid">
-      <div>
-        <label>Character Level</label>
-        <input id="characterLevel" type="number" value="1" min="1" max="15" placeholder="Level (1-15)" title="Sets level (1–15). Affects BAB, skill ranks (max 3 + level), feats, powers, Sanity (+2/level), and XP (e.g., Level 3 to 4: 450 XP). Synced with character sheet." onchange="updateInputs(); updateFeats(); updateClassAbilities();">
-      </div>
-      <div>
-        <label>Character Class</label>
-        <select id="characterClass" title="Character's class" onchange="updateInputs(); updateFeats(); updateClassAbilities();">
-          <option value="Fatemarked">Fatemarked</option>
-          <option value="Biomatrix Suit">Biomatrix Suit</option>
-          <option value="Continuum Raider">Continuum Raider</option>
-          <option value="Gunrunner">Gunrunner</option>
-          <option value="Faterunner">Faterunner</option>
-          <option value="Harlequin">Harlequin</option>
-          <option value="Warrior">Warrior</option>
-          <option value="Mage">Mage</option>
-          <option value="Shape">Shape</option>
-          <option value="Masque">Masque</option>
-          <option value="Adventurer">Adventurer</option>
-        </select>
-      </div>
-      <div>
-        <label>Roll Type</label>
-        <select id="rollType" title="Type of dice roll" onchange="resetInputs(); updateInputs(); updateSkillSpecOptions();">
-          <option value="skill">Skill Check (d20 + Modifier + Rank)</option>
-          <option value="attack">Attack Roll (d20 + BAB + Modifier vs. AC)</option>
-          <option value="damage">Damage Roll (Dice + Modifier)</option>
-          <option value="sanity">Sanity Check (d20 + WIS Modifier)</option>
-          <option value="saving">Saving Throw (d20 + Modifier)</option>
-          <option value="initiative">Initiative (d20 + DEX Modifier)</option>
-          <option value="paradox">Paradox Risk Check (d20 + Modifier)</option>
-          <option value="hazard">Environmental Hazard Roll (d20 + Modifier)</option>
-          <option value="custom">Custom Roll (e.g., 3d6)</option>
-          <option value="extended">Extended Test (Cumulative DC)</option>
-          <option value="opposed">Opposed Test (d20 + Modifier vs. Opponent)</option>
-          <option value="extendedOpposed">Extended Opposed Test</option>
-          <option value="disarm">Disarm (Attack Roll vs. AC)</option>
-          <option value="grapple">Grapple (Opposed Check)</option>
-          <option value="trip">Trip (Attack Roll vs. AC)</option>
-          <option value="nonLethal">Non-Lethal Damage (Dice + Modifier)</option>
-        </select>
-      </div>
-      <div>
-        <label>Sphere Influence</label>
-        <select id="sphereInfluence" title="Sets sphere modifiers (e.g., Balance: +2 Persuasion)" onchange="updateInputs();">
-          <option value="none">None</option>
-          <option value="Balance">Balance</option>
-          <option value="Growth">Growth</option>
-          <option value="Discord">Discord</option>
-          <option value="Oppression">Oppression</option>
-          <option value="Reason">Reason</option>
-        </select>
-      </div>
-      <div>
-        <label>Social Encounter</label>
-        <select id="socialEncounter" title="Manages social conflicts (e.g., DC 15 Persuasion, Influence Pool 10 + WIS). Affects Reputation and narrative." onchange="updateInputs();">
-          <option value="none">None</option>
-          <option value="Persuasion">Persuasion (DC 15)</option>
-          <option value="Intimidation">Intimidation (DC 15)</option>
-          <option value="Deception">Deception (DC 15)</option>
-        </select>
-      </div>
-      <div>
-        <label>Class Power</label>
-        <select id="classPower" title="Activates class-specific powers (e.g., Biomatrix Suit: Energy Cells, Faterunner: Fate Points). Includes narrative risks." onchange="updateInputs();">
-          <option value="none">None</option>
-          <option value="NanoPulse">Nano Pulse (Biomatrix Suit)</option>
-          <option value="FatePoint">Fate Point (Faterunner)</option>
-          <option value="ChaosBolt">Chaos Bolt (Masque)</option>
-        </select>
-      </div>
-      <div>
-        <label>Combat Modifiers</label>
-        <select id="combatModifiers" title="Combat modifiers (e.g., cover, concealment)" onchange="updateInputs();">
-          <option value="none">None</option>
-          <option value="partialCover">Partial Cover (+2 AC)</option>
-          <option value="halfCover">Half Cover (+4 AC)</option>
-          <option value="partialConcealment">Partial Concealment (20% miss)</option>
-          <option value="nonLethal">Non-Lethal (-4 attack)</option>
-        </select>
-      </div>
-      <div>
-        <label>Paradox Risk</label>
-        <input id="paradoxRisk" type="number" value="0" min="0" title="Tracks paradox for powers (e.g., PL 1 DC 15 INT/CHA, +2 per extra use). Failure: -2 penalty or rift (AC 15, 30 Health). Varies by class." onchange="updateInputs();">
-      </div>
-      <div>
-        <label>Inventory Slots</label>
-        <input id="inventorySlots" type="number" value="10" min="0" title="Inventory slots (default 10)" onchange="updateInputs(); updateInventory();">
-      </div>
-      <div>
-        <label>Currency Type</label>
-        <select id="currencyType" title="Currency type (e.g., Credits, Rift Shards)" onchange="updateInputs();">
-          <option value="credits">Credits</option>
-          <option value="riftShards">Rift Shards</option>
-          <option value="gunrunnerCredits">Gunrunner Credits</option>
-        </select>
-      </div>
-      <div>
-        <label>Power Creation</label>
-        <select id="powerCreation" title="Power creation level" onchange="updateInputs();">
-          <option value="pl1">PL 1</option>
-          <option value="pl2">PL 2</option>
-          <option value="pl3">PL 3</option>
-        </select>
-      </div>
-      <div>
-        <label>Pact Effect</label>
-        <select id="pactEffect" title="Creates Masque Pacts (e.g., Chaos Bolt: 1d8 + CHA). Risks Revenant spawns." onchange="updateInputs();">
-          <option value="none">None</option>
-          <option value="ChaosBolt">Chaos Bolt (1d8 + CHA)</option>
-          <option value="InfernalSurge">Infernal Surge (1d8 + CHA)</option>
-        </select>
-      </div>
-      <div>
-        <label>Market Purchase</label>
-        <input id="marketPurchase" type="number" value="0" min="0" placeholder="e.g., 20" title="Handles haven market transactions (e.g., Chronometric Rifle: 20 Credits). Risks scams/taxes." onchange="updateInputs();">
-      </div>
-      <div>
-        <label>XP Tracker</label>
-        <input id="xpTracker" type="number" value="0" min="0" placeholder="e.g., 450" title="Tracks XP for leveling (e.g., Level 3 to 4: 450 XP). Requires narrative milestones." onchange="updateInputs();">
-      </div>
-      <div>
-        <label>World Topography</label>
-        <select id="worldTopography" title="Sets dimension topography (e.g., Floating Islands: DC 15 Acrobatics). Affects navigation and encounters." onchange="updateInputs();">
-          <option value="none">None</option>
-          <option value="FloatingIslands">Floating Islands (DC 15 Acrobatics)</option>
-          <option value="CrystallineCaverns">Crystalline Caverns (DC 15 WIS)</option>
-          <option value="EndlessOcean">Endless Ocean (DC 15 Swim)</option>
-        </select>
-      </div>
-      <div>
-        <label>Adventure Objective</label>
-        <select id="adventureObjective" title="Defines adventure goal (e.g., Seal rift: DC 15 group check). Drives narrative and rewards." onchange="updateInputs();">
-          <option value="none">None</option>
-          <option value="SealRift">Seal Rift (DC 15)</option>
-          <option value="RecoverArtifact">Recover Artifact (DC 15)</option>
-          <option value="Rescue">Rescue (DC 15)</option>
-        </select>
-      </div>
-      <div>
-        <label>Paradox Consequence</label>
-        <input id="paradoxConsequence" type="number" value="0" min="0" placeholder="e.g., 2" title="Tracks paradox failure effects (e.g., Minor: -2 penalty). Varies by class and severity." onchange="updateInputs();">
-      </div>
-      <div>
-        <label>Condition Status</label>
-        <select id="conditionStatus" title="Applies status effects (e.g., Disoriented: -2 checks). Includes recovery methods." onchange="updateInputs();">
-          <option value="none">None</option>
-          <option value="Disoriented">Disoriented (-2 checks)</option>
-          <option value="Exhausted">Exhausted (-2 STR/CON)</option>
-        </select>
-      </div>
-      <div id="damageDiceInput" class="hidden">
-        <label>Damage Dice</label>
-        <select id="damageDice" title="Dice for damage roll">
-          <option value="1d4">1d4</option>
-          <option value="1d6">1d6</option>
-          <option value="1d8">1d8</option>
-          <option value="2d6">2d6</option>
-          <option value="1d10">1d10</option>
-          <option value="2d8">2d8</option>
-        </select>
-      </div>
-      <div id="customDiceInput" class="hidden">
-        <label>Custom Dice</label>
-        <input id="customDice" type="text" placeholder="e.g., 3d6" title="Custom dice notation (e.g., 3d6)">
-      </div>
-      <div>
-        <label>Modifier (Attribute)</label>
-        <input id="modifier" type="number" value="0" placeholder="Modifier" title="Attribute modifier">
-      </div>
-      <div id="skillRankInput" class="hidden">
-        <label>Skill Rank</label>
-        <input id="skillRank" type="number" value="0" min="0" placeholder="Rank" title="Skill rank">
-      </div>
-      <div id="babInput" class="hidden">
-        <label>Base Attack Bonus (BAB)</label>
-        <input id="bab" type="number" value="0" min="0" placeholder="BAB" title="Base Attack Bonus">
-      </div>
-      <div id="savingTypeInput" class="hidden">
-        <label>Saving Throw Type</label>
-        <select id="savingType" title="Type of saving throw">
-          <option value="reflex">Reflex (DEX)</option>
-          <option value="fortitude">Fortitude (CON)</option>
-          <option value="willpower">Willpower (WIS)</option>
-          <option value="luck">Luck (CHA, Level 4+)</option>
-        </select>
-      </div>
-      <div id="paradoxDCInput" class="hidden">
-        <label>Paradox DC</label>
-        <select id="paradoxDC" title="Paradox Difficulty Class" onchange="updateParadoxDC()">
-          <option value="custom">Custom DC</option>
-          <option value="15">PL 1 (DC 15)</option>
-          <option value="18">PL 2 (DC 18)</option>
-          <option value="22">PL 3 (DC 22)</option>
-        </select>
-        <input id="customParadoxDC" type="number" placeholder="Custom DC" title="Custom Paradox DC" class="hidden">
-      </div>
-      <div id="powerLevelInput" class="hidden">
-        <label>Power Level/Tier</label>
-        <select id="powerLevel" title="Power level for paradox risk"></select>
-      </div>
-      <div id="dcInput" class="hidden">
-        <label>Difficulty Class (DC)</label>
-        <input id="dc" type="number" placeholder="DC (e.g., 15)" min="0" title="Difficulty Class">
-      </div>
-      <div id="acInput" class="hidden">
-        <label>Target Armor Class (AC)</label>
-        <input id="ac" type="number" value="15" min="0" placeholder="AC" title="Target Armor Class">
-      </div>
-      <div id="opponentRollInput" class="hidden">
-        <label>Opponent Roll</label>
-        <input id="opponentRoll" type="number" value="0" min="0" placeholder="Opponent Roll" title="Opponent's roll for opposed tests">
-      </div>
-      <div id="cumulativeDCInput" class="hidden">
-        <label>Cumulative DC</label>
-        <input id="cumulativeDC" type="number" placeholder="DC (e.g., 30)" min="0" title="Cumulative DC for extended tests">
-      </div>
-      <div id="skillNameInput" class="hidden">
-        <label>Skill Name</label>
-        <select id="skillName" title="Skill for the roll" onchange="updateSkillSpecOptions()">
-          <option value="none">Select Skill</option>
-        </select>
-      </div>
-      <div id="skillSpecInput" class="hidden">
-        <label>Skill Specialization</label>
-        <select id="skillSpec" title="Specialization for the skill">
-          <option value="none">None</option>
-        </select>
-      </div>
-      <div id="advantageSelectInput" class="hidden">
-        <label>Advantage</label>
-        <select id="advantageSelect" title="Select advantage">
-          <option value="none">None</option>
-        </select>
-        <input id="advantageTier" type="number" min="1" max="5" value="1" style="width: 100px;" placeholder="Tier" title="Advantage tier" class="hidden">
-      </div>
-      <div id="disadvantageSelectInput" class="hidden">
-        <label>Disadvantage</label>
-        <select id="disadvantageSelect" title="Select disadvantage">
-          <option value="none">None</option>
-        </select>
-        <input id="disadvantageTier" type="number" min="1" max="5" value="1" style="width: 100px;" placeholder="Tier" title="Disadvantage tier" class="hidden">
-      </div>
-      <div id="powerSelectInput" class="hidden">
-        <label>Power</label>
-        <select id="powerSelect" title="Select power">
-          <option value="none">None</option>
-        </select>
-      </div>
-      <div>
-        <label>Class Feat/Advantage</label>
-        <select id="classFeat" class="feat-select" title="Class-relevant feat or advantage" onchange="updateInputs(); updateFeatOptions()">
-          <option value="none">None</option>
-        </select>
-        <div id="classFeatTierInput" class="hidden">
-          <label>Feat/Advantage Tier</label>
-          <input id="classFeatTier" type="number" min="1" max="5" value="1" placeholder="Tier" title="Feat or advantage tier">
-        </div>
-        <div id="featContainer"></div>
-        <button class="add-button" onclick="addFeatField()">Add Feat/Advantage</button>
-      </div>
-      <div>
-        <label>Mechanical Advantage</label>
-        <select id="advantage" title="Mechanical advantage or disadvantage">
-          <option value="none">None</option>
-          <option value="advantage">Advantage</option>
-          <option value="disadvantage">Disadvantage</option>
-        </select>
-      </div>
-      <div>
-        <label>Environmental Advantage (GM)</label>
-        <input type="checkbox" id="envAdvantage" title="Grant environmental advantage">
-        <label for="envAdvantage">Grant Advantage</label>
-      </div>
-      <div id="paradoxCheckInput" class="hidden">
-        <label>Elective Paradox Check (Faterunner/Harlequin)</label>
-        <input type="checkbox" id="paradoxCheckOptIn" title="Opt-in for paradox check on Tier 2/3 effects">
-        <label for="paradoxCheckOptIn">Apply Paradox Check</label>
-      </div>
-      <div id="synergyBonusInput" class="hidden">
-        <label>Synergy Bonus</label>
-        <input type="checkbox" id="synergyBonus" title="Apply +2 bonus from allies"> Apply +2 Bonus
-      </div>
-      <div id="coverConcealmentInput" class="hidden">
-        <label>Cover/Concealment</label>
-        <select id="coverConcealment" title="Cover or concealment modifiers">
-          <option value="none">None</option>
-          <option value="cover">Cover (+4 AC)</option>
-          <option value="concealment">Concealment (20% miss)</option>
-        </select>
-      </div>
-      <div id="customFeatInput" class="hidden">
-        <label>Custom Feat Description</label>
-        <input id="customFeat" type="text" placeholder="Describe custom feat" title="Description of custom feat">
-      </div>
-      <div id="rollFormulaInput" class="hidden">
-        <label>Roll Formula</label>
-        <input id="rollFormula" type="text" readonly title="Calculated roll formula">
-      </div>
+  <h2>Configure Your Roll</h2>
+  <div class="grid">
+    <div>
+      <label>Character Level</label>
+      <input id="characterLevel" type="number" value="1" min="1" max="15" placeholder="Level (1-15)" title="Sets level (1–15). Affects BAB, skill ranks (max 3 + level), feats, powers, Sanity (+2/level), and XP (e.g., Level 3 to 4: 450 XP). Synced with character sheet." onchange="updateInputs(); updateFeats(); updateClassAbilities();">
     </div>
-    <div id="classAbilities">
-      <h2>Class Abilities</h2>
-      <div id="abilitiesContainer"></div>
+    <div>
+      <label>Character Class</label>
+      <select id="characterClass" title="Character's class" onchange="updateInputs(); updateFeats(); updateClassAbilities();">
+        <option value="Fatemarked">Fatemarked</option>
+        <option value="Biomatrix Suit">Biomatrix Suit</option>
+        <option value="Continuum Raider">Continuum Raider</option>
+        <option value="Gunrunner">Gunrunner</option>
+        <option value="Faterunner">Faterunner</option>
+        <option value="Harlequin">Harlequin</option>
+        <option value="Warrior">Warrior</option>
+        <option value="Mage">Mage</option>
+        <option value="Shape">Shape</option>
+        <option value="Masque">Masque</option>
+        <option value="Adventurer">Adventurer</option>
+      </select>
     </div>
-    <div class="button-group">
-      <button onclick="rollDice()">Roll the Dice of Destiny</button>
-      <button onclick="clearFields()">Clear Fields</button>
+    <div>
+      <label>Roll Type</label>
+      <select id="rollType" title="Type of dice roll" onchange="resetInputs(); updateInputs(); updateSkillSpecOptions();">
+        <option value="skill">Skill Check (d20 + Modifier + Rank)</option>
+        <option value="attack">Attack Roll (d20 + BAB + Modifier vs. AC)</option>
+        <option value="damage">Damage Roll (Dice + Modifier)</option>
+        <option value="sanity">Sanity Check (d20 + WIS Modifier)</option>
+        <option value="saving">Saving Throw (d20 + Modifier)</option>
+        <option value="initiative">Initiative (d20 + DEX Modifier)</option>
+        <option value="paradox">Paradox Risk Check (d20 + Modifier)</option>
+        <option value="hazard">Environmental Hazard Roll (d20 + Modifier)</option>
+        <option value="custom">Custom Roll (e.g., 3d6)</option>
+        <option value="extended">Extended Test (Cumulative DC)</option>
+        <option value="opposed">Opposed Test (d20 + Modifier vs. Opponent)</option>
+        <option value="extendedOpposed">Extended Opposed Test</option>
+        <option value="disarm">Disarm (Attack Roll vs. AC)</option>
+        <option value="grapple">Grapple (Opposed Check)</option>
+        <option value="trip">Trip (Attack Roll vs. AC)</option>
+        <option value="nonLethal">Non-Lethal Damage (Dice + Modifier)</option>
+      </select>
+    </div>
+    <div id="sphereInfluenceInput" class="hidden">
+      <label>Sphere Influence</label>
+      <select id="sphereInfluence" title="Sets sphere modifiers (e.g., Balance: +2 Persuasion)" onchange="updateInputs();">
+        <option value="none">None</option>
+        <option value="Balance">Balance</option>
+        <option value="Growth">Growth</option>
+        <option value="Discord">Discord</option>
+        <option value="Oppression">Oppression</option>
+        <option value="Reason">Reason</option>
+      </select>
+    </div>
+    <div id="socialEncounterInput" class="hidden">
+      <label>Social Encounter</label>
+      <select id="socialEncounter" title="Manages social conflicts (e.g., DC 15 Persuasion, Influence Pool 10 + WIS). Affects Reputation and narrative." onchange="updateInputs();">
+        <option value="none">None</option>
+        <option value="Persuasion">Persuasion (DC 15)</option>
+        <option value="Intimidation">Intimidation (DC 15)</option>
+        <option value="Deception">Deception (DC 15)</option>
+      </select>
+    </div>
+    <div id="classPowerInput" class="hidden">
+      <label>Class Power</label>
+      <select id="classPower" title="Activates class-specific powers (e.g., Biomatrix Suit: Energy Cells, Faterunner: Fate Points). Includes narrative risks." onchange="updateInputs();">
+        <option value="none">None</option>
+        <option value="NanoPulse">Nano Pulse (Biomatrix Suit)</option>
+        <option value="FatePoint">Fate Point (Faterunner)</option>
+        <option value="ChaosBolt">Chaos Bolt (Masque)</option>
+      </select>
+    </div>
+    <div id="combatModifiersInput" class="hidden">
+      <label>Combat Modifiers</label>
+      <select id="combatModifiers" title="Combat modifiers (e.g., cover, concealment)" onchange="updateInputs();">
+        <option value="none">None</option>
+        <option value="partialCover">Partial Cover (+2 AC)</option>
+        <option value="halfCover">Half Cover (+4 AC)</option>
+        <option value="partialConcealment">Partial Concealment (20% miss)</option>
+        <option value="nonLethal">Non-Lethal (-4 attack)</option>
+      </select>
+    </div>
+    <div id="paradoxRiskInput" class="hidden">
+      <label>Paradox Risk</label>
+      <input id="paradoxRisk" type="number" value="0" min="0" title="Tracks paradox for powers (e.g., PL 1 DC 15 INT/CHA, +2 per extra use). Failure: -2 penalty or rift (AC 15, 30 Health). Varies by class." onchange="updateInputs();">
+    </div>
+    <div id="inventorySlotsInput" class="hidden">
+      <label>Inventory Slots</label>
+      <input id="inventorySlots" type="number" value="10" min="0" title="Inventory slots (default 10)" onchange="updateInputs(); updateInventory();">
+    </div>
+    <div id="currencyTypeInput" class="hidden">
+      <label>Currency Type</label>
+      <select id="currencyType" title="Currency type (e.g., Credits, Rift Shards)" onchange="updateInputs();">
+        <option value="credits">Credits</option>
+        <option value="riftShards">Rift Shards</option>
+        <option value="gunrunnerCredits">Gunrunner Credits</option>
+      </select>
+    </div>
+    <div id="powerCreationInput" class="hidden">
+      <label>Power Creation</label>
+      <select id="powerCreation" title="Power creation level" onchange="updateInputs();">
+        <option value="pl1">PL 1</option>
+        <option value="pl2">PL 2</option>
+        <option value="pl3">PL 3</option>
+      </select>
+    </div>
+    <div id="pactEffectInput" class="hidden">
+      <label>Pact Effect</label>
+      <select id="pactEffect" title="Creates Masque Pacts (e.g., Chaos Bolt: 1d8 + CHA). Risks Revenant spawns." onchange="updateInputs();">
+        <option value="none">None</option>
+        <option value="ChaosBolt">Chaos Bolt (1d8 + CHA)</option>
+        <option value="InfernalSurge">Infernal Surge (1d8 + CHA)</option>
+      </select>
+    </div>
+    <div id="marketPurchaseInput" class="hidden">
+      <label>Market Purchase</label>
+      <input id="marketPurchase" type="number" value="0" min="0" placeholder="e.g., 20" title="Handles haven market transactions (e.g., Chronometric Rifle: 20 Credits). Risks scams/taxes." onchange="updateInputs();">
+    </div>
+    <div id="xpTrackerInput" class="hidden">
+      <label>XP Tracker</label>
+      <input id="xpTracker" type="number" value="0" min="0" placeholder="e.g., 450" title="Tracks XP for leveling (e.g., Level 3 to 4: 450 XP). Requires narrative milestones." onchange="updateInputs();">
+    </div>
+    <div id="worldTopographyInput" class="hidden">
+      <label>World Topography</label>
+      <select id="worldTopography" title="Sets dimension topography (e.g., Floating Islands: DC 15 Acrobatics). Affects navigation and encounters." onchange="updateInputs();">
+        <option value="none">None</option>
+        <option value="FloatingIslands">Floating Islands (DC 15 Acrobatics)</option>
+        <option value="CrystallineCaverns">Crystalline Caverns (DC 15 WIS)</option>
+        <option value="EndlessOcean">Endless Ocean (DC 15 Swim)</option>
+      </select>
+    </div>
+    <div id="adventureObjectiveInput" class="hidden">
+      <label>Adventure Objective</label>
+      <select id="adventureObjective" title="Defines adventure goal (e.g., Seal rift: DC 15 group check). Drives narrative and rewards." onchange="updateInputs();">
+        <option value="none">None</option>
+        <option value="SealRift">Seal Rift (DC 15)</option>
+        <option value="RecoverArtifact">Recover Artifact (DC 15)</option>
+        <option value="Rescue">Rescue (DC 15)</option>
+      </select>
+    </div>
+    <div id="paradoxConsequenceInput" class="hidden">
+      <label>Paradox Consequence</label>
+      <input id="paradoxConsequence" type="number" value="0" min="0" placeholder="e.g., 2" title="Tracks paradox failure effects (e.g., Minor: -2 penalty). Varies by class and severity." onchange="updateInputs();">
+    </div>
+    <div id="conditionStatusInput" class="hidden">
+      <label>Condition Status</label>
+      <select id="conditionStatus" title="Applies status effects (e.g., Disoriented: -2 checks). Includes recovery methods." onchange="updateInputs();">
+        <option value="none">None</option>
+        <option value="Disoriented">Disoriented (-2 checks)</option>
+        <option value="Exhausted">Exhausted (-2 STR/CON)</option>
+      </select>
+    </div>
+    <div id="damageDiceInput" class="hidden">
+      <label>Damage Dice</label>
+      <select id="damageDice" title="Dice for damage roll">
+        <option value="1d4">1d4</option>
+        <option value="1d6">1d6</option>
+        <option value="1d8">1d8</option>
+        <option value="2d6">2d6</option>
+        <option value="1d10">1d10</option>
+        <option value="2d8">2d8</option>
+      </select>
+    </div>
+    <div id="customDiceInput" class="hidden">
+      <label>Custom Dice</label>
+      <input id="customDice" type="text" placeholder="e.g., 3d6" title="Custom dice notation (e.g., 3d6)">
+    </div>
+    <div>
+      <label>Modifier (Attribute)</label>
+      <input id="modifier" type="number" value="0" placeholder="Modifier" title="Attribute modifier">
+    </div>
+    <div id="skillRankInput" class="hidden">
+      <label>Skill Rank</label>
+      <input id="skillRank" type="number" value="0" min="0" placeholder="Rank" title="Skill rank">
+    </div>
+    <div id="babInput" class="hidden">
+      <label>Base Attack Bonus (BAB)</label>
+      <input id="bab" type="number" value="0" min="0" placeholder="BAB" title="Base Attack Bonus">
+    </div>
+    <div id="savingTypeInput" class="hidden">
+      <label>Saving Throw Type</label>
+      <select id="savingType" title="Type of saving throw">
+        <option value="reflex">Reflex (DEX)</option>
+        <option value="fortitude">Fortitude (CON)</option>
+        <option value="willpower">Willpower (WIS)</option>
+        <option value="luck">Luck (CHA, Level 4+)</option>
+      </select>
+    </div>
+    <div id="paradoxDCInput" class="hidden">
+      <label>Paradox DC</label>
+      <select id="paradoxDC" title="Paradox Difficulty Class" onchange="updateParadoxDC()">
+        <option value="custom">Custom DC</option>
+        <option value="15">PL 1 (DC 15)</option>
+        <option value="18">PL 2 (DC 18)</option>
+        <option value="22">PL 3 (DC 22)</option>
+      </select>
+      <input id="customParadoxDC" type="number" placeholder="Custom DC" title="Custom Paradox DC" class="hidden">
+    </div>
+    <div id="powerLevelInput" class="hidden">
+      <label>Power Level/Tier</label>
+      <select id="powerLevel" title="Power level for paradox risk"></select>
+    </div>
+    <div id="dcInput" class="hidden">
+      <label>Difficulty Class (DC)</label>
+      <input id="dc" type="number" placeholder="DC (e.g., 15)" min="0" title="Difficulty Class">
+    </div>
+    <div id="acInput" class="hidden">
+      <label>Target Armor Class (AC)</label>
+      <input id="ac" type="number" value="15" min="0" placeholder="AC" title="Target Armor Class">
+    </div>
+    <div id="opponentRollInput" class="hidden">
+      <label>Opponent Roll</label>
+      <input id="opponentRoll" type="number" value="0" min="0" placeholder="Opponent Roll" title="Opponent's roll for opposed tests">
+    </div>
+    <div id="cumulativeDCInput" class="hidden">
+      <label>Cumulative DC</label>
+      <input id="cumulativeDC" type="number" placeholder="DC (e.g., 30)" min="0" title="Cumulative DC for extended tests">
+    </div>
+    <div id="skillNameInput" class="hidden">
+      <label>Skill Name</label>
+      <select id="skillName" title="Skill for the roll" onchange="updateSkillSpecOptions()">
+        <option value="none">Select Skill</option>
+      </select>
+    </div>
+    <div id="skillSpecInput" class="hidden">
+      <label>Skill Specialization</label>
+      <select id="skillSpec" title="Specialization for the skill">
+        <option value="none">None</option>
+      </select>
+    </div>
+    <div id="advantageSelectInput" class="hidden">
+      <label>Advantage</label>
+      <select id="advantageSelect" title="Select advantage">
+        <option value="none">None</option>
+      </select>
+      <input id="advantageTier" type="number" min="1" max="5" value="1" style="width: 100px;" placeholder="Tier" title="Advantage tier" class="hidden">
+    </div>
+    <div id="disadvantageSelectInput" class="hidden">
+      <label>Disadvantage</label>
+      <select id="disadvantageSelect" title="Select disadvantage">
+        <option value="none">None</option>
+      </select>
+      <input id="disadvantageTier" type="number" min="1" max="5" value="1" style="width: 100px;" placeholder="Tier" title="Disadvantage tier" class="hidden">
+    </div>
+    <div id="powerSelectInput" class="hidden">
+      <label>Power</label>
+      <select id="powerSelect" title="Select power">
+        <option value="none">None</option>
+      </select>
+    </div>
+    <div>
+      <label>Class Feat/Advantage</label>
+      <select id="classFeat" class="feat-select" title="Class-relevant feat or advantage" onchange="updateInputs(); updateFeatOptions()">
+        <option value="none">None</option>
+      </select>
+      <div id="classFeatTierInput" class="hidden">
+        <label>Feat/Advantage Tier</label>
+        <input id="classFeatTier" type="number" min="1" max="5" value="1" placeholder="Tier" title="Feat or advantage tier">
+      </div>
+      <div id="featContainer"></div>
+      <button class="add-button" onclick="addFeatField()">Add Feat/Advantage</button>
+    </div>
+    <div>
+      <label>Mechanical Advantage</label>
+      <select id="advantage" title="Mechanical advantage or disadvantage">
+        <option value="none">None</option>
+        <option value="advantage">Advantage</option>
+        <option value="disadvantage">Disadvantage</option>
+      </select>
+    </div>
+    <div>
+      <label>Environmental Advantage (GM)</label>
+      <input type="checkbox" id="envAdvantage" title="Grant environmental advantage">
+      <label for="envAdvantage">Grant Advantage</label>
+    </div>
+    <div id="paradoxCheckInput" class="hidden">
+      <label>Elective Paradox Check (Faterunner/Harlequin)</label>
+      <input type="checkbox" id="paradoxCheckOptIn" title="Opt-in for paradox check on Tier 2/3 effects">
+      <label for="paradoxCheckOptIn">Apply Paradox Check</label>
+    </div>
+    <div id="synergyBonusInput" class="hidden">
+      <label>Synergy Bonus</label>
+      <input type="checkbox" id="synergyBonus" title="Apply +2 bonus from allies"> Apply +2 Bonus
+    </div>
+    <div id="coverConcealmentInput" class="hidden">
+      <label>Cover/Concealment</label>
+      <select id="coverConcealment" title="Cover or concealment modifiers">
+        <option value="none">None</option>
+        <option value="cover">Cover (+4 AC)</option>
+        <option value="concealment">Concealment (20% miss)</option>
+      </select>
+    </div>
+    <div id="customFeatInput" class="hidden">
+      <label>Custom Feat Description</label>
+      <input id="customFeat" type="text" placeholder="Describe custom feat" title="Description of custom feat">
+    </div>
+    <div id="rollFormulaInput" class="hidden">
+      <label>Roll Formula</label>
+      <input id="rollFormula" type="text" readonly title="Calculated roll formula">
     </div>
   </div>
+  <div id="classAbilities">
+    <h2>Class Abilities</h2>
+    <div id="abilitiesContainer"></div>
+  </div>
+  <div class="button-group">
+    <button onclick="rollDice()">Roll the Dice of Destiny</button>
+    <button onclick="clearFields()">Clear Fields</button>
+  </div>
+</div>
   <div class="gm-reference collapsed" style="position: relative;">
     <div class="guide-button" onclick="toggleGuideMode('gm-reference')" title="Toggle Guide Mode">?</div>
     <div class="toggle-button" onclick="toggleGMReference()">Show GM Reference</div>
@@ -3391,28 +3391,48 @@ function resetStatPointsOnLevelChange() {
 
     // Define visibility mapping
     const mapping = {
-      damageDiceInput: ['damage', 'nonLethal'],
-      customDiceInput: ['custom'],
+      skillNameInput: ['skill', 'extended', 'opposed', 'extendedOpposed'],
+      skillSpecInput: ['skill', 'extended', 'opposed', 'extendedOpposed'],
       skillRankInput: ['skill', 'extended'],
-      babInput: ['attack', 'disarm', 'grapple', 'trip'],
-      savingTypeInput: ['saving'],
-      paradoxDCInput: ['paradox'],
-      powerLevelInput: ['skill', 'extended', 'opposed', 'extendedOpposed'],
+      modifier: ['skill', 'attack', 'damage', 'sanity', 'saving', 'initiative', 'paradox', 'hazard', 'custom', 'extended', 'opposed', 'extendedOpposed', 'disarm', 'grapple', 'trip', 'nonLethal'],
       dcInput: ['skill', 'sanity', 'saving', 'paradox', 'hazard', 'extended'],
       acInput: ['attack', 'disarm', 'trip'],
       opponentRollInput: ['opposed', 'extendedOpposed', 'grapple'],
       cumulativeDCInput: ['extended', 'extendedOpposed'],
-      skillNameInput: ['skill', 'extended', 'opposed', 'extendedOpposed'],
-      skillSpecInput: ['skill', 'extended', 'opposed', 'extendedOpposed'],
       advantageSelectInput: ['skill', 'attack', 'sanity', 'saving', 'paradox', 'hazard', 'extended', 'opposed', 'extendedOpposed', 'disarm', 'grapple', 'trip'],
       disadvantageSelectInput: ['skill', 'attack', 'sanity', 'saving', 'paradox', 'hazard', 'extended', 'opposed', 'extendedOpposed', 'disarm', 'grapple', 'trip'],
       powerSelectInput: ['paradox'],
       synergyBonusInput: ['skill', 'extended'],
       coverConcealmentInput: ['attack', 'disarm', 'grapple', 'trip'],
+      classFeat: ['skill', 'attack', 'sanity', 'saving', 'paradox', 'hazard', 'extended', 'opposed', 'extendedOpposed', 'disarm', 'grapple', 'trip'],
       classFeatTierInput: advantagesList.filter(a => a.name === (document.getElementById('classFeat')?.value || 'none') && a.maxTier > 1).length ? [type] : [],
       customFeatInput: (document.getElementById('classFeat')?.value || 'none') === 'custom' ? [type] : [],
+      rollFormulaInput: ['skill', 'attack', 'sanity', 'saving', 'initiative', 'paradox', 'hazard', 'damage', 'nonLethal', 'extended', 'opposed', 'extendedOpposed', 'disarm', 'grapple', 'trip', 'custom'],
+      damageDiceInput: ['damage', 'nonLethal'],
+      customDiceInput: ['custom'],
+      babInput: ['attack', 'disarm', 'grapple', 'trip'],
+      savingTypeInput: ['saving'],
+      paradoxDCInput: ['paradox'],
+      powerLevelInput: ['skill', 'extended', 'opposed', 'extendedOpposed', 'paradox'],
       paradoxCheckInput: ['paradox'].filter(() => ['Faterunner', 'Harlequin'].includes(charData?.class || document.getElementById('characterClass')?.value || 'Fatemarked')),
-      rollFormulaInput: ['skill', 'attack', 'sanity', 'saving', 'initiative', 'paradox', 'hazard', 'damage', 'nonLethal', 'extended', 'opposed', 'extendedOpposed', 'disarm', 'grapple', 'trip', 'custom']
+      sphereInfluenceInput: ['skill', 'attack', 'damage', 'sanity', 'saving', 'initiative', 'paradox', 'hazard', 'custom', 'extended', 'opposed', 'extendedOpposed', 'disarm', 'grapple', 'trip', 'nonLethal'],
+      conditionStatusInput: ['skill', 'attack', 'damage', 'sanity', 'saving', 'initiative', 'paradox', 'hazard', 'custom', 'extended', 'opposed', 'extendedOpposed', 'disarm', 'grapple', 'trip', 'nonLethal'],
+      socialEncounterInput: ['opposed', 'extendedOpposed'].filter(() => {
+        const skillName = skillSelect?.value || 'none';
+        return ['Persuasion', 'Intimidation', 'Deception'].includes(skillName);
+      }),
+      classPowerInput: ['skill', 'extended', 'opposed', 'extendedOpposed', 'paradox'],
+      combatModifiersInput: ['attack', 'disarm', 'grapple', 'trip'],
+      worldTopographyInput: ['hazard'],
+      paradoxRiskInput: ['paradox'],
+      inventorySlotsInput: [], // Not needed for rolls
+      currencyTypeInput: [], // Not needed for rolls
+      powerCreationInput: [], // Not needed for rolls
+      pactEffectInput: ['paradox'],
+      marketPurchaseInput: [], // Not needed for rolls
+      xpTrackerInput: [], // Not needed for rolls
+      adventureObjectiveInput: [], // Not needed for rolls
+      paradoxConsequenceInput: ['paradox']
     };
 
     // Toggle visibility
