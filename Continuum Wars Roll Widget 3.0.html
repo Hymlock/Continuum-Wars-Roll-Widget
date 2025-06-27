@@ -851,7 +851,7 @@ function updateStatPointUI() {
     statPointsAvailable = totalPoints - spent;
     statPointsCommitted = totalPoints === 0 || spent >= totalPoints;
 
-    console.log(`updateStatPointUI: lvl=${lvl}, totalPoints=${totalPoints}, spent=${spent}, statPointsAvailable=${statPointsAvailable}, statPointsCommitted=${statPointsCommitted}, attrMethod=${attrMethod}`);
+    console.log(`updateStatPointUI: lvl=${lvl}, totalPoints=${totalPoints}, spent=${spent}, statPointsAvailable=${statPointsAvailable}, statPointsCommitted=${statPointsCommitted}, attrMethod=${attrMethod}, attributesConfirmed=${attributesConfirmed}`);
 
     // Control visibility of allocation UI and banner
     const shouldShowAllocation = totalPoints > 0 && !statPointsCommitted;
@@ -920,7 +920,9 @@ function updateStatPointUI() {
       }
       const currentVal = parseInt(attrInput.value) || 10;
 
-      if (!statPointsCommitted && !attributesConfirmed && statPointsAvailable > 0 && currentVal < 18) {
+      console.log(`updateStatPointUI: Checking buttons for ${attr}, statPointsCommitted=${statPointsCommitted}, attributesConfirmed=${attributesConfirmed}, statPointsAvailable=${statPointsAvailable}, currentVal=${currentVal}, hasLevelPoints=${hasLevelPoints(attr)}`);
+
+      if (!statPointsCommitted && statPointsAvailable > 0) {
         const plusBtn = document.createElement('button');
         plusBtn.className = 'dynamic-button stat-point-btn';
         plusBtn.style.padding = '1px 4px';
@@ -936,7 +938,7 @@ function updateStatPointUI() {
         console.log(`updateStatPointUI: Created + button for ${attr}`);
       }
 
-      if (!statPointsCommitted && !attributesConfirmed && hasLevelPoints(attr) && currentVal > 8) {
+      if (!statPointsCommitted && hasLevelPoints(attr) && currentVal > 8) {
         const minusBtn = document.createElement('button');
         minusBtn.className = 'dynamic-button stat-point-btn';
         minusBtn.style.padding = '1px 4px';
@@ -992,7 +994,7 @@ function dismissStatCommitBanner() {
 // Allocate or remove a stat point
 function allocateStatPoint(stat, delta) {
   try {
-    console.log(`allocateStatPoint: Attempting to change ${stat} by ${delta}, statPointsCommitted=${statPointsCommitted}, statPointsAvailable=${statPointsAvailable}`);
+    console.log(`allocateStatPoint: Attempting to change ${stat} by ${delta}, statPointsCommitted=${statPointsCommitted}, statPointsAvailable=${statPointsAvailable}, attributesConfirmed=${attributesConfirmed}`);
     
     if (statPointsCommitted) {
       console.log(`allocateStatPoint: Cannot allocate, statPointsCommitted=${statPointsCommitted}`);
@@ -1017,10 +1019,6 @@ function allocateStatPoint(stat, delta) {
     const lvl = parseInt(charLevelEl.value) || 1;
     const val = parseInt(input.value) || 10;
 
-    if (delta > 0 && val >= 18 && (attrMethod === 'pointBuy' || attrMethod === 'random')) {
-      console.log(`allocateStatPoint: ${stat} at max (18) for ${attrMethod}`);
-      return;
-    }
     if (delta < 0 && val <= 8) {
       console.log(`allocateStatPoint: ${stat} at min (8)`);
       return;
@@ -1111,7 +1109,10 @@ function confirmAttributes() {
     const method = document.getElementById('attrMethod').value;
     const attrs = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
     const pointsRemaining = document.getElementById('pointsRemaining');
+    const pointsRemainingDiv = pointsRemaining ? pointsRemaining.parentElement : null;
     const confirmButton = document.getElementById('confirmAssignments');
+    const rerollButton = document.getElementById('rerollButton');
+    const randomRolls = document.getElementById('randomRolls');
 
     // Validate attributes
     let valid = true;
@@ -1120,7 +1121,7 @@ function confirmAttributes() {
       const input = document.getElementById(`attr${attr}`);
       const value = parseInt(input.value) || 10;
       attrValues[attr] = value;
-      if (method !== 'manual' && (value < 8 || value > 18)) {
+      if (method === 'pointBuy' && (value < 8 || value > 18)) {
         alert(`${attr} must be between 8 and 18 for ${method} method!`);
         valid = false;
       }
@@ -1140,6 +1141,9 @@ function confirmAttributes() {
         alert('All attributes must be assigned valid rolled stats!');
         valid = false;
       }
+    } else if (method === 'manual') {
+      // No range validation for manual method (GM override)
+      console.log('confirmAttributes: Skipping range validation for manual method');
     }
 
     if (!valid) return;
@@ -1157,9 +1161,36 @@ function confirmAttributes() {
 
     // Lock attrMethod and confirm button
     const attrMethodSelect = document.getElementById('attrMethod');
-    if (attrMethodSelect) attrMethodSelect.disabled = true;
-    if (confirmButton) confirmButton.classList.add('hidden');
-    if (pointsRemaining) pointsRemaining.value = 'N/A';
+    if (attrMethodSelect) {
+      attrMethodSelect.disabled = true;
+      console.log('confirmAttributes: attrMethod permanently disabled for this character session');
+    }
+    if (confirmButton) {
+      confirmButton.classList.add('hidden');
+      console.log('confirmAttributes: confirmAssignments hidden');
+    }
+    if (rerollButton) {
+      rerollButton.classList.add('hidden');
+      rerollButton.disabled = true;
+      console.log('confirmAttributes: rerollButton hidden and disabled');
+    }
+    if (randomRolls) {
+      randomRolls.classList.add('hidden');
+      console.log('confirmAttributes: randomRolls hidden');
+    }
+    if (pointsRemaining && pointsRemainingDiv) {
+      pointsRemaining.value = 'N/A';
+      if (method === 'pointBuy') {
+        const remainingPoints = parseInt(pointsRemaining.value) || 0;
+        if (remainingPoints === 0 || pointsRemaining.value === 'N/A') {
+          pointsRemainingDiv.classList.add('hidden');
+          console.log('confirmAttributes: pointsRemainingDiv hidden for pointBuy method');
+        }
+      } else {
+        pointsRemainingDiv.classList.add('hidden');
+        console.log('confirmAttributes: pointsRemainingDiv hidden for non-pointBuy method');
+      }
+    }
 
     console.log('confirmAttributes: Attributes confirmed, attrMethod locked');
     updateDerivedStats();
@@ -1167,24 +1198,6 @@ function confirmAttributes() {
   } catch (e) {
     console.error('Error confirming attributes:', e);
     alert('Failed to confirm attributes.');
-  }
-}
-
-// Commit stat points
-function commitStatPoints() {
-  try {
-    if (statPointsAvailable !== 0) {
-      console.log(`commitStatPoints: Cannot commit, ${statPointsAvailable} points unspent`);
-      alert('Please allocate all stat points before committing.');
-      return;
-    }
-    statPointsCommitted = true;
-    window.isBannerDismissed = false; // Reset banner state
-    console.log('commitStatPoints: Committed stat points, statPointsCommitted=', statPointsCommitted);
-    updateStatPointUI();
-  } catch (e) {
-    console.error('Error committing stat points:', e);
-    alert('Failed to commit stat points.');
   }
 }
 
@@ -1197,7 +1210,7 @@ function resetStatPointsOnLevelChange() {
     }
     const lvl = parseInt(charLevelEl.value) || 1;
     const totalPoints = getStatPointsForLevel(lvl);
-    console.log(`resetStatPointsOnLevelChange: lvl=${lvl}, totalPoints=${totalPoints}, spent=${Object.values(statPointsAllocated).reduce((a, b) => a + b, 0)}, statPointsCommitted=${statPointsCommitted}`);
+    console.log(`resetStatPointsOnLevelChange: lvl=${lvl}, totalPoints=${totalPoints}, spent=${Object.values(statPointsAllocated).reduce((a, b) => a + b, 0)}, statPointsCommitted=${statPointsCommitted}, attributesConfirmed=${attributesConfirmed}`);
 
     // Filter out allocations from levels higher than current
     if (statPointsByLevel && Array.isArray(statPointsByLevel)) {
@@ -1225,6 +1238,14 @@ function resetStatPointsOnLevelChange() {
       });
     }
 
+    // Add new milestone level entry if not present
+    const milestoneLevels = [3, 6, 9, 12, 15].filter(l => l <= lvl);
+    const existingLevels = statPointsByLevel.map(entry => entry.level);
+    const missingLevels = milestoneLevels.filter(l => !existingLevels.includes(l));
+    missingLevels.forEach(level => {
+      statPointsByLevel.push({ level, allocations: { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 } });
+    });
+
     const spent = Object.values(statPointsAllocated).reduce((a, b) => a + b, 0);
     statPointsAvailable = totalPoints - spent;
     statPointsCommitted = spent >= totalPoints;
@@ -1238,7 +1259,16 @@ function resetStatPointsOnLevelChange() {
       statPointsCommitted = false;
     }
 
-    console.log(`resetStatPointsOnLevelChange: After reset - statPointsAllocated=`, statPointsAllocated, `statPointsByLevel=`, statPointsByLevel, `statPointsCommitted=${statPointsCommitted}, statPointsAvailable=${statPointsAvailable}`);
+    // Ensure attrMethod remains disabled if attributes are confirmed
+    const attrMethodSelect = document.getElementById('attrMethod');
+    if (attrMethodSelect) {
+      attrMethodSelect.disabled = attributesConfirmed;
+      console.log(`resetStatPointsOnLevelChange: attrMethod disabled=${attrMethodSelect.disabled}, attributesConfirmed=${attributesConfirmed}`);
+    } else {
+      console.warn('attrMethod element not found');
+    }
+
+    console.log(`resetStatPointsOnLevelChange: After reset - statPointsAllocated=`, statPointsAllocated, `statPointsByLevel=`, statPointsByLevel, `statPointsCommitted=${statPointsCommitted}, statPointsAvailable=${statPointsAvailable}, attributesConfirmed=${attributesConfirmed}`);
     updateStatPointUI();
   } catch (e) {
     console.error('Error resetting stat points:', e);
@@ -1333,11 +1363,17 @@ function resetStatPointsOnLevelChange() {
       });
     }
 
-    // Prompt user for additional stat gains
+    // Ensure all milestone levels have entries
     const milestoneLevels = [3, 6, 9, 12, 15].filter(l => l <= lvl);
     const existingLevels = statPointsByLevel.map(entry => entry.level);
     const missingLevels = milestoneLevels.filter(l => !existingLevels.includes(l));
+    missingLevels.forEach(level => {
+      statPointsByLevel.push({ level, allocations: { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 } });
+    });
+
+    // Prompt user for additional stat gains
     if (missingLevels.length > 0) {
+      attributesConfirmed = false; // Reset attributesConfirmed for stat point allocation
       const modal = document.createElement('div');
       modal.style.position = 'fixed';
       modal.style.top = '50%';
@@ -1390,7 +1426,7 @@ function resetStatPointsOnLevelChange() {
           }
         });
 
-        console.log(`loadStatPointsFromData: Loaded statPointsAllocated=`, statPointsAllocated, `statPointsByLevel=`, statPointsByLevel, `statPointsCommitted=${statPointsCommitted}, totalPoints=${totalPoints}, spent=${spent}, statPointsAvailable=${statPointsAvailable}`);
+        console.log(`loadStatPointsFromData: Loaded statPointsAllocated=`, statPointsAllocated, `statPointsByLevel=`, statPointsByLevel, `statPointsCommitted=${statPointsCommitted}, totalPoints=${totalPoints}, spent=${spent}, statPointsAvailable=${statPointsAvailable}, attributesConfirmed=${attributesConfirmed}`);
         updateStatPointUI();
         window.isLoadingStatPoints = false;
       };
@@ -1410,7 +1446,7 @@ function resetStatPointsOnLevelChange() {
         }
       });
 
-      console.log(`loadStatPointsFromData: Loaded statPointsAllocated=`, statPointsAllocated, `statPointsByLevel=`, statPointsByLevel, `statPointsCommitted=${statPointsCommitted}, totalPoints=${totalPoints}, spent=${spent}, statPointsAvailable=${statPointsAvailable}`);
+      console.log(`loadStatPointsFromData: Loaded statPointsAllocated=`, statPointsAllocated, `statPointsByLevel=`, statPointsByLevel, `statPointsCommitted=${statPointsCommitted}, totalPoints=${totalPoints}, spent=${spent}, statPointsAvailable=${statPointsAvailable}, attributesConfirmed=${attributesConfirmed}`);
       updateStatPointUI();
       window.isLoadingStatPoints = false;
     }
@@ -3046,10 +3082,18 @@ function resetStatPointsOnLevelChange() {
 
   function updateAttributes() {
     try {
+    // Define point buy cost mapping
+    const pointBuyCost = {
+      8: -2, 9: -1, 10: 0, 11: 1, 12: 2, 13: 3, 14: 5, 15: 7, 16: 10, 17: 13, 18: 16
+    };
+
     const method = document.getElementById('attrMethod').value;
     const rerollButton = document.getElementById('rerollButton');
     if (rerollButton) {
-      rerollButton.classList.toggle('hidden', method !== 'random');
+      const shouldHideReroll = method !== 'random' || attributesConfirmed;
+      rerollButton.classList.toggle('hidden', shouldHideReroll);
+      rerollButton.disabled = shouldHideReroll;
+      console.log(`updateAttributes: rerollButton hidden=${shouldHideReroll}, disabled=${rerollButton.disabled}, method=${method}, attributesConfirmed=${attributesConfirmed}`);
     } else {
       console.warn('rerollButton element not found');
     }
@@ -3061,15 +3105,28 @@ function resetStatPointsOnLevelChange() {
     }
     const confirmAssignments = document.getElementById('confirmAssignments');
     if (confirmAssignments) {
-      confirmAssignments.classList.toggle('hidden', method === 'imported' || attributesConfirmed);
+      const canConfirm = method !== 'imported' && !attributesConfirmed;
+      confirmAssignments.classList.toggle('hidden', !canConfirm);
+      confirmAssignments.disabled = !canConfirm;
+      console.log(`updateAttributes: Confirm button canConfirm=${canConfirm}, method=${method}, attributesConfirmed=${attributesConfirmed}`);
+      if (canConfirm) {
+        confirmAssignments.removeEventListener('click', confirmAttributes);
+        confirmAssignments.addEventListener('click', confirmAttributes);
+      }
     } else {
       console.warn('confirmAssignments element not found');
     }
     const pointsRemaining = document.getElementById('pointsRemaining');
     if (pointsRemaining) {
       pointsRemaining.value = method === 'pointBuy' && !attributesConfirmed ? '15' : 'N/A';
+      console.log(`updateAttributes: pointsRemaining.value=${pointsRemaining.value}, method=${method}`);
     } else {
       console.warn('pointsRemaining element not found');
+    }
+    const attrMethodSelect = document.getElementById('attrMethod');
+    if (attrMethodSelect && attributesConfirmed) {
+      attrMethodSelect.disabled = true;
+      console.log(`updateAttributes: attrMethod disabled due to attributesConfirmed=${attributesConfirmed}`);
     }
 
     const attrs = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
@@ -3129,11 +3186,13 @@ function resetStatPointsOnLevelChange() {
       const rolledStatsInput = document.getElementById('rolledStats');
       if (rolledStatsInput) rolledStatsInput.value = rolledStats.join(', ');
     } else if (method === 'pointBuy') {
+      let totalPointsUsed = 0;
       attrs.forEach(attr => {
         const input = document.getElementById(`attr${attr}`);
         if (input) {
-          input.value = 10;
           input.readOnly = true;
+          const currentVal = parseInt(input.value) || 10;
+          totalPointsUsed += pointBuyCost[currentVal] || 0;
         }
         const assignSelect = document.getElementById(`assign${attr}`);
         if (assignSelect) {
@@ -3149,36 +3208,45 @@ function resetStatPointsOnLevelChange() {
         const pointBuyBtnSpan = document.getElementById(`pointBuyBtns${attr}`) || document.createElement('span');
         pointBuyBtnSpan.id = `pointBuyBtns${attr}`;
         pointBuyBtnSpan.innerHTML = '';
-        const plusBtn = document.createElement('button');
-        plusBtn.className = 'dynamic-button point-buy-btn';
-        plusBtn.style.padding = '1px 4px';
-        plusBtn.style.fontSize = '0.7em';
-        plusBtn.style.width = 'auto';
-        plusBtn.textContent = '+';
-        plusBtn.addEventListener('click', () => {
-          console.log(`Point Buy: Plus button clicked for ${attr}`);
-          allocatePointBuyPoint(attr, 1);
-        });
-        pointBuyBtnSpan.appendChild(plusBtn);
-        const minusBtn = document.createElement('button');
-        minusBtn.className = 'dynamic-button point-buy-btn';
-        minusBtn.style.padding = '1px 4px';
-        minusBtn.style.fontSize = '0.7em';
-        minusBtn.style.width = 'auto';
-        minusBtn.textContent = '-';
-        minusBtn.addEventListener('click', () => {
-          console.log(`Point Buy: Minus button clicked for ${attr}`);
-          allocatePointBuyPoint(attr, -1);
-        });
-        pointBuyBtnSpan.appendChild(minusBtn);
-        input.parentNode.appendChild(pointBuyBtnSpan);
-        console.log(`updateAttributes: Added point buy buttons for ${attr}`);
+        if (!attributesConfirmed && parseInt(input.value) < 18) {
+          const plusBtn = document.createElement('button');
+          plusBtn.className = 'dynamic-button point-buy-btn';
+          plusBtn.style.padding = '1px 4px';
+          plusBtn.style.fontSize = '0.7em';
+          plusBtn.style.width = 'auto';
+          plusBtn.textContent = '+';
+          plusBtn.addEventListener('click', () => {
+            console.log(`Point Buy: Plus button clicked for ${attr}`);
+            allocatePointBuyPoint(attr, 1);
+          });
+          pointBuyBtnSpan.appendChild(plusBtn);
+        }
+        if (!attributesConfirmed && parseInt(input.value) > 8) {
+          const minusBtn = document.createElement('button');
+          minusBtn.className = 'dynamic-button point-buy-btn';
+          minusBtn.style.padding = '1px 4px';
+          minusBtn.style.fontSize = '0.7em';
+          minusBtn.style.width = 'auto';
+          minusBtn.textContent = '-';
+          minusBtn.addEventListener('click', () => {
+            console.log(`Point Buy: Minus button clicked for ${attr}`);
+            allocatePointBuyPoint(attr, -1);
+          });
+          pointBuyBtnSpan.appendChild(minusBtn);
+        }
+        if (!document.getElementById(`pointBuyBtns${attr}`)) {
+          input.parentNode.appendChild(pointBuyBtnSpan);
+        }
+        console.log(`updateAttributes: Added point buy buttons for ${attr}, value=${input ? input.value : 'N/A'}`);
       });
       rolledStats = [];
       availableStats = [];
       const rolledStatsInput = document.getElementById('rolledStats');
       if (rolledStatsInput) rolledStatsInput.value = '';
-      updatePoints();
+      if (pointsRemaining) {
+        pointsRemaining.value = 15 - totalPointsUsed;
+        console.log(`updateAttributes: Point buy points remaining=${pointsRemaining.value}, totalPointsUsed=${totalPointsUsed}`);
+      }
     }
     updateDerivedStats();
   } catch (e) {
@@ -6528,6 +6596,8 @@ function removePowerField(button) {
       statPointsAllocated = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
       statPointsCommitted = true;
       statPointsAvailable = 0;
+      statPointsByLevel = [];
+      attributesConfirmed = false; // Reset attributesConfirmed
 
       // Clear attribute inputs
       ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
@@ -6562,13 +6632,14 @@ function removePowerField(button) {
       availableStats = [];
       skillCriticalTracker = {};
       fatePointsUsedInEncounter = 0;
+      window.manualInputWarned = false;
 
       // Update UI and state
       updateSheetInputs({ preserveAttributes: true });
       resetStatPointsOnLevelChange();
       debouncedUpdateFeatsSheet();
       updateStatPointUI();
-      console.log('clearSheetFields: Reset statPointsAllocated=', statPointsAllocated, 'statPointsCommitted=', statPointsCommitted);
+      console.log('clearSheetFields: Reset statPointsAllocated=', statPointsAllocated, 'statPointsCommitted=', statPointsCommitted, 'attributesConfirmed=', attributesConfirmed);
       alert('Character sheet cleared!');
     } catch (e) {
       console.error('Error clearing sheet fields:', e);
