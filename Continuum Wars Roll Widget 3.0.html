@@ -223,6 +223,14 @@
     margin-bottom: 10px;
     display: none;
   }
+  #customDice:invalid {
+  border: 2px solid #ff4444;
+  background-color: #ffe6e6;
+  }
+  #customDice:valid {
+    border: 1px solid #00cc99;
+    background-color: #1a1a3a;
+  }
   /* Disable number input arrows for attribute inputs */
   input[id^="attr"][type="number"]::-webkit-inner-spin-button,
   input[id^="attr"][type="number"]::-webkit-outer-spin-button {
@@ -294,8 +302,8 @@
           </select>
         </div>
         <div id="customDiceInput" class="hidden">
-          <label>Custom Dice</label>
-          <input id="customDice" type="text" placeholder="e.g., 3d6" title="Custom dice notation (e.g., 3d6)">
+          <label>Custom Dice (e.g., 2d6+3, 1d20-2, 2d8+1d6)</label>
+          <input id="customDice" type="text" placeholder="e.g., 2d6+3, 1d20-2, 2d8+1d6" title="Custom dice notation (e.g., 3d6+2 for 3 six-sided dice plus 2)">
         </div>
         <div>
           <label>Modifier (Attribute)</label>
@@ -824,59 +832,89 @@
 // ...existing code...
 
 function updateStatPointUI() {
-  try {
-    if (window.isUpdatingStatPointUI) {
-      console.log('updateStatPointUI: Skipped due to ongoing update');
-      return;
-    }
-    window.isUpdatingStatPointUI = true;
+  if (window.isUpdatingStatPointUI) {
+    console.log('updateStatPointUI: Skipped due to ongoing update');
+    return;
+  }
+  window.isUpdatingStatPointUI = true;
 
+  // Initialize statPointsAllocated and statPointsByLevel
+  if (!statPointsAllocated || typeof statPointsAllocated !== 'object') {
+    statPointsAllocated = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+  }
+  if (!statPointsByLevel || !Array.isArray(statPointsByLevel)) {
+    statPointsByLevel = [];
+  }
+
+  // Get character level
+  let lvl, totalPoints;
+  try {
     const charLevelEl = document.getElementById('charLevel');
     if (!charLevelEl) {
+      console.error('updateStatPointUI: charLevel input not found');
       throw new Error('charLevel input not found');
     }
-    const lvl = parseInt(charLevelEl.value) || 1;
-    const totalPoints = getStatPointsForLevel(lvl);
-    const attrMethod = document.getElementById('attrMethod').value;
+    lvl = parseInt(charLevelEl.value) || 1;
+    totalPoints = getStatPointsForLevel(lvl);
+  } catch (e) {
+    console.error('Error getting character level:', e);
+    alert('Failed to retrieve character level.');
+    window.isUpdatingStatPointUI = false;
+    return;
+  }
 
-    // Ensure statPointsAllocated is initialized
-    if (!statPointsAllocated || typeof statPointsAllocated !== 'object') {
-      statPointsAllocated = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+  // Get attribute method
+  let attrMethod = 'pointBuy';
+  try {
+    const attrMethodEl = document.getElementById('attrMethod');
+    if (attrMethodEl) {
+      attrMethod = attrMethodEl.value || 'pointBuy';
+    } else {
+      console.warn('updateStatPointUI: attrMethod element not found, using default pointBuy');
     }
-    if (!statPointsByLevel || !Array.isArray(statPointsByLevel)) {
-      statPointsByLevel = [];
-    }
+  } catch (e) {
+    console.error('Error getting attribute method:', e);
+    alert('Failed to retrieve attribute method. Using default.');
+  }
 
-    const spent = Object.values(statPointsAllocated).reduce((a, b) => a + b, 0);
-    statPointsAvailable = totalPoints - spent;
-    statPointsCommitted = totalPoints === 0 || spent >= totalPoints;
+  // Calculate stat points
+  const spent = Object.values(statPointsAllocated).reduce((a, b) => a + b, 0);
+  statPointsAvailable = totalPoints - spent;
+  statPointsCommitted = totalPoints === 0 || spent >= totalPoints;
 
-    console.log(`updateStatPointUI: lvl=${lvl}, totalPoints=${totalPoints}, spent=${spent}, statPointsAvailable=${statPointsAvailable}, statPointsCommitted=${statPointsCommitted}, attrMethod=${attrMethod}, attributesConfirmed=${attributesConfirmed}`);
+  console.log(`updateStatPointUI: lvl=${lvl}, totalPoints=${totalPoints}, spent=${spent}, statPointsAvailable=${statPointsAvailable}, statPointsCommitted=${statPointsCommitted}, attrMethod=${attrMethod}, attributesConfirmed=${attributesConfirmed}`);
 
-    // Control visibility of allocation UI and banner
-    const shouldShowAllocation = totalPoints > 0 && !statPointsCommitted;
-    const shouldShowBanner = totalPoints > 0 && !statPointsCommitted && !window.isBannerDismissed;
-
+  // Control visibility of allocation UI
+  const shouldShowAllocation = totalPoints > 0 && !statPointsCommitted;
+  try {
     const allocationDiv = document.getElementById('statPointAllocation');
     if (allocationDiv) {
       allocationDiv.style.display = shouldShowAllocation ? 'flex' : 'none';
     } else {
-      console.warn('statPointAllocation element not found');
+      console.warn('updateStatPointUI: statPointAllocation element not found');
     }
+  } catch (e) {
+    console.error('Error updating stat point allocation UI:', e);
+    alert('Failed to update stat point allocation UI.');
+  }
 
+  // Control visibility of banner
+  const shouldShowBanner = totalPoints > 0 && !statPointsCommitted && !window.isBannerDismissed;
+  try {
     const banner = document.getElementById('statCommitBanner');
     if (banner) {
-      if (shouldShowBanner) {
-        banner.classList.remove('hidden');
-      } else {
-        banner.classList.add('hidden');
-      }
+      banner.classList.toggle('hidden', !shouldShowBanner);
       console.log(`updateStatPointUI: shouldShowBanner=${shouldShowBanner}, banner.classList=${banner.classList.toString()}, display=${getComputedStyle(banner).display}`);
     } else {
-      console.warn('statCommitBanner element not found');
+      console.warn('updateStatPointUI: statCommitBanner element not found');
     }
+  } catch (e) {
+    console.error('Error updating stat commit banner:', e);
+    alert('Failed to update stat commit banner.');
+  }
 
-    // Bind dismiss button event
+  // Bind dismiss button event
+  try {
     const dismissBtn = document.getElementById('dismissStatCommitBannerBtn');
     if (dismissBtn) {
       dismissBtn.removeEventListener('click', dismissStatCommitBanner);
@@ -884,38 +922,68 @@ function updateStatPointUI() {
       dismissBtn.disabled = false;
       console.log('updateStatPointUI: Dismiss button event bound');
     } else {
-      console.warn('dismissStatCommitBannerBtn element not found');
+      console.warn('updateStatPointUI: dismissStatCommitBannerBtn element not found');
     }
+  } catch (e) {
+    console.error('Error binding dismiss button event:', e);
+    alert('Failed to bind stat commit banner dismiss event.');
+  }
 
-    // Update points display
+  // Update points display
+  try {
     const pointsDisplay = document.getElementById('statPointsAvailable');
     if (pointsDisplay) {
       pointsDisplay.textContent = statPointsAvailable;
+    } else {
+      console.warn('updateStatPointUI: statPointsAvailable element not found');
     }
+  } catch (e) {
+    console.error('Error updating stat points display:', e);
+    alert('Failed to update stat points display.');
+  }
 
-    // Update commit button
+  // Update commit button
+  try {
     const commitBtn = document.getElementById('commitStatPointsBtn');
     if (commitBtn) {
       commitBtn.disabled = statPointsAvailable !== 0 || statPointsCommitted;
       commitBtn.textContent = statPointsCommitted ? 'Committed' : 'Commit';
+    } else {
+      console.warn('updateStatPointUI: commitStatPointsBtn element not found');
     }
+  } catch (e) {
+    console.error('Error updating commit button:', e);
+    alert('Failed to update commit button.');
+  }
 
-    // Determine which stats have level-gained points at current or higher levels
-    const currentLevelAllocations = statPointsByLevel.find(entry => entry.level === lvl)?.allocations || {};
-    const hasLevelPoints = stat => (statPointsByLevel.filter(entry => entry.level <= lvl).reduce((sum, entry) => sum + (entry.allocations[stat] || 0), 0)) > 0;
+  // Determine which stats have level-gained points
+  const currentLevelAllocations = statPointsByLevel.find(entry => entry.level === lvl)?.allocations || {};
+  const hasLevelPoints = stat => (statPointsByLevel.filter(entry => entry.level <= lvl).reduce((sum, entry) => sum + (entry.allocations[stat] || 0), 0)) > 0;
 
-    // Render stat allocation buttons for level-up points
-    ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+  // Define named handler functions for stat buttons
+  const handleStatIncrement = (attr) => () => {
+    console.log(`Plus button clicked for ${attr}`);
+    allocateStatPoint(attr, 1);
+  };
+
+  const handleStatDecrement = (attr) => () => {
+    console.log(`Minus button clicked for ${attr}`);
+    allocateStatPoint(attr, -1);
+  };
+
+  // Render stat allocation buttons
+  ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(attr => {
+    try {
       const btnSpan = document.getElementById(`statPointBtns${attr}`);
       if (!btnSpan) {
-        console.warn(`statPointBtns${attr} element not found`);
+        console.warn(`updateStatPointUI: statPointBtns${attr} element not found`);
         return;
       }
       btnSpan.innerHTML = '';
 
       const attrInput = document.getElementById(`attr${attr}`);
       if (!attrInput) {
-        console.warn(`attr${attr} input not found`);
+        console.warn(`updateStatPointUI: attr${attr} input not found`);
         return;
       }
       const currentVal = parseInt(attrInput.value) || 10;
@@ -930,10 +998,9 @@ function updateStatPointUI() {
         plusBtn.style.width = 'auto';
         plusBtn.textContent = '+';
         plusBtn.disabled = false;
-        plusBtn.addEventListener('click', () => {
-          console.log(`Plus button clicked for ${attr}`);
-          allocateStatPoint(attr, 1);
-        });
+        const incrementHandler = handleStatIncrement(attr);
+        plusBtn.removeEventListener('click', incrementHandler);
+        plusBtn.addEventListener('click', incrementHandler);
         btnSpan.appendChild(plusBtn);
         console.log(`updateStatPointUI: Created + button for ${attr}`);
       }
@@ -946,16 +1013,20 @@ function updateStatPointUI() {
         minusBtn.style.width = 'auto';
         minusBtn.textContent = '-';
         minusBtn.disabled = false;
-        minusBtn.addEventListener('click', () => {
-          console.log(`Minus button clicked for ${attr}`);
-          allocateStatPoint(attr, -1);
-        });
+        const decrementHandler = handleStatDecrement(attr);
+        minusBtn.removeEventListener('click', decrementHandler);
+        minusBtn.addEventListener('click', decrementHandler);
         btnSpan.appendChild(minusBtn);
         console.log(`updateStatPointUI: Created - button for ${attr}`);
       }
-    });
+    } catch (e) {
+      console.error(`Error rendering stat buttons for ${attr}:`, e);
+      alert(`Failed to render stat buttons for ${attr}.`);
+    }
+  });
 
-    // Manage input states
+  // Manage input states
+  try {
     const allInteractive = document.querySelectorAll('input, select, textarea, button');
     allInteractive.forEach(el => {
       if (shouldShowBanner && ![
@@ -969,12 +1040,12 @@ function updateStatPointUI() {
         delete el.dataset.wasDisabled;
       }
     });
-
-    window.isUpdatingStatPointUI = false;
   } catch (e) {
-    console.error('Error updating stat point UI:', e);
-    alert('Failed to update stat point UI.');
+    console.error('Error managing input states:', e);
+    alert('Failed to manage input states.');
   }
+
+  window.isUpdatingStatPointUI = false;
 }
 
 // Dismiss the stat commit banner temporarily
@@ -1054,6 +1125,82 @@ function allocateStatPoint(stat, delta) {
     console.error('Error allocating stat point:', e);
     alert('Failed to allocate stat point.');
   }
+}
+
+function commitStatPoints() {
+  if (statPointsAvailable !== 0) {
+    alert('Please allocate all available stat points before committing.');
+    return;
+  }
+  if (statPointsCommitted) {
+    console.log('commitStatPoints: Already committed, skipping');
+    return;
+  }
+
+  // Update attribute inputs
+  const attrInputs = {
+    STR: document.getElementById('attrSTR'),
+    DEX: document.getElementById('attrDEX'),
+    CON: document.getElementById('attrCON'),
+    INT: document.getElementById('attrINT'),
+    WIS: document.getElementById('attrWIS'),
+    CHA: document.getElementById('attrCHA')
+  };
+
+  try {
+    for (const [stat, input] of Object.entries(attrInputs)) {
+      if (!input) {
+        console.error(`commitStatPoints: Missing input for ${stat}`);
+        throw new Error(`Attribute input ${stat} not found`);
+      }
+      const baseVal = parseInt(input.value) || 10;
+      const allocatedPoints = statPointsAllocated[stat] || 0;
+      input.value = Math.min(baseVal + allocatedPoints, 18); // Cap at 18
+      input.readOnly = true; // Lock input after commit
+    }
+    attributesConfirmed = true; // Lock attributes
+    const attrMethodSelect = document.getElementById('attrMethod');
+    if (attrMethodSelect) {
+      attrMethodSelect.disabled = true;
+      console.log('commitStatPoints: Disabled attrMethod select');
+    }
+  } catch (e) {
+    console.error('Error updating attribute inputs:', e);
+    alert('Failed to update attribute inputs.');
+    return;
+  }
+
+  statPointsCommitted = true;
+
+  // Update UI
+  try {
+    updateStatPointUI();
+    updateSheetInputs({ preserveAttributes: true });
+  } catch (e) {
+    console.error('Error updating UI after committing stat points:', e);
+    alert('Failed to update UI after committing stat points.');
+    return;
+  }
+
+  // Bind commit button event
+  try {
+    const commitStatPointsBtn = document.getElementById('commitStatPointsBtn');
+    if (commitStatPointsBtn) {
+      const handleCommitClick = () => {
+        commitStatPoints();
+      };
+      commitStatPointsBtn.removeEventListener('click', handleCommitClick);
+      commitStatPointsBtn.addEventListener('click', handleCommitClick);
+      console.log('commitStatPoints: Added click event listener for commitStatPointsBtn');
+    } else {
+      console.warn('commitStatPoints: commitStatPointsBtn not found');
+    }
+  } catch (e) {
+    console.error('Error binding commit button event:', e);
+    alert('Failed to bind commit button event.');
+  }
+
+  console.log('commitStatPoints: Committed stat points', statPointsAllocated);
 }
 
 function allocatePointBuyPoint(stat, delta) {
@@ -1275,6 +1422,28 @@ function resetStatPointsOnLevelChange() {
     alert('Failed to reset stat points.');
   }
 }
+
+  function validateCustomDice() {
+    try {
+      const inputs = [document.getElementById('customDice'), document.getElementById('damageDice')];
+      inputs.forEach(input => {
+        if (!input) {
+          console.warn(`validateCustomDice: ${input?.id || 'input'} not found`);
+          return;
+        }
+        const notation = input.value.replace(/\s+/g, '').toLowerCase();
+        const diceRegex = /^((\d+)d(4|6|8|10|12|20|100)([+-]\d+)?)+$/;
+        if (!notation || diceRegex.test(notation)) {
+          input.setCustomValidity('');
+        } else {
+          input.setCustomValidity('Invalid dice notation. Use format like 2d6+3 or 1d20-2.');
+        }
+      });
+    } catch (e) {
+      console.error('Error validating dice input:', e);
+      alert('Failed to validate dice input.');
+    }
+  }
 
   // Initialize stat points on page load
   document.addEventListener('DOMContentLoaded', () => {
@@ -1888,65 +2057,76 @@ function resetStatPointsOnLevelChange() {
 
   function updateFeats() {
     try {
-        const lvl = parseInt(document.getElementById('characterLevel').value) || 1;
-        const cls = document.getElementById('characterClass').value || 'Fatemarked';
-        const classFeatSelect = document.getElementById('classFeat');
-        const dynamicFeatSelects = document.querySelectorAll('.dynamic-feat');
-        const selectedFeats = [
-            classFeatSelect.value,
-            ...Array.from(dynamicFeatSelects).map(s => s.value)
-        ].filter(v => v && v !== 'none');
-
-        const classFeats = {
-            'Fatemarked': ['Fatemarked Agility', 'Dimensional Instinct', 'Mystic Resonance', 'Circuit Intuition', 'Iron Psyche', 'Scholar’s Insight', 'Streetwise Contact', 'Artisan’s Craft', 'Veteran’s Grit', 'Performer’s Flair'],
-            'Biomatrix Suit': ['Circuit Intuition', 'Sniper', 'Surgical Precision', 'MacGyver'],
-            'Continuum Raider': ['Fatemarked Agility', 'Dimensional Instinct', 'Improved Disarm', 'Survival'],
-            'Gunrunner': ['Sniper', 'Steady Aim', 'Surgical Precision', 'Improved Critical'],
-            'Faterunner': ['Mystic Resonance', 'Feint', 'Rabbit’s Luck', 'Evasion'],
-            'Harlequin': ['Mystic Resonance', 'Feint', 'Rabbit’s Luck', 'Evasion'],
-            'Warrior': ['Veteran’s Grit', 'Crushing Might', 'Improved Disarm', 'Improved Defensive'],
-            'Mage': ['Mystic Resonance', 'Dimensional Instinct', 'Iron Psyche', 'Recall'],
-            'Shape': ['Fatemarked Agility', 'Dimensional Instinct', 'Improved Defensive', 'Evasion'],
-            'Masque': ['Mystic Resonance', 'Feint', 'Enamor', 'Evasion'],
-            'Adventurer': ['Fatemarked Agility', 'Dimensional Instinct', 'Circuit Intuition', 'Iron Psyche', 'Scholar’s Insight', 'Jack of All Trades']
-        };
-
-        let availableFeats = [...startingFeatsList, ...levelUpFeatsList, ...advantagesList.map(a => ({ value: a.name, text: `${a.name} (${a.desc})` }))].filter(f => (!f.level || f.level <= lvl) && (!f.prereq || checkFeatPrereq(f.prereq, lvl)));
-        availableFeats.unshift({ value: 'none', text: 'None' });
-        availableFeats.push({ value: 'custom', text: 'Custom Feat' });
-        if (cls === 'Adventurer' && lvl >= 4) availableFeats.push({ value: 'Versatile Feat', text: 'Versatile Feat (Extra Feat, Level 4+)' });
-
-        const classAvailableFeats = availableFeats.filter(f => f.value === 'none' || classFeats[cls].includes(f.value) || f.value === 'custom' || (cls === 'Adventurer' && f.value === 'Versatile Feat'));
-
-        classFeatSelect.innerHTML = '';
-        classAvailableFeats.forEach(f => {
-            if (!selectedFeats.includes(f.value) || f.value === 'none' || f.value === classFeatSelect.value) {
-                const opt = document.createElement('option');
-                opt.value = f.value;
-                opt.text = f.text;
-                classFeatSelect.appendChild(opt);
-            }
-        });
-
-        dynamicFeatSelects.forEach(select => {
-            const currentValue = select.value;
-            select.innerHTML = '';
-            availableFeats.forEach(f => {
-                if (!selectedFeats.includes(f.value) || f.value === 'none' || f.value === currentValue) {
-                    const opt = document.createElement('option');
-                    opt.value = f.value;
-                    opt.text = f.text;
-                    select.appendChild(opt);
-                }
-            });
-            select.value = availableFeats.some(f => f.value === currentValue) ? currentValue : 'none';
-        });
-
-        updateInputs();
-    } catch (error) {
-        console.error('Error updating feats:', error);
-        alert('Failed to update feats. Please refresh the page.');
+    const levelInput = document.getElementById('characterLevel');
+    const classInput = document.getElementById('characterClass');
+    const classFeatSelect = document.getElementById('classFeat');
+    if (!levelInput || !classInput || !classFeatSelect) {
+      console.error('updateFeats: Missing critical DOM elements', {
+        levelInput: !!levelInput,
+        classInput: !!classInput,
+        classFeatSelect: !!classFeatSelect
+      });
+      throw new Error('Required feat input elements not found');
     }
+
+    const lvl = parseInt(levelInput.value) || 1;
+    const cls = classInput.value || 'Fatemarked';
+    const dynamicFeatSelects = document.querySelectorAll('.dynamic-feat');
+    const selectedFeats = [
+      classFeatSelect.value,
+      ...Array.from(dynamicFeatSelects).map(s => s.value)
+    ].filter(v => v && v !== 'none');
+
+    const classFeats = {
+      'Fatemarked': ['Fatemarked Agility', 'Dimensional Instinct', 'Mystic Resonance', 'Circuit Intuition', 'Iron Psyche', 'Scholar’s Insight', 'Streetwise Contact', 'Artisan’s Craft', 'Veteran’s Grit', 'Performer’s Flair'],
+      'Biomatrix Suit': ['Circuit Intuition', 'Sniper', 'Surgical Precision', 'MacGyver'],
+      'Continuum Raider': ['Fatemarked Agility', 'Dimensional Instinct', 'Improved Disarm', 'Survival'],
+      'Gunrunner': ['Sniper', 'Steady Aim', 'Surgical Precision', 'Improved Critical'],
+      'Faterunner': ['Mystic Resonance', 'Feint', 'Rabbit’s Luck', 'Evasion'],
+      'Harlequin': ['Mystic Resonance', 'Feint', 'Rabbit’s Luck', 'Evasion'],
+      'Warrior': ['Veteran’s Grit', 'Crushing Might', 'Improved Disarm', 'Improved Defensive'],
+      'Mage': ['Mystic Resonance', 'Dimensional Instinct', 'Iron Psyche', 'Recall'],
+      'Shape': ['Fatemarked Agility', 'Dimensional Instinct', 'Improved Defensive', 'Evasion'],
+      'Masque': ['Mystic Resonance', 'Feint', 'Enamor', 'Evasion'],
+      'Adventurer': ['Fatemarked Agility', 'Dimensional Instinct', 'Circuit Intuition', 'Iron Psyche', 'Scholar’s Insight', 'Jack of All Trades']
+    };
+
+    let availableFeats = [...startingFeatsList, ...levelUpFeatsList, ...advantagesList.map(a => ({ value: a.name, text: `${a.name} (${a.desc})` }))].filter(f => (!f.level || f.level <= lvl) && (!f.prereq || checkFeatPrereq(f.prereq, lvl)));
+    availableFeats.unshift({ value: 'none', text: 'None' });
+    availableFeats.push({ value: 'custom', text: 'Custom Feat' });
+    if (cls === 'Adventurer' && lvl >= 4) availableFeats.push({ value: 'Versatile Feat', text: 'Versatile Feat (Extra Feat, Level 4+)' });
+
+    const classAvailableFeats = availableFeats.filter(f => f.value === 'none' || classFeats[cls].includes(f.value) || f.value === 'custom' || (cls === 'Adventurer' && f.value === 'Versatile Feat'));
+
+    classFeatSelect.innerHTML = '';
+    classAvailableFeats.forEach(f => {
+      if (!selectedFeats.includes(f.value) || f.value === 'none' || f.value === classFeatSelect.value) {
+        const opt = document.createElement('option');
+        opt.value = f.value;
+        opt.text = f.text;
+        classFeatSelect.appendChild(opt);
+      }
+    });
+
+    dynamicFeatSelects.forEach(select => {
+      const currentValue = select.value;
+      select.innerHTML = '';
+      availableFeats.forEach(f => {
+        if (!selectedFeats.includes(f.value) || f.value === 'none' || f.value === currentValue) {
+          const opt = document.createElement('option');
+          opt.value = f.value;
+          opt.text = f.text;
+          select.appendChild(opt);
+        }
+      });
+      select.value = availableFeats.some(f => f.value === currentValue) ? currentValue : 'none';
+    });
+
+    updateInputs();
+  } catch (error) {
+    console.error('Error updating feats:', error);
+    alert('Failed to update feats. Please refresh the page.');
+  }
 }
 
   function checkFeatPrereq(prereq, lvl) {
@@ -2063,7 +2243,7 @@ function resetStatPointsOnLevelChange() {
 
   function updateInputs() {
     try {
-    const type = document.getElementById('rollType').value || 'skill';
+    const type = document.getElementById('rollType')?.value || 'skill';
     const charData = getCharacterData();
     const skillSelect = document.getElementById('skillName');
     const modifierInput = document.getElementById('modifier');
@@ -2071,71 +2251,63 @@ function resetStatPointsOnLevelChange() {
     const savingTypeSelect = document.getElementById('savingType');
     const babInput = document.getElementById('bab');
     const rollFormulaInput = document.getElementById('rollFormula');
-
-    console.log('updateInputs: charData=', JSON.stringify(charData, null, 2));
-
-    // Update level and class
     const levelInput = document.getElementById('characterLevel');
     const classInput = document.getElementById('characterClass');
     const charLevelInput = document.getElementById('charLevel');
     const charClassInput = document.getElementById('charClass');
+
+    // Validate critical elements
+    if (!levelInput || !classInput || !charLevelInput || !charClassInput) {
+      console.error('updateInputs: Missing critical DOM elements', {
+        levelInput: !!levelInput,
+        classInput: !!classInput,
+        charLevelInput: !!charLevelInput,
+        charClassInput: !!charClassInput
+      });
+      throw new Error('Required input elements not found');
+    }
+
+    console.log('updateInputs: charData=', JSON.stringify(charData, null, 2));
+
+    // Update level and class
     let level = 1;
     let cls = 'Fatemarked';
     if (charData && charData.level && charData.class) {
       level = charData.level;
       cls = charData.class;
-      if (levelInput) {
-        const prevLevel = levelInput.value;
-        levelInput.value = level;
-        console.log(`updateInputs: Set characterLevel from ${prevLevel} to ${level}`);
-        if (prevLevel !== level.toString()) {
-          updateFeats();
-          updateClassAbilities();
-        }
+      const prevLevel = levelInput.value;
+      levelInput.value = level;
+      console.log(`updateInputs: Set characterLevel from ${prevLevel} to ${level}`);
+      if (prevLevel !== level.toString()) {
+        updateFeats();
+        updateClassAbilities();
       }
-      if (classInput) {
-        const validClasses = Array.from(classInput.options).map(opt => opt.value);
-        const prevClass = classInput.value;
-        classInput.value = validClasses.includes(cls) ? cls : 'Fatemarked';
-        console.log(`updateInputs: Set characterClass from ${prevClass} to ${classInput.value}`);
-        if (prevClass !== classInput.value) {
-          updateFeats();
-          updateClassAbilities();
-        }
-      }
-    } else if (charLevelInput && charClassInput) {
-      level = parseInt(charLevelInput.value) || 1;
-      cls = charClassInput.value || 'Fatemarked';
-      if (levelInput) {
-        const prevLevel = levelInput.value;
-        levelInput.value = level;
-        console.log(`updateInputs: Fallback set characterLevel from ${prevLevel} to ${levelInput.value}`);
-        if (prevLevel !== levelInput.value.toString()) {
-          updateFeats();
-          updateClassAbilities();
-        }
-      }
-      if (classInput) {
-        const validClasses = Array.from(classInput.options).map(opt => opt.value);
-        const prevClass = classInput.value;
-        classInput.value = validClasses.includes(cls) ? cls : 'Fatemarked';
-        console.log(`updateInputs: Fallback set characterClass from ${prevClass} to ${classInput.value}`);
-        if (prevClass !== classInput.value) {
-          updateFeats();
-          updateClassAbilities();
-        }
+      const validClasses = Array.from(classInput.options).map(opt => opt.value);
+      const prevClass = classInput.value;
+      classInput.value = validClasses.includes(cls) ? cls : 'Fatemarked';
+      console.log(`updateInputs: Set characterClass from ${prevClass} to ${classInput.value}`);
+      if (prevClass !== classInput.value) {
+        updateFeats();
+        updateClassAbilities();
       }
     } else {
-      if (levelInput) {
-        levelInput.value = '1';
-        console.log('updateInputs: Set characterLevel to default 1');
+      level = parseInt(charLevelInput.value) || 1;
+      cls = charClassInput.value || 'Fatemarked';
+      const prevLevel = levelInput.value;
+      levelInput.value = level;
+      console.log(`updateInputs: Fallback set characterLevel from ${prevLevel} to ${levelInput.value}`);
+      if (prevLevel !== levelInput.value.toString()) {
+        updateFeats();
+        updateClassAbilities();
       }
-      if (classInput) {
-        classInput.value = 'Fatemarked';
-        console.log('updateInputs: Set characterClass to default Fatemarked');
+      const validClasses = Array.from(classInput.options).map(opt => opt.value);
+      const prevClass = classInput.value;
+      classInput.value = validClasses.includes(cls) ? cls : 'Fatemarked';
+      console.log(`updateInputs: Fallback set characterClass from ${prevClass} to ${classInput.value}`);
+      if (prevClass !== classInput.value) {
+        updateFeats();
+        updateClassAbilities();
       }
-      updateFeats();
-      updateClassAbilities();
     }
 
     // Define visibility mapping
@@ -2205,7 +2377,7 @@ function resetStatPointsOnLevelChange() {
     // Update fields based on roll type
     if (['skill', 'extended', 'opposed', 'extendedOpposed'].includes(type)) {
       const selectedSkill = skillSelect?.value || 'none';
-      if (selectedSkill !== 'none') {
+      if (selectedSkill !== 'none' && skillSelect) {
         const skillData = skillsList.find(s => s.name === selectedSkill);
         const charSkill = charData?.skills?.find(s => s.name === selectedSkill);
         if (skillData && modifierInput) {
@@ -2317,6 +2489,8 @@ function resetStatPointsOnLevelChange() {
     if (rollFormulaInput) {
       rollFormulaInput.value = rollFormula;
       console.log(`updateInputs: Set rollFormula to ${rollFormula}`);
+    } else {
+      console.warn('updateInputs: rollFormulaInput element not found');
     }
 
     // Populate skillName
@@ -2358,6 +2532,8 @@ function resetStatPointsOnLevelChange() {
       }
       if (advantageTierInput) {
         advantageTierInput.classList.toggle('hidden', !advantagesList.some(a => a.name === advantageSelect.value && a.maxTier > 1));
+      } else {
+        console.warn('updateInputs: advantageTier element not found');
       }
     } else {
       console.warn('updateInputs: advantageSelect element not found');
@@ -2381,6 +2557,8 @@ function resetStatPointsOnLevelChange() {
       }
       if (disadvantageTierInput) {
         disadvantageTierInput.classList.toggle('hidden', !disadvantagesList.some(d => d.name === disadvantageSelect.value && d.maxTier > 1));
+      } else {
+        console.warn('updateInputs: disadvantageTier element not found');
       }
     } else {
       console.warn('updateInputs: disadvantageSelect element not found');
@@ -2773,14 +2951,17 @@ function resetStatPointsOnLevelChange() {
         console.error('Error checking paradox risk:', error);
         alert('Failed to check paradox risk.');
     }
-}
-
-  function rollD20() {
-    return Math.floor(Math.random() * 20) + 1;
   }
 
+  function rollD20() {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    return 1 + (array[0] % 20);
+  }
   function rollD4() {
-    return Math.floor(Math.random() * 4) + 1;
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    return 1 + (array[0] % 4);
   }
 
   function addParadoxPoint() {
@@ -4085,7 +4266,7 @@ function resetStatPointsOnLevelChange() {
     const div = document.createElement('div');
     div.className = 'dynamic-group';
     div.style.display = 'flex';
-    div.dataset.id = powerCounter;
+    div.dataset.id = powerCounter; // Assign ID immediately
     div.innerHTML = `
       <select id="powerCategory${powerCounter}" title="Power category" onchange="updatePowerCost(${powerCounter})">
         <option value="none">Select Category</option>
@@ -4101,7 +4282,7 @@ function resetStatPointsOnLevelChange() {
         ${lvl >= 7 ? '<option value="PL2">PL 2 / Tier 2</option>' : ''}
         ${lvl >= 11 ? '<option value="PL3">PL 3 / Tier 3</option>' : ''}
       </select>
-      <input id="powerCost${powerCounter}" type="number" min="0" value="0" style="width: 100px;" placeholder="Fate Point Cost" title="Fate Point cost" readonly>
+      <input id="powerCost${powerCounter}" type="number" min="0" value="0" style="width: 100px;" placeholder="Fate Point Cost" title="Fate Point cost" readonly data-prev-cost="0">
       <input id="powerEffect${powerCounter}" type="text" placeholder="Effect (e.g., 1d6 Psychic)" style="width: 200px;" title="Power effect, including damage if applicable">
       <input id="powerDC${powerCounter}" type="number" min="10" value="10" style="width: 100px;" placeholder="DC" title="Difficulty Class, including range modifier">
       <input id="powerRisk${powerCounter}" type="text" placeholder="Paradox Risk (e.g., DC 18)" style="width: 200px;" title="Paradox risk, if applicable">
@@ -4109,6 +4290,7 @@ function resetStatPointsOnLevelChange() {
     `;
     container.appendChild(div);
     updatePowers();
+    console.log(`addPowerField: Added power field with ID ${powerCounter}`);
   } catch (e) {
     console.error('Error adding power field:', e);
     alert('Failed to add power field.');
@@ -4286,20 +4468,9 @@ function resetStatPointsOnLevelChange() {
 function removePowerField(button) {
   try {
     const powerDiv = button.parentElement;
-    // Use data-id attribute to reliably get the power ID
     const id = powerDiv.dataset.id;
     if (!id) {
-      console.warn('Power ID not found on div, attempting fallback parsing');
-      // Fallback to parsing input IDs
-      const costInput = powerDiv.querySelector('input[id^="powerCost"]');
-      const nameInput = powerDiv.querySelector('input[id^="powerName"]');
-      const match = (costInput && costInput.id.match(/powerCost(\d+)/)) || 
-                   (nameInput && nameInput.id.match(/powerName(\d+)/));
-      if (match) {
-        powerDiv.dataset.id = match[1]; // Cache for future use
-      } else {
-        throw new Error('Unable to determine power ID');
-      }
+      throw new Error('Power ID not found on div');
     }
 
     // Refund Fate Points
@@ -4559,631 +4730,901 @@ function removePowerField(button) {
   }
 
   function rollDice() {
-    try {
-    const lvl = parseInt(document.getElementById('characterLevel').value) || 1;
-    const cls = document.getElementById('characterClass').value || 'Fatemarked';
-    if (cls === 'Fatemarked' && lvl > 3) {
-      alert('Fatemarked is only valid for Levels 1–3. Please select an advanced class.');
-      return;
+    if (window.isRollingDice) {
+    console.log('rollDice: Skipped due to ongoing roll');
+    return;
+  }
+  window.isRollingDice = true;
+
+  // Initialize variables
+  let lvl, cls;
+  try {
+    const levelInput = document.getElementById('characterLevel');
+    const classInput = document.getElementById('characterClass');
+    if (!levelInput || !classInput) {
+      console.error('rollDice: Missing critical DOM elements', {
+        levelInput: !!levelInput,
+        classInput: !!classInput
+      });
+      throw new Error('Required input elements not found');
     }
-    const type = document.getElementById('rollType').value || 'skill';
-    const mod = parseInt(document.getElementById('modifier').value) || 0;
-    const advSel = document.getElementById('advantage').value || 'none';
-    const envAdvantage = document.getElementById('envAdvantage').checked || false;
+    lvl = parseInt(levelInput.value) || 1;
+    cls = classInput.value || 'Fatemarked';
+  } catch (e) {
+    console.error('Error retrieving character level or class:', e);
+    alert('Failed to retrieve character level or class.');
+    window.isRollingDice = false;
+    return;
+  }
+
+  if (cls === 'Fatemarked' && lvl > 3) {
+    alert('Fatemarked is only valid for Levels 1–3. Please select an advanced class.');
+    window.isRollingDice = false;
+    return;
+  }
+
+  // Get input values
+  let type, mod, advSel, envAdvantage, feats, customFeat, skillName, skillSpec, advantage, advantageTier, disadvantage, disadvantageTier, power, powerLevel, paradoxCheckOptIn, synergyBonus, coverConcealment, lifestyle, charData;
+  try {
+    type = document.getElementById('rollType')?.value || 'skill';
+    mod = parseInt(document.getElementById('modifier')?.value) || 0;
+    advSel = document.getElementById('advantage')?.value || 'none';
+    envAdvantage = document.getElementById('envAdvantage')?.checked || false;
     const classFeatSelect = document.getElementById('classFeat');
     const dynamicFeatSelects = document.querySelectorAll('.dynamic-feat');
-    const feats = [
+    if (!classFeatSelect) {
+      console.warn('rollDice: classFeat element not found');
+    }
+    feats = [
       {
-        value: classFeatSelect.value || 'none',
-        tier: parseInt(document.getElementById('classFeatTier').value) || 1
+        value: classFeatSelect?.value || 'none',
+        tier: parseInt(document.getElementById('classFeatTier')?.value) || 1
       },
       ...Array.from(dynamicFeatSelects).map(s => ({
         value: s.value,
         tier: parseInt(s.closest('.dynamic-group')?.querySelector('.dynamic-feat-tier')?.value) || 1
       }))
     ].filter(f => f.value !== 'none');
-    const customFeat = document.getElementById('customFeat').value?.trim() || '';
-    const skillName = ['skill', 'extended', 'opposed', 'extendedOpposed'].includes(type) ?
-      document.getElementById('skillName').value || 'none' : null;
-    const skillSpec = ['skill', 'extended', 'opposed', 'extendedOpposed'].includes(type) ?
-      document.getElementById('skillSpec').value || 'none' : null;
-    const advantage = document.getElementById('advantageSelect').value || 'none';
-    const advantageTier = parseInt(document.getElementById('advantageTier').value) || 1;
-    const disadvantage = document.getElementById('disadvantageSelect').value || 'none';
-    const disadvantageTier = parseInt(document.getElementById('disadvantageTier').value) || 1;
-    const power = document.getElementById('powerSelect').value || 'none';
-    const powerLevel = document.getElementById('powerLevel').value || 'none';
-    const paradoxCheckOptIn = document.getElementById('paradoxCheckOptIn')?.checked || false;
-    const synergyBonus = document.getElementById('synergyBonus').checked ? 2 : 0;
-    const coverConcealment = document.getElementById('coverConcealment').value || 'none';
-    const lifestyle = document.getElementById('charLifestyle')?.value || 'Squalid';
-    const charData = getCharacterData();
-    const now = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
+    customFeat = document.getElementById('customFeat')?.value?.trim() || '';
+    skillName = ['skill', 'extended', 'opposed', 'extendedOpposed'].includes(type) ?
+      document.getElementById('skillName')?.value || 'none' : null;
+    skillSpec = ['skill', 'extended', 'opposed', 'extendedOpposed'].includes(type) ?
+      document.getElementById('skillSpec')?.value || 'none' : null;
+    advantage = document.getElementById('advantageSelect')?.value || 'none';
+    advantageTier = parseInt(document.getElementById('advantageTier')?.value) || 1;
+    disadvantage = document.getElementById('disadvantageSelect')?.value || 'none';
+    disadvantageTier = parseInt(document.getElementById('disadvantageTier')?.value) || 1;
+    power = document.getElementById('powerSelect')?.value || 'none';
+    powerLevel = document.getElementById('powerLevel')?.value || 'none';
+    paradoxCheckOptIn = document.getElementById('paradoxCheckOptIn')?.checked || false;
+    synergyBonus = document.getElementById('synergyBonus')?.checked ? 2 : 0;
+    coverConcealment = document.getElementById('coverConcealment')?.value || 'none';
+    lifestyle = document.getElementById('charLifestyle')?.value || 'Squalid';
+    charData = getCharacterData();
+  } catch (e) {
+    console.error('Error retrieving input values:', e);
+    alert('Failed to retrieve roll input values.');
+    window.isRollingDice = false;
+    return;
+  }
 
-    const lifestyleMods = {
-      'Luxurious': { Persuasion: 2, Survival: -2 },
-      'Comfortable': { Diplomacy: 1 },
-      'Modest': {},
-      'Squalid': { Survival: 1, Persuasion: -2 }
-    };
+  const now = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
 
-    const inherentBonuses = {
-      'Biomatrix Suit': { 'Technical Expertise': 2, 'Crafting': 2, 'Quantum Engineering': 2 },
-      'Continuum Raider': { 'Survival': 2, 'Navigate': 2 },
-      'Gunrunner': { 'Ranged Weapons': 2 },
-      'Faterunner': { 'Deception': 2 },
-      'Harlequin': { 'Deception': 2 },
-      'Warrior': { 'Melee Weapon': 2 },
-      'Mage': { 'Knowledge': 2, 'Perform': 2 },
-      'Shape': { 'Stealth': 2 },
-      'Masque': { 'Disguise': 2 },
-      'Adventurer': {},
-      'Fatemarked': {}
-    };
+  const lifestyleMods = {
+    'Luxurious': { Persuasion: 2, Survival: -2 },
+    'Comfortable': { Diplomacy: 1 },
+    'Modest': {},
+    'Squalid': { Survival: 1, Persuasion: -2 }
+  };
 
-    let naturalRoll = 0;
-    let totalRoll = 0;
-    let description = '';
-    let criticalResult = '';
-    let sanityResult = '';
-    let paradoxResult = '';
-    let levelNote = '';
-    let advantageSource = 'Mechanical';
-    let effectiveAdvantage = 'none';
-    if (advSel === 'disadvantage') {
-      effectiveAdvantage = 'disadvantage';
-      advantageSource = 'Mechanical (Disadvantage)';
-    } else if (advSel === 'advantage' || envAdvantage) {
-      effectiveAdvantage = 'advantage';
-      advantageSource = advSel === 'advantage' ? 'Mechanical' : 'Environmental';
-    }
+  const inherentBonuses = {
+    'Biomatrix Suit': { 'Technical Expertise': 2, 'Crafting': 2, 'Quantum Engineering': 2 },
+    'Continuum Raider': { 'Survival': 2, 'Navigate': 2 },
+    'Gunrunner': { 'Ranged Weapons': 2 },
+    'Faterunner': { 'Deception': 2 },
+    'Harlequin': { 'Deception': 2 },
+    'Warrior': { 'Melee Weapon': 2 },
+    'Mage': { 'Knowledge': 2, 'Perform': 2 },
+    'Shape': { 'Stealth': 2 },
+    'Masque': { 'Disguise': 2 },
+    'Adventurer': {},
+    'Fatemarked': {}
+  };
 
-    function rollD20() {
-      const array = new Uint32Array(2);
-      crypto.getRandomValues(array);
-      const roll1 = 1 + (array[0] % 20);
-      const roll2 = 1 + (array[1] % 20);
-      if (effectiveAdvantage === 'advantage') {
-        description = `Rolls: ${roll1}, ${roll2} (take higher) [${advantageSource}]`;
-        return Math.max(roll1, roll2);
-      } else if (effectiveAdvantage === 'disadvantage') {
-        description = `Rolls: ${roll1}, ${roll2} (take lower) [${advantageSource}]`;
-        return Math.min(roll1, roll2);
+  let naturalRoll = 0;
+  let totalRoll = 0;
+  let description = '';
+  let criticalResult = '';
+  let sanityResult = '';
+  let paradoxResult = '';
+  let levelNote = '';
+  let advantageSource = 'Mechanical';
+  let effectiveAdvantage = 'none';
+  if (advSel === 'disadvantage') {
+    effectiveAdvantage = 'disadvantage';
+    advantageSource = 'Mechanical (Disadvantage)';
+  } else if (advSel === 'advantage' || envAdvantage) {
+    effectiveAdvantage = 'advantage';
+    advantageSource = advSel === 'advantage' ? 'Mechanical' : 'Environmental';
+  }
+
+  // Helper function to parse and roll dice notation
+  function parseDiceNotation(notation) {
+    try {
+      // Normalize input: remove spaces, convert to lowercase
+      notation = notation.replace(/\s+/g, '').toLowerCase();
+      // Match dice groups (e.g., 2d6, 1d8) and modifiers (+3, -2)
+      const diceRegex = /(?:(\d+)d(4|6|8|10|12|20|100)|([+-]\d+))/g;
+      let match;
+      const diceGroups = [];
+      let totalModifier = 0;
+      const validDieTypes = [4, 6, 8, 10, 12, 20, 100];
+
+      // Validate notation format
+      if (!notation.match(/^((\d+)d(4|6|8|10|12|20|100)([+-]\d+)?)+$/)) {
+        throw new Error('Invalid dice notation. Use format like 2d6, 1d20+3, or 2d8+1d6-2.');
       }
-      description = `Roll: ${roll1}`;
-      return roll1;
-    }
 
-    function rollD4() {
-      const array = new Uint32Array(1);
-      crypto.getRandomValues(array);
-      return 1 + (array[0] % 4);
-    }
-
-    function rollParadoxRisk(powerCost = 0) {
-      const paradoxNatural = rollD20();
-      const paradoxMod = parseInt(document.getElementById('modifier').value) || 0;
-      let paradoxDC = powerLevel === 'PL1' || ['Fate’s Edge', 'Fate’s Influence', 'Fate’s Reach'].includes(powerLevel) ? 15 :
-        powerLevel === 'PL2' ? 18 : 22;
-      if (power !== 'none') {
-        const selectedOption = document.getElementById('powerSelect').querySelector(`option[value="${power}"]`);
-        paradoxDC = parseInt(selectedOption?.dataset.dc) || paradoxDC;
-      }
-      const paradoxTotal = paradoxNatural + paradoxMod + (feats.some(f => f.value === 'Rabbit’s Luck') ? Math.floor(feats.find(f => f.value === 'Rabbit’s Luck').tier / 5) * 2 : 0);
-      let paradoxModifiers = [];
-      if (paradoxMod !== 0) paradoxModifiers.push(`Modifier ${paradoxMod > 0 ? '+' : ''}${paradoxMod}`);
-      if (feats.some(f => f.value === 'Rabbit’s Luck')) paradoxModifiers.push(`Rabbit’s Luck +${Math.floor(feats.find(f => f.value === 'Rabbit’s Luck').tier / 5) * 2}`);
-      paradoxResult = `Paradox Risk Check: Rolled ${paradoxNatural}${paradoxModifiers.length ? ' + ' + paradoxModifiers.join(', ') : ''}=${paradoxTotal} vs DC${paradoxDC}. `;
-      if (paradoxNatural === 1 || paradoxTotal < paradoxDC - 10) {
-        paradoxResult += cls === 'Faterunner' || cls === 'Harlequin' ? 'Epic Failure: Minor Rift (AC 14, 20 Health)!' : 'Epic Failure: Dimensional Beast (AC 15, 30 Health)!';
-        const sanityLoss = rollD4();
-        document.getElementById('sanity').value = parseInt(document.getElementById('sanity').value) - sanityLoss;
-        sanityResult = `Sanity Loss: -${sanityLoss} due to epic paradox!`;
-        addParadoxPoint();
-      } else if (paradoxTotal < paradoxDC) {
-        if (paradoxTotal < paradoxDC - 5) {
-          paradoxResult += cls === 'Faterunner' || cls === 'Harlequin' ? 'Major Failure: Faint Shimmer (No Portal)!' : 'Major Failure: Minor Rift (Portal with Whispers)!';
-          addParadoxPoint();
-        } else {
-          paradoxResult += cls === 'Faterunner' || cls === 'Harlequin' ? 'Minor Failure: Minor Anomaly (-1 Penalty for 1 Encounter)!' : 'Minor Failure: Temporal Backlash (-2 Penalty for 1 Encounter)!';
-          addParadoxPoint();
+      while ((match = diceRegex.exec(notation)) !== null) {
+        if (match[1] && match[2]) {
+          // Dice group (e.g., 2d6)
+          const numDice = parseInt(match[1]);
+          const dieType = parseInt(match[2]);
+          if (!validDieTypes.includes(dieType)) {
+            throw new Error(`Invalid die type: d${dieType}. Supported types: d4, d6, d8, d10, d12, d20, d100`);
+          }
+          if (numDice < 1 || numDice > 100) {
+            throw new Error(`Invalid number of dice: ${numDice}. Must be between 1 and 100.`);
+          }
+          diceGroups.push({ numDice, dieType });
+        } else if (match[3]) {
+          // Modifier (e.g., +3, -2)
+          totalModifier += parseInt(match[3]);
         }
+      }
+
+      if (diceGroups.length === 0) {
+        throw new Error('No valid dice found in notation. Use format like 2d6+3 or 1d20-2.');
+      }
+
+      // Roll each die group
+      const allRolls = [];
+      const rollDescriptions = [];
+      diceGroups.forEach(group => {
+        const rolls = [];
+        for (let i = 0; i < group.numDice; i++) {
+          const array = new Uint32Array(1);
+          crypto.getRandomValues(array);
+          const roll = 1 + (array[0] % group.dieType);
+          rolls.push(roll);
+        }
+        allRolls.push(...rolls);
+        rollDescriptions.push(`${group.numDice}d${group.dieType}: ${rolls.join(', ')}`);
+      });
+
+      const total = allRolls.reduce((sum, val) => sum + val, 0) + totalModifier;
+      const description = rollDescriptions.join(' + ') + (totalModifier !== 0 ? ` ${totalModifier > 0 ? '+' : ''}${totalModifier}` : '');
+      return { total, description, allRolls };
+    } catch (e) {
+      console.error('Error parsing dice notation:', e);
+      throw new Error(e.message);
+    }
+  }
+
+  // Stub for rollParadoxRisk
+  function rollParadoxRisk() {
+    try {
+      const paradoxNatural = rollD20();
+      const paradoxMod = parseInt(document.getElementById('modifier')?.value) || 0;
+      const paradoxDC = 15; // Default DC
+      const paradoxTotal = paradoxNatural + paradoxMod;
+      let paradoxResult = `Paradox Risk Check: Rolled ${paradoxNatural}${paradoxMod ? ` + Modifier ${paradoxMod}` : ''}=${paradoxTotal} vs DC${paradoxDC}. `;
+      if (paradoxNatural === 1 || paradoxTotal < paradoxDC - 10) {
+        paradoxResult += cls === 'Faterunner' || cls === 'Harlequin' ?
+          'Epic Failure: Minor Rift (AC 14, 20 Health)!' : 'Epic Failure: Dimensional Beast (AC 15, 30 Health)!';
+        addParadoxPoint();
+        const sanityLoss = rollD4();
+        const sanityInput = document.getElementById('sanity');
+        if (sanityInput) {
+          sanityInput.value = parseInt(sanityInput.value) - sanityLoss;
+          document.getElementById('sanityResult').innerHTML = `Sanity Loss: -${sanityLoss} due to epic paradox!`;
+        }
+      } else if (paradoxTotal < paradoxDC) {
+        paradoxResult += cls === 'Faterunner' || cls === 'Harlequin' ?
+          'Minor Failure: Minor Anomaly (-1 Penalty for 1 Encounter)!' : 'Minor Failure: Temporal Backlash (-2 Penalty for 1 Encounter)!';
+        addParadoxPoint();
       } else {
-        paradoxResult += 'Stable Continuum!';
-        hasParadoxSuccess = true;
+        paradoxResult += 'Success: Stable Continuum!';
       }
-      if (powerCost > 0) {
-        totalResourcesUsedInSession += powerCost;
+      document.getElementById('paradoxResult').innerHTML = paradoxResult;
+      document.getElementById('results').classList.remove('hidden');
+    } catch (error) {
+      console.error('Error checking paradox risk:', error);
+      alert('Failed to check paradox risk.');
+    }
+  }
+
+  function confirmCritical() {
+    let confirmRoll, confirmTotal;
+    try {
+      let rolls = [rollD20()];
+      if (effectiveAdvantage === 'advantage') {
+        rolls.push(rollD20());
+        confirmRoll = Math.max(...rolls);
+        console.log(`confirmCritical: Advantage applied, rolls=${rolls}, selected=${confirmRoll}`);
+      } else if (effectiveAdvantage === 'disadvantage') {
+        rolls.push(rollD20());
+        confirmRoll = Math.min(...rolls);
+        console.log(`confirmCritical: Disadvantage applied, rolls=${rolls}, selected=${confirmRoll}`);
+      } else {
+        confirmRoll = rolls[0];
       }
+      confirmTotal = confirmRoll + mod + (['attack', 'disarm', 'grapple', 'trip'].includes(type) ? getBAB(lvl, cls) : 0);
+      return confirmTotal >= (parseInt(document.getElementById('ac')?.value) || 15);
+    } catch (e) {
+      console.error('Error confirming critical hit:', e);
+      alert('Failed to confirm critical hit.');
+      return false;
+    }
+  }
+
+  function checkEpicFail(dc, total, isDimensional = false) {
+    if (naturalRoll !== 1) return { isEpicFail: false, result: '' };
+    const threshold = dc >= 15 ? 5 : 10;
+    if (total >= dc - threshold) return { isEpicFail: false, result: '' };
+
+    let canSpendFate, canUseInnate;
+    try {
+      canSpendFate = lvl >= 4 && parseInt(document.getElementById('fatePointsCurrent')?.value) >= 1;
+      canUseInnate = lvl <= 3 && !localStorage.getItem('ability_Fate’s Edge');
+    } catch (e) {
+      console.error('Error checking fate points or innate ability:', e);
+      alert('Failed to check fate points or innate ability.');
+      return { isEpicFail: false, result: '' };
     }
 
-    function confirmCritical() {
-      const confirmRoll = rollD20();
-      const confirmTotal = confirmRoll + mod + (['attack', 'disarm', 'grapple', 'trip'].includes(type) ? getBAB(lvl, cls) : 0);
-      return confirmTotal >= (parseInt(document.getElementById('ac').value) || 15);
-    }
-
-    function checkEpicFail(dc, total, isDimensional = false) {
-      if (naturalRoll !== 1) return { isEpicFail: false, result: '' };
-      const threshold = dc >= 15 ? 5 : 10;
-      if (total >= dc - threshold) return { isEpicFail: false, result: '' };
-
-      const canSpendFate = lvl >= 4 && parseInt(document.getElementById('fatePointsCurrent').value) >= 1;
-      const canUseInnate = lvl <= 3 && !localStorage.getItem('ability_Fate’s Edge');
-      if (canSpendFate || canUseInnate) {
-        const useResource = confirm(`Epic Fail Check triggered! Use ${canSpendFate ? '1 Fate Point' : 'Fate’s Edge'} to avoid?`);
-        if (useResource) {
+    if (canSpendFate || canUseInnate) {
+      const useResource = confirm(`Epic Fail Check triggered! Use ${canSpendFate ? '1 Fate Point' : 'Fate’s Edge'} to avoid?`);
+      if (useResource) {
+        try {
           if (canSpendFate) {
-            document.getElementById('fatePointsCurrent').value = parseInt(document.getElementById('fatePointsCurrent').value) - 1;
-            totalResourcesUsedInSession += 1;
-            if (totalResourcesUsedInSession > lvl || (totalResourcesUsedInSession > lvl + 1 && (totalResourcesUsedInSession - lvl - 1) % 2 === 0)) {
-              rollParadoxRiskForFatePoint(1);
+            const fatePointsInput = document.getElementById('fatePointsCurrent');
+            if (fatePointsInput) {
+              fatePointsInput.value = parseInt(fatePointsInput.value) - 1;
+              totalResourcesUsedInSession += 1;
+              if (totalResourcesUsedInSession > lvl || (totalResourcesUsedInSession > lvl + 1 && (totalResourcesUsedInSession - lvl - 1) % 2 === 0)) {
+                rollParadoxRiskForFatePoint(1);
+              }
+            } else {
+              console.warn('rollDice: fatePointsCurrent element not found');
             }
           } else {
             localStorage.setItem('ability_Fate’s Edge', 'used');
           }
           return { isEpicFail: false, result: 'Standard Critical Failure: -1 to skill checks for session.' };
+        } catch (e) {
+          console.error('Error processing fate point usage:', e);
+          alert('Failed to process fate point usage.');
+          return { isEpicFail: false, result: '' };
         }
-      }
-
-      const reroll = rollD20();
-      if (reroll === 1) {
-        let consequence = '';
-        if (dc >= 20) {
-          consequence = isDimensional ?
-            'Major Setback: Minor rift (INT DC 18, summons beast AC 12, 20 Health, 1d6 damage). Paradox Risk: INT/CHA DC 18, -2 penalty or anomaly.' :
-            'Major Setback: Lose 1d4 Sanity (WIS DC 15 to resist).';
-          if (isDimensional) rollParadoxRisk();
-        } else if (dc >= 15) {
-          consequence = isDimensional ?
-            'Moderate Setback: Equipment breaks (Technical Expertise DC 15 to repair). Paradox Risk: INT/CHA DC 15, -1 penalty for 1 encounter.' :
-            'Moderate Setback: NPC hostile (Persuasion DC 15 to de-escalate).';
-          if (isDimensional) rollParadoxRisk();
-        } else {
-          consequence = 'Minor Setback: Equipment jams (-1 to skill checks for 1 encounter).';
-          if (isDimensional) rollParadoxRisk();
-        }
-        const sanityLoss = dc >= 20 ? rollD4() : 0;
-        if (sanityLoss) {
-          document.getElementById('sanity').value = parseInt(document.getElementById('sanity').value) - sanityLoss;
-          sanityResult = `Sanity Loss: -${sanityLoss}!`;
-        }
-        return { isEpicFail: true, result: `Epic Fail Confirmed! ${consequence}` };
-      } else {
-        const rerollTotal = reroll + mod + (type === 'skill' ? parseInt(document.getElementById('skillRank').value) || 0 : 0);
-        if (rerollTotal >= dc - 5) {
-          return { isEpicFail: false, result: 'Normal Failure.' };
-        }
-        return { isEpicFail: false, result: 'Standard Critical Failure: -1 to skill checks for session.' };
       }
     }
 
-    if (['skill', 'attack', 'sanity', 'saving', 'initiative', 'paradox', 'hazard', 'extended', 'opposed', 'extendedOpposed', 'disarm', 'grapple', 'trip'].includes(type)) {
-      naturalRoll = rollD20();
-      let extraModifier = 0;
-      if (['skill', 'extended'].includes(type) && skillName !== 'none') {
-        extraModifier = charData ? charData.skills.find(s => s.name === skillName)?.rank || 0 :
-          parseInt(document.getElementById('skillRank').value) || 0;
-        if (skillSpec !== 'none') extraModifier += 2; // Specialization bonus
-      }
-      if (['attack', 'disarm', 'grapple', 'trip'].includes(type)) extraModifier = getBAB(lvl, cls);
-      totalRoll = naturalRoll + mod + extraModifier + synergyBonus;
+    let reroll;
+    try {
+      reroll = rollD20();
+    } catch (e) {
+      console.error('Error performing reroll for epic fail:', e);
+      alert('Failed to perform reroll for epic fail.');
+      return { isEpicFail: false, result: '' };
+    }
 
-      let modifiers = [];
-      if (mod !== 0 && skillName !== 'none') modifiers.push(`${skillName} Modifier ${mod > 0 ? '+' : ''}${mod}`);
-      if (extraModifier !== 0) {
-        if (['skill', 'extended'].includes(type)) {
-          if (skillSpec !== 'none') modifiers.push(`Specialization (${skillSpec}) +2`);
-          modifiers.push(`Skill Rank +${extraModifier - (skillSpec !== 'none' ? 2 : 0)}`);
-        } else if (['attack', 'disarm', 'grapple', 'trip'].includes(type)) {
-          modifiers.push(`BAB +${extraModifier}`);
-        }
+    if (reroll === 1) {
+      let consequence = '';
+      if (dc >= 20) {
+        consequence = isDimensional ?
+          'Major Setback: Minor rift (INT DC 18, summons beast AC 12, 20 Health, 1d6 damage). Paradox Risk: INT/CHA DC 18, -2 penalty or anomaly.' :
+          'Major Setback: Lose 1d4 Sanity (WIS DC 15 to resist).';
+        if (isDimensional) rollParadoxRisk();
+      } else if (dc >= 15) {
+        consequence = isDimensional ?
+          'Moderate Setback: Equipment breaks (Technical Expertise DC 15 to repair). Paradox Risk: INT/CHA DC 15, -1 penalty for 1 encounter.' :
+          'Moderate Setback: NPC hostile (Persuasion DC 15 to de-escalate).';
+        if (isDimensional) rollParadoxRisk();
+      } else {
+        consequence = 'Minor Setback: Equipment jams (-1 to skill checks for 1 encounter).';
+        if (isDimensional) rollParadoxRisk();
       }
-      if (synergyBonus !== 0) modifiers.push(`Synergy Bonus +${synergyBonus}`);
-      if (skillName !== 'none' && lifestyleMods[lifestyle][skillName]) {
-        totalRoll += lifestyleMods[lifestyle][skillName];
-        modifiers.push(`Lifestyle (${lifestyle}) ${lifestyleMods[lifestyle][skillName] > 0 ? '+' : ''}${lifestyleMods[lifestyle][skillName]}`);
-      }
-      if (skillName !== 'none' && inherentBonuses[cls] && inherentBonuses[cls][skillName]) {
-        totalRoll += inherentBonuses[cls][skillName];
-        modifiers.push(`${cls} Inherent +${inherentBonuses[cls][skillName]}`);
-      }
-      if (cls === 'Adventurer' && feats.some(f => f.value === 'Jack of All Trades')) {
-        totalRoll += 1;
-        modifiers.push('Jack of All Trades +1');
-      }
-      if (cls === 'Harlequin' && skillName === 'Deception' && localStorage.getItem('ability_Illusion Weave')) {
-        totalRoll += 2;
-        modifiers.push('Illusion Weave +2');
-      }
-
-      // Apply advantage modifiers
-      if (advantage !== 'none') {
-        const advData = advantagesList.find(a => a.name === advantage);
-        if (advData) {
-          if (advData.name === 'Sniper' && ['attack', 'disarm'].includes(type)) {
-            const concentrationRank = charData ? charData.skills.find(s => s.name === 'Concentration')?.rank || 0 : 0;
-            totalRoll += concentrationRank;
-            modifiers.push(`Sniper +${concentrationRank}`);
-          } else if (advData.name === 'Feint' && ['attack', 'disarm', 'grapple', 'trip'].includes(type)) {
-            totalRoll += advantageTier;
-            modifiers.push(`Feint +${advantageTier}`);
-          } else if (advData.name === 'Reckless Abandon' && ['attack'].includes(type)) {
-            totalRoll += advantageTier;
-            modifiers.push(`Reckless Abandon +${advantageTier}`);
-          } else if (advData.name === 'Animal Empathy' && skillName === 'Animal Handling') {
-            totalRoll += advantageTier;
-            modifiers.push(`Animal Empathy +${advantageTier}`);
-          } else if (advData.name === 'Attractive' && ['Deception', 'Diplomacy', 'Persuade'].includes(skillName)) {
-            totalRoll += advantageTier;
-            modifiers.push(`Attractive +${advantageTier}`);
-          } else if (advData.name === 'Melee Expert' && skillName === 'Melee Weapon') {
-            totalRoll += advantageTier;
-            modifiers.push(`Melee Expert +${advantageTier}`);
-          } else if (advData.name === 'Defensive Fighter' && ['attack'].includes(type)) {
-            totalRoll -= advantageTier;
-            modifiers.push(`Defensive Fighter -${advantageTier}`);
-          } else if (advData.name === 'Recall' && skillName === 'Knowledge') {
-            totalRoll += advantageTier;
-            modifiers.push(`Recall +${advantageTier}`);
-          } else if (advData.name === 'Evasion' && type === 'saving' && document.getElementById('savingType').value === 'reflex') {
-            totalRoll += advantageTier;
-            modifiers.push(`Evasion +${advantageTier}`);
-          } else if (advData.name === 'Enamor' && ['Deception', 'Persuade'].includes(skillName)) {
-            totalRoll += advantageTier;
-            modifiers.push(`Enamor +${advantageTier}`);
-          } else if (advData.name === 'Fearless' && type === 'sanity') {
-            totalRoll += 2;
-            modifiers.push('Fearless +2');
-          } else if (advData.name === 'Tireless' && type === 'saving' && document.getElementById('savingType').value === 'fortitude') {
-            totalRoll += advantageTier;
-            modifiers.push(`Tireless +${advantageTier}`);
-          } else if (advData.name === 'Improved Critical' && ['attack', 'disarm', 'grapple', 'trip'].includes(type)) {
-            totalRoll += advantageTier;
-            modifiers.push(`Improved Critical +${advantageTier}`);
-          } else if (advData.name === 'Improved Disarm' && type === 'disarm') {
-            totalRoll += 2;
-            modifiers.push('Improved Disarm +2');
-          } else if (advData.name === 'Improved Initiative' && type === 'initiative') {
-            totalRoll += advantageTier;
-            modifiers.push(`Improved Initiative +${advantageTier}`);
-          } else if (advData.name === 'Improved Defensive' && type === 'grapple') {
-            totalRoll += advantageTier * 2;
-            modifiers.push(`Improved Defensive +${advantageTier * 2}`);
-          } else if (advData.name === 'MacGyver' && ['Crafting', 'Technical Expertise'].includes(skillName)) {
-            totalRoll += 2;
-            modifiers.push('MacGyver +2');
-          } else if (advData.name === 'Multilingual' && skillName === 'Language') {
-            totalRoll += advantageTier;
-            modifiers.push(`Multilingual +${advantageTier}`);
-          } else if (advData.name === 'Rabbit’s Luck' && type === 'paradox') {
-            const rabbitBonus = Math.floor(advantageTier / 5) * 2;
-            totalRoll += rabbitBonus;
-            modifiers.push(`Rabbit’s Luck +${rabbitBonus}`);
-          } else if (advData.name === 'Surgical Precision' && ['attack', 'disarm'].includes(type)) {
-            totalRoll += advantageTier;
-            modifiers.push(`Surgical Precision +${advantageTier}`);
-          } else if (advData.name === 'Ranged Weapons Mastery' && skillName === 'Ranged Weapons') {
-            totalRoll += advantageTier;
-            modifiers.push(`Ranged Weapons Mastery +${advantageTier}`);
-          }
-        }
-      }
-
-      // Apply disadvantage penalties
-      if (disadvantage !== 'none') {
-        const disData = disadvantagesList.find(d => d.name === disadvantage);
-        if (disData) {
-          if (disData.name === 'Nearsighted' && ['Perception', 'Ranged Weapons'].includes(skillName)) {
-            totalRoll -= disadvantageTier;
-            modifiers.push(`Nearsighted -${disadvantageTier}`);
-          } else if (disData.name === 'Social Anxiety' && ['Deception', 'Diplomacy', 'Persuade'].includes(skillName)) {
-            totalRoll -= disadvantageTier;
-            modifiers.push(`Social Anxiety -${disadvantageTier}`);
-          } else if (disData.name === 'Bum Knee' && skillName === 'Acrobatics' && skillSpec === 'Tumbling') {
-            totalRoll -= disadvantageTier;
-            modifiers.push(`Bum Knee -${disadvantageTier}`);
-          } else if (disData.name === 'Chronic Stutter' && ['Persuasion', 'Perform'].includes(skillName)) {
-            totalRoll -= disadvantageTier;
-            modifiers.push(`Chronic Stutter -${disadvantageTier}`);
-          } else if (disData.name === 'Weak Grip' && skillName === 'Melee Weapon') {
-            totalRoll -= disadvantageTier;
-            modifiers.push(`Weak Grip -${disadvantageTier}`);
-          } else if (disData.name === 'Chronic Back Pain' && type === 'saving' && document.getElementById('savingType').value === 'reflex') {
-            totalRoll -= disadvantageTier;
-            modifiers.push(`Chronic Back Pain -${disadvantageTier}`);
-          } else if (disData.name === 'Migraines' && ['Knowledge', 'Cryptography'].includes(skillName)) {
-            totalRoll -= disadvantageTier;
-            modifiers.push(`Migraines -${disadvantageTier}`);
-          } else if (disData.name === 'Asthma' && type === 'saving' && document.getElementById('savingType').value === 'fortitude') {
-            totalRoll -= disadvantageTier;
-            modifiers.push(`Asthma -${disadvantageTier}`);
-          } else if (disData.name === 'Impulsiveness' && skillName === 'Insight') {
-            totalRoll -= 2;
-            modifiers.push('Impulsiveness -2');
-          } else if (disData.name === 'Insomnia' && type === 'saving' && document.getElementById('savingType').value === 'fortitude') {
-            totalRoll -= disadvantageTier;
-            modifiers.push(`Insomnia -${disadvantageTier}`);
-          } else if (disData.name === 'Shaky Hands' && ['Sleight of Hand', 'Lockpicking'].includes(skillName)) {
-            totalRoll -= disadvantageTier;
-            modifiers.push(`Shaky Hands -${disadvantageTier}`);
-          } else if (disData.name === 'Old Shoulder Injury' && ['disarm', 'grapple'].includes(type)) {
-            totalRoll -= disadvantageTier;
-            modifiers.push(`Old Shoulder Injury -${disadvantageTier}`);
-          } else if (disData.name === 'Poor Reaction Time' && type === 'saving' && document.getElementById('savingType').value === 'reflex') {
-            totalRoll -= disadvantageTier;
-            modifiers.push(`Poor Reaction Time -${disadvantageTier}`);
-          } else if (disData.name === 'Self-Doubt' && ['Persuasion', 'Deception'].includes(skillName)) {
-            totalRoll -= disadvantageTier;
-            modifiers.push(`Self-Doubt -${disadvantageTier}`);
-          } else if (disData.name === 'Overcautious Nature' && type === 'initiative') {
-            totalRoll -= 2;
-            modifiers.push('Overcautious Nature -2');
-          } else if (disData.name === 'Dyslexia' && ['Knowledge', 'Research'].includes(skillName)) {
-            totalRoll -= disadvantageTier;
-            modifiers.push(`Dyslexia -${disadvantageTier}`);
-          } else if (disData.name === 'Low Willpower' && type === 'saving' && document.getElementById('savingType').value === 'willpower') {
-            totalRoll -= disadvantageTier;
-            modifiers.push(`Low Willpower -${disadvantageTier}`);
-          }
-        }
-      }
-
-      // Apply power effects for paradox rolls
-      let powerCost = 0;
-      if (type === 'paradox' && power !== 'none') {
-        const selectedOption = document.getElementById('powerSelect').querySelector(`option[value="${power}"]`);
-        powerCost = parseInt(selectedOption?.dataset.cost) || 0;
-        if (powerCost > 0 && parseInt(document.getElementById('fatePointsCurrent').value) < powerCost) {
-          alert(`Need ${powerCost} Fate Point(s) for ${power}!`);
-          return;
-        }
-      }
-
-      if (coverConcealment === 'cover' && !feats.some(f => ['Sniper', 'Surgical Precision'].includes(f.value)) && advantage !== 'Surgical Precision') {
-        totalRoll -= 4;
-        modifiers.push('Cover -4');
-      }
-      if (coverConcealment === 'concealment' && !feats.some(f => ['Sniper', 'Surgical Precision'].includes(f.value)) && advantage !== 'Surgical Precision') {
-        const missChance = Math.random() < 0.2 ? -2 : 0;
-        totalRoll += missChance;
-        if (missChance) modifiers.push('Concealment -2');
-      }
-
-      feats.forEach(f => {
-        if (f.value === 'Fatemarked Agility' && skillName && ['Acrobatics', 'Escape Artist', 'Pilot', 'Riding', 'Sleight of Hand', 'Stealth'].includes(skillName)) {
-          totalRoll += 2;
-          modifiers.push('Fatemarked Agility +2');
-        }
-        if (f.value === 'Dimensional Instinct' && skillName && ['Insight', 'Investigate', 'Survival'].includes(skillName) && type === 'skill') {
-          totalRoll += 3;
-          modifiers.push('Dimensional Instinct +3');
-        }
-        if (f.value === 'Mystic Resonance' && skillName && ['Artistic Expression', 'Deception', 'Perform', 'Persuade'].includes(skillName)) {
-          totalRoll += 2;
-          modifiers.push('Mystic Resonance +2');
-        }
-        if (f.value === 'Circuit Intuition' && skillName && ['Crafting', 'Technical Expertise', 'Quantum Engineering'].includes(skillName)) {
-          totalRoll += 2;
-          modifiers.push('Circuit Intuition +2');
-        }
-        if (f.value === 'Iron Psyche' && type === 'sanity') {
-          totalRoll += 2;
-          modifiers.push('Iron Psyche +2');
-        }
-        if (f.value === 'Scholar’s Insight' && skillName && skillName === 'Knowledge') {
-          totalRoll += 3;
-          modifiers.push('Scholar’s Insight +3');
-        }
-        if (f.value === 'Streetwise Contact' && skillName && skillName === 'Streetwise') {
-          totalRoll += 3;
-          modifiers.push('Streetwise Contact +3');
-        }
-        if (f.value === 'Artisan’s Craft' && skillName && skillName === 'Crafting') {
-          totalRoll += 3;
-          modifiers.push('Artisan’s Craft +3');
-        }
-        if (f.value === 'Veteran’s Grit' && skillName && skillName === 'Intimidate') {
-          totalRoll += 4;
-          modifiers.push('Veteran’s Grit +4');
-        }
-        if (f.value === 'Performer’s Flair' && skillName && skillName === 'Perform') {
-          totalRoll += 3;
-          modifiers.push('Performer’s Flair +3');
-        }
-        if (f.value === 'custom' && customFeat) {
-          modifiers.push(`Custom Feat (${customFeat})`);
-        }
-      });
-
-      let dc = 0;
-      if (['skill', 'sanity', 'saving', 'hazard'].includes(type)) dc = parseInt(document.getElementById('dc').value) || 10;
-      if (type === 'paradox') {
-        const sel = document.getElementById('paradoxDC').value;
-        dc = sel === 'custom' ? (parseInt(document.getElementById('customParadoxDC').value) || 15) : parseInt(sel);
-      }
-      if (type === 'extended') dc = parseInt(document.getElementById('cumulativeDC').value) || 30;
-      if (['opposed', 'extendedOpposed', 'grapple'].includes(type)) dc = parseInt(document.getElementById('opponentRoll').value) || 10;
-      if (['attack', 'disarm', 'trip'].includes(type)) dc = parseInt(document.getElementById('ac').value) || 15;
-
-      description += `<br>Modifiers: ${modifiers.length ? modifiers.join(', ') : 'None'}<br>Total: ${totalRoll}`;
-
-      let flavorText = '';
-      if (cls === 'Fatemarked' && ['skill', 'attack', 'saving'].includes(type) && effectiveAdvantage === 'advantage') {
-        flavorText = lvl >= 3 ? 'Fate’s Reach bends reality!' : lvl >= 2 ? 'Fate’s intuition guides your hand!' : 'Fate’s edge shines through!';
-      } else if (cls === 'Biomatrix Suit' && ['attack', 'skill'].includes(type)) {
-        flavorText = totalRoll >= dc ? 'Order’s precision prevails!' : 'Tech falters in chaos!';
-      } else if (cls === 'Continuum Raider' && ['attack', 'skill'].includes(type)) {
-        flavorText = totalRoll >= dc ? 'Chaos fuels your mutation!' : 'The Continuum resists!';
-      } else if (cls === 'Gunrunner' && type === 'attack') {
-        flavorText = totalRoll >= dc ? 'Chronometric aim strikes true!' : 'Shot goes wide!';
-      } else if (cls === 'Faterunner' && totalRoll >= dc) {
-        flavorText = 'Luck turns the tide!';
-      } else if (cls === 'Harlequin' && totalRoll >= dc) {
-        flavorText = 'Illusion weaves success!';
-      } else if (cls === 'Warrior' && type === 'attack') {
-        flavorText = totalRoll >= dc ? 'Chi empowers your blow!' : 'Balance wavers!';
-      } else if (cls === 'Mage' && ['skill', 'saving'].includes(type)) {
-        flavorText = totalRoll >= dc ? 'Arcane mastery shines!' : 'Magic flickers!';
-      } else if (cls === 'Shape' && ['skill', 'attack'].includes(type)) {
-        flavorText = totalRoll >= dc ? 'Pathos reshapes reality!' : 'The Darkwell stirs!';
-      } else if (cls === 'Masque' && ['skill', 'saving'].includes(type)) {
-        flavorText = totalRoll >= dc ? 'Pact holds strong!' : 'Revenants whisper!';
-      } else if (cls === 'Adventurer' && totalRoll >= dc) {
-        flavorText = 'Versatility triumphs!';
-      }
-
-      if (type === 'skill') {
-        if (skillName === 'none') {
-          alert('Please select a skill!');
-          return;
-        }
-        const isDimensional = powerLevel !== 'none' && !['Fate’s Edge', 'Fate’s Influence', 'Fate’s Reach'].includes(powerLevel);
-        const epicFail = checkEpicFail(dc, totalRoll, isDimensional);
-        if (epicFail.isEpicFail) {
-          criticalResult = epicFail.result;
-        } else if (naturalRoll === 20 && skillName && !skillCriticalTracker[skillName]) {
-          skillCriticalTracker[skillName] = true;
-          criticalResult = `Critical Success in ${skillName}${skillSpec !== 'none' ? ` (${skillSpec})` : ''}! Gain a skill point! ${flavorText}`;
-          if (isDimensional) rollParadoxRisk();
-        } else if (naturalRoll === 1 && !epicFail.isEpicFail) {
-          criticalResult = epicFail.result || `Critical Failure: -1 to ${skillName} checks for session!`;
-          if (isDimensional) rollParadoxRisk();
-        } else if (totalRoll >= dc + 5) {
-          criticalResult = `Triumphant Success! ${flavorText}`;
-        } else if (totalRoll >= dc) {
-          criticalResult = `Success! ${flavorText}`;
-        } else {
-          criticalResult = 'Failure!';
-        }
-      }
-      if (['attack', 'disarm', 'grapple', 'trip'].includes(type)) {
-        if (naturalRoll === 1) {
-          const epicFail = checkEpicFail(dc, totalRoll);
-          criticalResult = epicFail.isEpicFail ? epicFail.result : 'Critical Miss: -1 to attack rolls for session!';
-          description += type === 'grapple' ? ` vs Opponent ${dc}` : ` vs AC ${dc}`;
-        } else {
-          let critRange = 20;
-          if (feats.some(f => f.value === 'Improved Critical') || advantage === 'Improved Critical') {
-            critRange = 20 - (feats.find(f => f.value === 'Improved Critical')?.tier || advantageTier);
-            modifiers.push(`Improved Critical (Range ${critRange}-20)`);
-          }
-          if (naturalRoll >= critRange && confirmCritical()) {
-            criticalResult = `Confirmed Critical Hit! ${flavorText}`;
-          } else if (totalRoll >= dc) {
-            criticalResult = type === 'attack' ? `Hit! ${flavorText}` : `${type.charAt(0).toUpperCase() + type.slice(1)} Success! ${flavorText}`;
+      try {
+        const sanityLoss = dc >= 20 ? rollD4() : 0;
+        if (sanityLoss) {
+          const sanityInput = document.getElementById('sanity');
+          if (sanityInput) {
+            sanityInput.value = parseInt(sanityInput.value) - sanityLoss;
+            sanityResult = `Sanity Loss: -${sanityLoss}!`;
           } else {
-            criticalResult = type === 'attack' ? 'Miss!' : `${type.charAt(0).toUpperCase() + type.slice(1)} Failed!`;
+            console.warn('rollDice: sanity element not found');
           }
-          description += type === 'grapple' ? ` vs Opponent ${dc}` : ` vs AC ${dc}`;
         }
-      }
-      if (type === 'sanity' || type === 'saving') {
-        const epicFail = checkEpicFail(dc, totalRoll);
-        if (epicFail.isEpicFail) {
-          sanityResult = epicFail.result;
-        } else {
-          sanityResult = `${type === 'sanity' ? 'Sanity' : 'Save'}: ${naturalRoll}${modifiers.length ? ' + ' + modifiers.join(', ') : ''}=${totalRoll} vs DC${dc}. ${flavorText}`;
-        }
-      }
-      if (type === 'paradox') {
-        const epicFail = checkEpicFail(dc, totalRoll, true);
-        if (powerCost > 0) {
-          document.getElementById('fatePointsCurrent').value = parseInt(document.getElementById('fatePointsCurrent').value) - powerCost;
-        }
-        const shouldCheckParadox = (cls === 'Faterunner' || cls === 'Harlequin') ?
-          (powerLevel === 'PL2' || powerLevel === 'PL3' || power !== 'none') && paradoxCheckOptIn :
-          totalResourcesUsedInSession + powerCost > lvl || (totalResourcesUsedInSession + powerCost > lvl + 1 && (totalResourcesUsedInSession + powerCost - lvl - 1) % 2 === 0);
-        if (shouldCheckParadox) {
-          if (epicFail.isEpicFail) {
-            paradoxResult = epicFail.result;
-          } else if (naturalRoll === 1 && !epicFail.isEpicFail) {
-            paradoxResult = cls === 'Faterunner' || cls === 'Harlequin' ? 'Critical Failure: Minor Rift (AC 14, 20 Health)!' : 'Critical Failure: Dimensional Beast (AC 15, 30 Health)!';
-            const sanityLoss = rollD4();
-            document.getElementById('sanity').value = parseInt(document.getElementById('sanity').value) - sanityLoss;
-            sanityResult = `Sanity Loss: -${sanityLoss} due to critical paradox!`;
-            addParadoxPoint();
-          } else if (totalRoll < dc) {
-            paradoxResult = cls === 'Faterunner' || cls === 'Harlequin' ? 'Minor Backlash (-1)!' : 'Temporal Backlash (-2)!';
-            addParadoxPoint();
-          } else {
-            paradoxResult = `Stable Continuum! ${flavorText}`;
-            hasParadoxSuccess = true;
-          }
-        } else {
-          paradoxResult = powerCost > 0 ? `No paradox check required for ${power}.` : 'No paradox check required.';
-        }
-        if (powerCost > 0) {
-          totalResourcesUsedInSession += powerCost;
-        }
-        description += ` vs DC ${dc}`;
-      }
-      if (type === 'hazard') {
-        const epicFail = checkEpicFail(dc, totalRoll);
-        if (epicFail.isEpicFail) {
-          paradoxResult = epicFail.result;
-        } else {
-          paradoxResult = totalRoll >= dc ? `Navigated Hazard! ${flavorText}` : 'Hazard Overwhelms!';
-        }
-        description += ` vs DC ${dc}`;
-      }
-      if (type === 'extended') {
-        if (skillName === 'none') {
-          alert('Please select a skill!');
-          return;
-        }
-        const isDimensional = powerLevel !== 'none' && !['Fate’s Edge', 'Fate’s Influence', 'Fate’s Reach'].includes(powerLevel);
-        const epicFail = checkEpicFail(dc, totalRoll, isDimensional);
-        if (epicFail.isEpicFail) {
-          criticalResult = epicFail.result;
-        } else {
-          extendedProgress += totalRoll;
-          criticalResult = `Progress: ${extendedProgress}/${dc} ${extendedProgress >= dc ? `- Success! ${flavorText}` : ''}`;
-          if (isDimensional) rollParadoxRisk();
-        }
-      }
-      if (type === 'opposed' || type === 'extendedOpposed') {
-        if (skillName === 'none') {
-          alert('Please select a skill!');
-          return;
-        }
-        const isDimensional = powerLevel !== 'none' && !['Fate’s Edge', 'Fate’s Influence', 'Fate’s Reach'].includes(powerLevel);
-        const epicFail = checkEpicFail(dc, totalRoll, isDimensional);
-        if (epicFail.isEpicFail) {
-          criticalResult = epicFail.result;
-        } else if (type === 'extendedOpposed') {
-          extendedProgress += totalRoll;
-          criticalResult = `Progress: ${extendedProgress}/${dc} ${extendedProgress >= dc ? `- Success! ${flavorText}` : ''}`;
-          if (isDimensional) rollParadoxRisk();
-        } else {
-          criticalResult = totalRoll >= dc ? `Outperformed! (${totalRoll} vs ${dc}) ${flavorText}` : `Opponent Prevails! (${totalRoll} vs ${dc})`;
-        }
-      }
-      if (type === 'initiative') {
-        criticalResult = `Initiative: ${totalRoll} ${flavorText}`;
+        return { isEpicFail: true, result: `Epic Fail Confirmed! ${consequence}` };
+      } catch (e) {
+        console.error('Error processing epic fail consequence:', e);
+        alert('Failed to process epic fail consequence.');
+        return { isEpicFail: true, result: `Epic Fail Confirmed! ${consequence}` };
       }
     } else {
-      let notation = type === 'damage' || type === 'nonLethal' ? document.getElementById('damageDice').value : document.getElementById('customDice').value || '1d6';
-      const match = notation.match(/(\d+)d(\d+)/);
-      if (!match) return alert('Invalid dice notation.');
-      const [, numDice, dieType] = match.map(Number);
-      let rolls = [];
-      for (let i = 0; i < numDice; i++) {
-        const array = new Uint32Array(1);
-        crypto.getRandomValues(array);
-        rolls.push(1 + (array[0] % dieType));
+      let rerollTotal;
+      try {
+        rerollTotal = reroll + mod + (type === 'skill' ? parseInt(document.getElementById('skillRank')?.value) || 0 : 0);
+      } catch (e) {
+        console.error('Error calculating reroll total:', e);
+        alert('Failed to calculate reroll total.');
+        return { isEpicFail: false, result: '' };
       }
-      totalRoll = rolls.reduce((sum, val) => sum + val, 0) + mod - (type === 'nonLethal' ? 2 : 0);
-      let modifiers = [];
-      if (mod !== 0) modifiers.push(`Modifier ${mod > 0 ? '+' : ''}${mod}`);
-      if (type === 'nonLethal') modifiers.push('Non-Lethal -2');
-      if (advantage === 'Sniper' && type === 'damage') {
-        const concentrationRank = charData ? charData.skills.find(s => s.name === 'Concentration')?.rank || 0 : 0;
-        totalRoll += concentrationRank;
-        modifiers.push(`Sniper +${concentrationRank}`);
+      if (rerollTotal >= dc - 5) {
+        return { isEpicFail: false, result: 'Normal Failure.' };
       }
-      description = `Rolls: ${rolls.join(', ')}<br>Modifiers: ${modifiers.length ? modifiers.join(', ') : 'None'}<br>Total: ${totalRoll}`;
-      criticalResult = type === 'nonLethal' ? 'Non-Lethal Strike!' : 'Damage Dealt!';
+      return { isEpicFail: false, result: 'Standard Critical Failure: -1 to skill checks for session.' };
+    }
+  }
+
+  if (['skill', 'attack', 'sanity', 'saving', 'initiative', 'paradox', 'hazard', 'extended', 'opposed', 'extendedOpposed', 'disarm', 'grapple', 'trip'].includes(type)) {
+    try {
+      // Handle advantage/disadvantage for d20 rolls
+      let rolls = [rollD20()];
+      if (effectiveAdvantage === 'advantage') {
+        rolls.push(rollD20());
+        naturalRoll = Math.max(...rolls);
+        description = `Rolls: ${rolls.join(', ')} (Advantage: ${advantageSource})<br>`;
+        console.log(`rollDice: Advantage applied, rolls=${rolls}, selected=${naturalRoll}`);
+      } else if (effectiveAdvantage === 'disadvantage') {
+        rolls.push(rollD20());
+        naturalRoll = Math.min(...rolls);
+        description = `Rolls: ${rolls.join(', ')} (Disadvantage: ${advantageSource})<br>`;
+        console.log(`rollDice: Disadvantage applied, rolls=${rolls}, selected=${naturalRoll}`);
+      } else {
+        naturalRoll = rolls[0];
+        description = `Roll: ${naturalRoll}<br>`;
+      }
+      totalRoll = naturalRoll;
+    } catch (e) {
+      console.error('Error rolling d20:', e);
+      alert('Failed to roll d20.');
+      window.isRollingDice = false;
+      return;
+    }
+
+    let extraModifier = 0;
+    try {
+      if (['skill', 'extended'].includes(type) && skillName !== 'none') {
+        extraModifier = charData ? charData.skills.find(s => s.name === skillName)?.rank || 0 :
+          parseInt(document.getElementById('skillRank')?.value) || 0;
+        if (skillSpec !== 'none') extraModifier += 2;
+      }
+      if (['attack', 'disarm', 'grapple', 'trip'].includes(type)) extraModifier = getBAB(lvl, cls);
+      totalRoll += mod + extraModifier + synergyBonus;
+    } catch (e) {
+      console.error('Error calculating roll modifiers:', e);
+      alert('Failed to calculate roll modifiers.');
+      window.isRollingDice = false;
+      return;
+    }
+
+    let modifiers = [];
+    if (mod !== 0 && skillName !== 'none') modifiers.push(`${skillName} Modifier ${mod > 0 ? '+' : ''}${mod}`);
+    if (extraModifier !== 0) {
+      if (['skill', 'extended'].includes(type)) {
+        if (skillSpec !== 'none') modifiers.push(`Specialization (${skillSpec}) +2`);
+        modifiers.push(`Skill Rank +${extraModifier - (skillSpec !== 'none' ? 2 : 0)}`);
+      } else if (['attack', 'disarm', 'grapple', 'trip'].includes(type)) {
+        modifiers.push(`BAB +${extraModifier}`);
+      }
+    }
+    if (synergyBonus !== 0) modifiers.push(`Synergy Bonus +${synergyBonus}`);
+    if (skillName !== 'none' && lifestyleMods[lifestyle][skillName]) {
+      totalRoll += lifestyleMods[lifestyle][skillName];
+      modifiers.push(`Lifestyle (${lifestyle}) ${lifestyleMods[lifestyle][skillName] > 0 ? '+' : ''}${lifestyleMods[lifestyle][skillName]}`);
+    }
+    if (skillName !== 'none' && inherentBonuses[cls] && inherentBonuses[cls][skillName]) {
+      totalRoll += inherentBonuses[cls][skillName];
+      modifiers.push(`${cls} Inherent +${inherentBonuses[cls][skillName]}`);
+    }
+    if (cls === 'Adventurer' && feats.some(f => f.value === 'Jack of All Trades')) {
+      totalRoll += 1;
+      modifiers.push('Jack of All Trades +1');
+    }
+    if (cls === 'Harlequin' && skillName === 'Deception' && localStorage.getItem('ability_Illusion Weave')) {
+      totalRoll += 2;
+      modifiers.push('Illusion Weave +2');
+    }
+
+    // Apply advantage modifiers
+    if (advantage !== 'none') {
+      const advData = advantagesList.find(a => a.name === advantage);
+      if (advData) {
+        if (advData.name === 'Sniper' && ['attack', 'disarm'].includes(type)) {
+          const concentrationRank = charData ? charData.skills.find(s => s.name === 'Concentration')?.rank || 0 : 0;
+          totalRoll += concentrationRank;
+          modifiers.push(`Sniper +${concentrationRank}`);
+        } else if (advData.name === 'Feint' && ['attack', 'disarm', 'grapple', 'trip'].includes(type)) {
+          totalRoll += advantageTier;
+          modifiers.push(`Feint +${advantageTier}`);
+        } else if (advData.name === 'Reckless Abandon' && ['attack'].includes(type)) {
+          totalRoll += advantageTier;
+          modifiers.push(`Reckless Abandon +${advantageTier}`);
+        } else if (advData.name === 'Animal Empathy' && skillName === 'Animal Handling') {
+          totalRoll += advantageTier;
+          modifiers.push(`Animal Empathy +${advantageTier}`);
+        } else if (advData.name === 'Attractive' && ['Deception', 'Diplomacy', 'Persuade'].includes(skillName)) {
+          totalRoll += advantageTier;
+          modifiers.push(`Attractive +${advantageTier}`);
+        } else if (advData.name === 'Melee Expert' && skillName === 'Melee Weapon') {
+          totalRoll += advantageTier;
+          modifiers.push(`Melee Expert +${advantageTier}`);
+        } else if (advData.name === 'Defensive Fighter' && ['attack'].includes(type)) {
+          totalRoll -= advantageTier;
+          modifiers.push(`Defensive Fighter -${advantageTier}`);
+        } else if (advData.name === 'Recall' && skillName === 'Knowledge') {
+          totalRoll += advantageTier;
+          modifiers.push(`Recall +${advantageTier}`);
+        } else if (advData.name === 'Evasion' && type === 'saving' && document.getElementById('savingType')?.value === 'reflex') {
+          totalRoll += advantageTier;
+          modifiers.push(`Evasion +${advantageTier}`);
+        } else if (advData.name === 'Enamor' && ['Deception', 'Persuade'].includes(skillName)) {
+          totalRoll += advantageTier;
+          modifiers.push(`Enamor +${advantageTier}`);
+        } else if (advData.name === 'Fearless' && type === 'sanity') {
+          totalRoll += 2;
+          modifiers.push('Fearless +2');
+        } else if (advData.name === 'Tireless' && type === 'saving' && document.getElementById('savingType')?.value === 'fortitude') {
+          totalRoll += advantageTier;
+          modifiers.push(`Tireless +${advantageTier}`);
+        } else if (advData.name === 'Improved Critical' && ['attack', 'disarm', 'grapple', 'trip'].includes(type)) {
+          totalRoll += advantageTier;
+          modifiers.push(`Improved Critical +${advantageTier}`);
+        } else if (advData.name === 'Improved Disarm' && type === 'disarm') {
+          totalRoll += 2;
+          modifiers.push('Improved Disarm +2');
+        } else if (advData.name === 'Improved Initiative' && type === 'initiative') {
+          totalRoll += advantageTier;
+          modifiers.push(`Improved Initiative +${advantageTier}`);
+        } else if (advData.name === 'Improved Defensive' && type === 'grapple') {
+          totalRoll += advantageTier * 2;
+          modifiers.push(`Improved Defensive +${advantageTier * 2}`);
+        } else if (advData.name === 'MacGyver' && ['Crafting', 'Technical Expertise'].includes(skillName)) {
+          totalRoll += 2;
+          modifiers.push('MacGyver +2');
+        } else if (advData.name === 'Multilingual' && skillName === 'Language') {
+          totalRoll += advantageTier;
+          modifiers.push(`Multilingual +${advantageTier}`);
+        } else if (advData.name === 'Rabbit’s Luck' && type === 'paradox') {
+          const rabbitBonus = Math.floor(advantageTier / 5) * 2;
+          totalRoll += rabbitBonus;
+          modifiers.push(`Rabbit’s Luck +${rabbitBonus}`);
+        } else if (advData.name === 'Surgical Precision' && ['attack', 'disarm'].includes(type)) {
+          totalRoll += advantageTier;
+          modifiers.push(`Surgical Precision +${advantageTier}`);
+        } else if (advData.name === 'Ranged Weapons Mastery' && skillName === 'Ranged Weapons') {
+          totalRoll += advantageTier;
+          modifiers.push(`Ranged Weapons Mastery +${advantageTier}`);
+        }
+      }
+    }
+
+    // Apply disadvantage penalties
+    if (disadvantage !== 'none') {
+      const disData = disadvantagesList.find(d => d.name === disadvantage);
+      if (disData) {
+        if (disData.name === 'Nearsighted' && ['Perception', 'Ranged Weapons'].includes(skillName)) {
+          totalRoll -= disadvantageTier;
+          modifiers.push(`Nearsighted -${disadvantageTier}`);
+        } else if (disData.name === 'Social Anxiety' && ['Deception', 'Diplomacy', 'Persuade'].includes(skillName)) {
+          totalRoll -= disadvantageTier;
+          modifiers.push(`Social Anxiety -${disadvantageTier}`);
+        } else if (disData.name === 'Bum Knee' && skillName === 'Acrobatics' && skillSpec === 'Tumbling') {
+          totalRoll -= disadvantageTier;
+          modifiers.push(`Bum Knee -${disadvantageTier}`);
+        } else if (disData.name === 'Chronic Stutter' && ['Persuasion', 'Perform'].includes(skillName)) {
+          totalRoll -= disadvantageTier;
+          modifiers.push(`Chronic Stutter -${disadvantageTier}`);
+        } else if (disData.name === 'Weak Grip' && skillName === 'Melee Weapon') {
+          totalRoll -= disadvantageTier;
+          modifiers.push(`Weak Grip -${disadvantageTier}`);
+        } else if (disData.name === 'Chronic Back Pain' && type === 'saving' && document.getElementById('savingType')?.value === 'reflex') {
+          totalRoll -= disadvantageTier;
+          modifiers.push(`Chronic Back Pain -${disadvantageTier}`);
+        } else if (disData.name === 'Migraines' && ['Knowledge', 'Cryptography'].includes(skillName)) {
+          totalRoll -= disadvantageTier;
+          modifiers.push(`Migraines -${disadvantageTier}`);
+        } else if (disData.name === 'Asthma' && type === 'saving' && document.getElementById('savingType')?.value === 'fortitude') {
+          totalRoll -= disadvantageTier;
+          modifiers.push(`Asthma -${disadvantageTier}`);
+        } else if (disData.name === 'Impulsiveness' && skillName === 'Insight') {
+          totalRoll -= 2;
+          modifiers.push('Impulsiveness -2');
+        } else if (disData.name === 'Insomnia' && type === 'saving' && document.getElementById('savingType')?.value === 'fortitude') {
+          totalRoll -= disadvantageTier;
+          modifiers.push(`Insomnia -${disadvantageTier}`);
+        } else if (disData.name === 'Shaky Hands' && ['Sleight of Hand', 'Lockpicking'].includes(skillName)) {
+          totalRoll -= disadvantageTier;
+          modifiers.push(`Shaky Hands -${disadvantageTier}`);
+        } else if (disData.name === 'Old Shoulder Injury' && ['disarm', 'grapple'].includes(type)) {
+          totalRoll -= disadvantageTier;
+          modifiers.push(`Old Shoulder Injury -${disadvantageTier}`);
+        } else if (disData.name === 'Poor Reaction Time' && type === 'saving' && document.getElementById('savingType')?.value === 'reflex') {
+          totalRoll -= disadvantageTier;
+          modifiers.push(`Poor Reaction Time -${disadvantageTier}`);
+        } else if (disData.name === 'Self-Doubt' && ['Persuasion', 'Deception'].includes(skillName)) {
+          totalRoll -= disadvantageTier;
+          modifiers.push(`Self-Doubt -${disadvantageTier}`);
+        } else if (disData.name === 'Overcautious Nature' && type === 'initiative') {
+          totalRoll -= 2;
+          modifiers.push('Overcautious Nature -2');
+        } else if (disData.name === 'Dyslexia' && ['Knowledge', 'Research'].includes(skillName)) {
+          totalRoll -= disadvantageTier;
+          modifiers.push(`Dyslexia -${disadvantageTier}`);
+        } else if (disData.name === 'Low Willpower' && type === 'saving' && document.getElementById('savingType')?.value === 'willpower') {
+          totalRoll -= disadvantageTier;
+          modifiers.push(`Low Willpower -${disadvantageTier}`);
+        }
+      }
+    }
+
+    // Apply power effects for paradox rolls
+    let powerCost = 0;
+    if (type === 'paradox' && power !== 'none') {
+      try {
+        const selectedOption = document.getElementById('powerSelect')?.querySelector(`option[value="${power}"]`);
+        powerCost = parseInt(selectedOption?.dataset.cost) || 0;
+        if (powerCost > 0 && parseInt(document.getElementById('fatePointsCurrent')?.value) < powerCost) {
+          alert(`Need ${powerCost} Fate Point(s) for ${power}!`);
+          window.isRollingDice = false;
+          return;
+        }
+      } catch (e) {
+        console.error('Error checking paradox power cost:', e);
+        alert('Failed to check paradox power cost.');
+        window.isRollingDice = false;
+        return;
+      }
+    }
+
+    if (coverConcealment === 'cover' && !feats.some(f => ['Sniper', 'Surgical Precision'].includes(f.value)) && advantage !== 'Surgical Precision') {
+      totalRoll -= 4;
+      modifiers.push('Cover -4');
+    }
+    if (coverConcealment === 'concealment' && !feats.some(f => ['Sniper', 'Surgical Precision'].includes(f.value)) && advantage !== 'Surgical Precision') {
+      const array = new Uint32Array(1);
+      crypto.getRandomValues(array);
+      const missChance = array[0] / 2**32 < 0.2 ? -2 : 0;
+      totalRoll += missChance;
+      if (missChance) modifiers.push('Concealment -2');
+    }
+
+    feats.forEach(f => {
+      if (f.value === 'Fatemarked Agility' && skillName && ['Acrobatics', 'Escape Artist', 'Pilot', 'Riding', 'Sleight of Hand', 'Stealth'].includes(skillName)) {
+        totalRoll += 2;
+        modifiers.push('Fatemarked Agility +2');
+      }
+      if (f.value === 'Dimensional Instinct' && skillName && ['Insight', 'Investigate', 'Survival'].includes(skillName) && type === 'skill') {
+        totalRoll += 3;
+        modifiers.push('Dimensional Instinct +3');
+      }
+      if (f.value === 'Mystic Resonance' && skillName && ['Artistic Expression', 'Deception', 'Perform', 'Persuade'].includes(skillName)) {
+        totalRoll += 2;
+        modifiers.push('Mystic Resonance +2');
+      }
+      if (f.value === 'Circuit Intuition' && skillName && ['Crafting', 'Technical Expertise', 'Quantum Engineering'].includes(skillName)) {
+        totalRoll += 2;
+        modifiers.push('Circuit Intuition +2');
+      }
+      if (f.value === 'Iron Psyche' && type === 'sanity') {
+        totalRoll += 2;
+        modifiers.push('Iron Psyche +2');
+      }
+      if (f.value === 'Scholar’s Insight' && skillName && skillName === 'Knowledge') {
+        totalRoll += 3;
+        modifiers.push('Scholar’s Insight +3');
+      }
+      if (f.value === 'Streetwise Contact' && skillName && skillName === 'Streetwise') {
+        totalRoll += 3;
+        modifiers.push('Streetwise Contact +3');
+      }
+      if (f.value === 'Artisan’s Craft' && skillName && skillName === 'Crafting') {
+        totalRoll += 3;
+        modifiers.push('Artisan’s Craft +3');
+      }
+      if (f.value === 'Veteran’s Grit' && skillName && skillName === 'Intimidate') {
+        totalRoll += 4;
+        modifiers.push('Veteran’s Grit +4');
+      }
+      if (f.value === 'Performer’s Flair' && skillName && skillName === 'Perform') {
+        totalRoll += 3;
+        modifiers.push('Performer’s Flair +3');
+      }
+      if (f.value === 'custom' && customFeat) {
+        modifiers.push(`Custom Feat (${customFeat})`);
+      }
+    });
+
+    let dc = 0;
+    try {
+      if (['skill', 'sanity', 'saving', 'hazard'].includes(type)) dc = parseInt(document.getElementById('dc')?.value) || 10;
+      if (type === 'paradox') {
+        const sel = document.getElementById('paradoxDC')?.value;
+        dc = sel === 'custom' ? (parseInt(document.getElementById('customParadoxDC')?.value) || 15) : parseInt(sel) || 15;
+      }
+      if (type === 'extended') dc = parseInt(document.getElementById('cumulativeDC')?.value) || 30;
+      if (['opposed', 'extendedOpposed', 'grapple'].includes(type)) dc = parseInt(document.getElementById('opponentRoll')?.value) || 10;
+      if (['attack', 'disarm', 'trip'].includes(type)) dc = parseInt(document.getElementById('ac')?.value) || 15;
+    } catch (e) {
+      console.error('Error calculating DC:', e);
+      alert('Failed to calculate DC.');
+      window.isRollingDice = false;
+      return;
+    }
+
+    description += `Modifiers: ${modifiers.length ? modifiers.join(', ') : 'None'}<br>Total: ${totalRoll}`;
+
+    let flavorText = '';
+    if (cls === 'Fatemarked' && ['skill', 'attack', 'saving'].includes(type) && effectiveAdvantage === 'advantage') {
+      flavorText = lvl >= 3 ? 'Fate’s Reach bends reality!' : lvl >= 2 ? 'Fate’s intuition guides your hand!' : 'Fate’s edge shines through!';
+    } else if (cls === 'Biomatrix Suit' && ['attack', 'skill'].includes(type)) {
+      flavorText = totalRoll >= dc ? 'Order’s precision prevails!' : 'Tech falters in chaos!';
+    } else if (cls === 'Continuum Raider' && ['attack', 'skill'].includes(type)) {
+      flavorText = totalRoll >= dc ? 'Chaos fuels your mutation!' : 'The Continuum resists!';
+    } else if (cls === 'Gunrunner' && type === 'attack') {
+      flavorText = totalRoll >= dc ? 'Chronometric aim strikes true!' : 'Shot goes wide!';
+    } else if (cls === 'Faterunner' && totalRoll >= dc) {
+      flavorText = 'Luck turns the tide!';
+    } else if (cls === 'Harlequin' && totalRoll >= dc) {
+      flavorText = 'Illusion weaves success!';
+    } else if (cls === 'Warrior' && type === 'attack') {
+      flavorText = totalRoll >= dc ? 'Chi empowers your blow!' : 'Balance wavers!';
+    } else if (cls === 'Mage' && ['skill', 'saving'].includes(type)) {
+      flavorText = totalRoll >= dc ? 'Arcane mastery shines!' : 'Magic flickers!';
+    } else if (cls === 'Shape' && ['skill', 'attack'].includes(type)) {
+      flavorText = totalRoll >= dc ? 'Pathos reshapes reality!' : 'The Darkwell stirs!';
+    } else if (cls === 'Masque' && ['skill', 'saving'].includes(type)) {
+      flavorText = totalRoll >= dc ? 'Pact holds strong!' : 'Revenants whisper!';
+    } else if (cls === 'Adventurer' && totalRoll >= dc) {
+      flavorText = 'Versatility triumphs!';
+    }
+
+    if (type === 'skill') {
+      if (skillName === 'none') {
+        alert('Please select a skill!');
+        window.isRollingDice = false;
+        return;
+      }
+      const isDimensional = powerLevel !== 'none' && !['Fate’s Edge', 'Fate’s Influence', 'Fate’s Reach'].includes(powerLevel);
+      let epicFail;
+      try {
+        epicFail = checkEpicFail(dc, totalRoll, isDimensional);
+      } catch (e) {
+        console.error('Error checking epic fail for skill roll:', e);
+        alert('Failed to check epic fail for skill roll.');
+        window.isRollingDice = false;
+        return;
+      }
+      if (epicFail.isEpicFail) {
+        criticalResult = epicFail.result;
+      } else if (naturalRoll === 20 && skillName && !skillCriticalTracker[skillName]) {
+        skillCriticalTracker[skillName] = true;
+        criticalResult = `Critical Success in ${skillName}${skillSpec !== 'none' ? ` (${skillSpec})` : ''}! Gain a skill point! ${flavorText}`;
+        if (isDimensional) rollParadoxRisk();
+      } else if (naturalRoll === 1 && !epicFail.isEpicFail) {
+        criticalResult = epicFail.result || `Critical Failure: -1 to ${skillName} checks for session!`;
+        if (isDimensional) rollParadoxRisk();
+      } else if (totalRoll >= dc + 5) {
+        criticalResult = `Triumphant Success! ${flavorText}`;
+      } else if (totalRoll >= dc) {
+        criticalResult = `Success! ${flavorText}`;
+      } else {
+        criticalResult = 'Failure!';
+      }
+    } else if (['attack', 'disarm', 'grapple', 'trip'].includes(type)) {
+      if (naturalRoll === 1) {
+        let epicFail;
+        try {
+          epicFail = checkEpicFail(dc, totalRoll);
+        } catch (e) {
+          console.error('Error checking epic fail for attack roll:', e);
+          alert('Failed to check epic fail for attack roll.');
+          window.isRollingDice = false;
+          return;
+        }
+        criticalResult = epicFail.isEpicFail ? epicFail.result : 'Critical Miss: -1 to attack rolls for session!';
+        description += type === 'grapple' ? ` vs Opponent ${dc}` : ` vs AC ${dc}`;
+      } else {
+        let critRange = 20;
+        if (feats.some(f => f.value === 'Improved Critical') || advantage === 'Improved Critical') {
+          critRange = 20 - (feats.find(f => f.value === 'Improved Critical')?.tier || advantageTier);
+          modifiers.push(`Improved Critical (Range ${critRange}-20)`);
+        }
+        let confirmedCritical;
+        try {
+          confirmedCritical = naturalRoll >= critRange && confirmCritical();
+        } catch (e) {
+          console.error('Error confirming critical hit:', e);
+          alert('Failed to confirm critical hit.');
+          window.isRollingDice = false;
+          return;
+        }
+        if (confirmedCritical) {
+          criticalResult = `Confirmed Critical Hit! ${flavorText}`;
+        } else if (totalRoll >= dc) {
+          criticalResult = type === 'attack' ? `Hit! ${flavorText}` : `${type.charAt(0).toUpperCase() + type.slice(1)} Success! ${flavorText}`;
+        } else {
+          criticalResult = type === 'attack' ? 'Miss!' : `${type.charAt(0).toUpperCase() + type.slice(1)} Failed!`;
+        }
+        description += type === 'grapple' ? ` vs Opponent ${dc}` : ` vs AC ${dc}`;
+      }
+    } else if (type === 'sanity' || type === 'saving') {
+      let epicFail;
+      try {
+        epicFail = checkEpicFail(dc, totalRoll);
+      } catch (e) {
+        console.error('Error checking epic fail for sanity/saving roll:', e);
+        alert('Failed to check epic fail for sanity/saving roll.');
+        window.isRollingDice = false;
+        return;
+      }
+      if (epicFail.isEpicFail) {
+        sanityResult = epicFail.result;
+      } else {
+        sanityResult = `${type === 'sanity' ? 'Sanity' : 'Save'}: ${naturalRoll}${modifiers.length ? ' + ' + modifiers.join(', ') : ''}=${totalRoll} vs DC${dc}. ${flavorText}`;
+      }
+    } else if (type === 'paradox') {
+      let epicFail;
+      try {
+        epicFail = checkEpicFail(dc, totalRoll, true);
+      } catch (e) {
+        console.error('Error checking epic fail for paradox roll:', e);
+        alert('Failed to check epic fail for paradox roll.');
+        window.isRollingDice = false;
+        return;
+      }
+      if (powerCost > 0) {
+        try {
+          const fatePointsInput = document.getElementById('fatePointsCurrent');
+          if (fatePointsInput) {
+            fatePointsInput.value = parseInt(fatePointsInput.value) - powerCost;
+          } else {
+            console.warn('rollDice: fatePointsCurrent element not found');
+          }
+        } catch (e) {
+          console.error('Error updating fate points for paradox roll:', e);
+          alert('Failed to update fate points for paradox roll.');
+          window.isRollingDice = false;
+          return;
+        }
+      }
+      const shouldCheckParadox = (cls === 'Faterunner' || cls === 'Harlequin') ?
+        (powerLevel === 'PL2' || powerLevel === 'PL3' || power !== 'none') && paradoxCheckOptIn :
+        totalResourcesUsedInSession + powerCost > lvl || (totalResourcesUsedInSession + powerCost > lvl + 1 && (totalResourcesUsedInSession + powerCost - lvl - 1) % 2 === 0);
+      if (shouldCheckParadox) {
+        if (epicFail.isEpicFail) {
+          paradoxResult = epicFail.result;
+        } else if (naturalRoll === 1 && !epicFail.isEpicFail) {
+          paradoxResult = cls === 'Faterunner' || cls === 'Harlequin' ? 'Critical Failure: Minor Rift (AC 14, 20 Health)!' : 'Critical Failure: Dimensional Beast (AC 15, 30 Health)!';
+          try {
+            const sanityLoss = rollD4();
+            const sanityInput = document.getElementById('sanity');
+            if (sanityInput) {
+              sanityInput.value = parseInt(sanityInput.value) - sanityLoss;
+              sanityResult = `Sanity Loss: -${sanityLoss} due to critical paradox!`;
+            } else {
+              console.warn('rollDice: sanity element not found');
+            }
+            addParadoxPoint();
+          } catch (e) {
+            console.error('Error updating sanity for paradox critical failure:', e);
+            alert('Failed to update sanity for paradox critical failure.');
+          }
+        } else if (totalRoll < dc) {
+          paradoxResult = cls === 'Faterunner' || cls === 'Harlequin' ? 'Minor Backlash (-1)!' : 'Temporal Backlash (-2)!';
+          addParadoxPoint();
+        } else {
+          paradoxResult = `Stable Continuum! ${flavorText}`;
+          hasParadoxSuccess = true;
+        }
+      } else {
+        paradoxResult = powerCost > 0 ? `No paradox check required for ${power}.` : 'No paradox check required.';
+      }
+      if (powerCost > 0) {
+        totalResourcesUsedInSession += powerCost;
+      }
+      description += ` vs DC ${dc}`;
+    } else if (type === 'hazard') {
+      let epicFail;
+      try {
+        epicFail = checkEpicFail(dc, totalRoll);
+      } catch (e) {
+        console.error('Error checking epic fail for hazard roll:', e);
+        alert('Failed to check epic fail for hazard roll.');
+        window.isRollingDice = false;
+        return;
+      }
+      if (epicFail.isEpicFail) {
+        paradoxResult = epicFail.result;
+      } else {
+        paradoxResult = totalRoll >= dc ? `Navigated Hazard! ${flavorText}` : 'Hazard Overwhelms!';
+      }
+      description += ` vs DC ${dc}`;
+    } else if (type === 'extended') {
+      if (skillName === 'none') {
+        alert('Please select a skill!');
+        window.isRollingDice = false;
+        return;
+      }
+      const isDimensional = powerLevel !== 'none' && !['Fate’s Edge', 'Fate’s Influence', 'Fate’s Reach'].includes(powerLevel);
+      let epicFail;
+      try {
+        epicFail = checkEpicFail(dc, totalRoll, isDimensional);
+      } catch (e) {
+        console.error('Error checking epic fail for extended roll:', e);
+        alert('Failed to check epic fail for extended roll.');
+        window.isRollingDice = false;
+        return;
+      }
+      if (epicFail.isEpicFail) {
+        criticalResult = epicFail.result;
+      } else {
+        extendedProgress += totalRoll;
+        criticalResult = `Progress: ${extendedProgress}/${dc} ${extendedProgress >= dc ? `- Success! ${flavorText}` : ''}`;
+        if (isDimensional) rollParadoxRisk();
+      }
+    } else if (type === 'opposed' || type === 'extendedOpposed') {
+      if (skillName === 'none') {
+        alert('Please select a skill!');
+        window.isRollingDice = false;
+        return;
+      }
+      const isDimensional = powerLevel !== 'none' && !['Fate’s Edge', 'Fate’s Influence', 'Fate’s Reach'].includes(powerLevel);
+      let epicFail;
+      try {
+        epicFail = checkEpicFail(dc, totalRoll, isDimensional);
+      } catch (e) {
+        console.error('Error checking epic fail for opposed/extendedOpposed roll:', e);
+        alert('Failed to check epic fail for opposed/extendedOpposed roll.');
+        window.isRollingDice = false;
+        return;
+      }
+      if (epicFail.isEpicFail) {
+        criticalResult = epicFail.result;
+      } else if (type === 'extendedOpposed') {
+        extendedProgress += totalRoll;
+        criticalResult = `Progress: ${extendedProgress}/${dc} ${extendedProgress >= dc ? `- Success! ${flavorText}` : ''}`;
+        if (isDimensional) rollParadoxRisk();
+      } else {
+        criticalResult = totalRoll >= dc ? `Outperformed! (${totalRoll} vs ${dc}) ${flavorText}` : `Opponent Prevails! (${totalRoll} vs ${dc})`;
+      }
+    } else if (type === 'initiative') {
+      criticalResult = `Initiative: ${totalRoll} ${flavorText}`;
+    } else if (type === 'damage' || type === 'nonLethal' || type === 'custom') {
+      try {
+        const notation = type === 'damage' || type === 'nonLethal' ? 
+          (document.getElementById('damageDice')?.value || '1d4') : 
+          (document.getElementById('customDice')?.value || '1d6');
+        const result = parseDiceNotation(notation);
+        totalRoll = result.total + mod - (type === 'nonLethal' ? 2 : 0);
+        let modifiers = [];
+        if (mod !== 0) modifiers.push(`Modifier ${mod > 0 ? '+' : ''}${mod}`);
+        if (type === 'nonLethal') modifiers.push('Non-Lethal -2');
+        if (advantage === 'Sniper' && (type === 'damage' || type === 'custom')) {
+          const concentrationRank = charData ? charData.skills.find(s => s.name === 'Concentration')?.rank || 0 : 0;
+          totalRoll += concentrationRank;
+          modifiers.push(`Sniper +${concentrationRank}`);
+        }
+        description = `${result.description}<br>Modifiers: ${modifiers.length ? modifiers.join(', ') : 'None'}<br>Total: ${totalRoll}`;
+        criticalResult = type === 'nonLethal' ? 'Non-Lethal Strike!' : type === 'damage' ? 'Damage Dealt!' : 'Custom Roll Result!';
+      } catch (e) {
+        console.error('Error processing dice roll:', e);
+        alert(e.message);
+        window.isRollingDice = false;
+        return;
+      }
     }
 
     if ([3, 4, 6, 8, 10, 12, 14].includes(lvl)) levelNote += `Feat Available!`;
@@ -5192,25 +5633,51 @@ function removePowerField(button) {
       if (nextFeat) levelNote += `Next feat at Level ${nextFeat}.`;
     }
 
-    document.getElementById('results').classList.remove('hidden');
-    document.getElementById('rollResult').innerHTML = description;
-    document.getElementById('rollResult').setAttribute('aria-label', `Roll result: ${description.replace(/<br>/g, ', ')}`);
-    document.getElementById('criticalResult').innerHTML = criticalResult;
-    document.getElementById('criticalResult').setAttribute('aria-label', `Critical result: ${criticalResult}`);
-    document.getElementById('sanityResult').innerHTML = sanityResult;
-    document.getElementById('sanityResult').setAttribute('aria-label', `Sanity result: ${sanityResult}`);
-    document.getElementById('paradoxResult').innerHTML = paradoxResult;
-    document.getElementById('paradoxResult').setAttribute('aria-label', `Paradox result: ${paradoxResult}`);
-    document.getElementById('levelNote').innerHTML = levelNote;
-    document.getElementById('levelNote').setAttribute('aria-label', `Level note: ${levelNote}`);
+    // Update result display
+    try {
+      const resultsDiv = document.getElementById('results');
+      const rollResult = document.getElementById('rollResult');
+      const criticalResultEl = document.getElementById('criticalResult');
+      const sanityResultEl = document.getElementById('sanityResult');
+      const paradoxResultEl = document.getElementById('paradoxResult');
+      const levelNoteEl = document.getElementById('levelNote');
+      const historyList = document.getElementById('historyList');
 
-    const historyList = document.getElementById('historyList');
-    const li = document.createElement('li');
-    li.innerHTML = `${now} — ${type.charAt(0).toUpperCase() + type.slice(1)}:<br>${description}${criticalResult ? `<br>${criticalResult}` : ''}${sanityResult ? `<br>${sanityResult}` : ''}${paradoxResult ? `<br>${paradoxResult}` : ''}${levelNote ? `<br>${levelNote}` : ''}`;
-    historyList.prepend(li);
-  } catch (e) {
-    console.error('Error rolling dice:', e);
-    alert('Failed to roll dice. Please check inputs.');
+      if (!resultsDiv || !rollResult || !criticalResultEl || !sanityResultEl || !paradoxResultEl || !levelNoteEl || !historyList) {
+        console.error('rollDice: Missing result display elements', {
+          resultsDiv: !!resultsDiv,
+          rollResult: !!rollResult,
+          criticalResultEl: !!criticalResultEl,
+          sanityResultEl: !!sanityResultEl,
+          paradoxResultEl: !!paradoxResultEl,
+          levelNoteEl: !!levelNoteEl,
+          historyList: !!historyList
+        });
+        throw new Error('Required result display elements not found');
+      }
+
+      resultsDiv.classList.remove('hidden');
+      rollResult.innerHTML = description;
+      rollResult.setAttribute('aria-label', `Roll result: ${description.replace(/<br>/g, ', ')}`);
+      criticalResultEl.innerHTML = criticalResult;
+      criticalResultEl.setAttribute('aria-label', `Critical result: ${criticalResult}`);
+      sanityResultEl.innerHTML = sanityResult;
+      sanityResultEl.setAttribute('aria-label', `Sanity result: ${sanityResult}`);
+      paradoxResultEl.innerHTML = paradoxResult;
+      paradoxResultEl.setAttribute('aria-label', `Paradox result: ${paradoxResult}`);
+      levelNoteEl.innerHTML = levelNote;
+      levelNoteEl.setAttribute('aria-label', `Level note: ${levelNote}`);
+
+      const li = document.createElement('li');
+      li.innerHTML = `${now} — ${type.charAt(0).toUpperCase() + type.slice(1)}:<br>${description}${criticalResult ? `<br>${criticalResult}` : ''}${sanityResult ? `<br>${sanityResult}` : ''}${paradoxResult ? `<br>${paradoxResult}` : ''}${levelNote ? `<br>${levelNote}` : ''}`;
+      historyList.prepend(li);
+      console.log('rollDice: Appended roll result to history list');
+    } catch (e) {
+      console.error('Error updating roll result display:', e);
+      alert('Failed to update roll result display.');
+    }
+
+    window.isRollingDice = false;
   }
 }
 
@@ -5282,6 +5749,11 @@ function removePowerField(button) {
         'Primordial Mark - +2 tech, -2 CHA.'
       ];
 
+      const gmOutput = document.getElementById('gmReferenceOutput');
+      if (!gmOutput) {
+        throw new Error('gmReferenceOutput element not found');
+      }
+
       const rollD10 = () => Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] % 10);
       const reality = {
         Topography: topographies[rollD10()],
@@ -5296,10 +5768,10 @@ function removePowerField(button) {
 
       let output = '<strong>Wondrous Realities</strong><br>';
       for (const [key, value] of Object.entries(reality)) output += `<strong>${key}:</strong> ${value}<br>`;
-      document.getElementById('gmReferenceOutput').innerHTML = output;
+      gmOutput.innerHTML = output;
     } catch (e) {
       console.error('Error generating reality:', e);
-      alert('Failed to generate reality.');
+      alert(`Failed to generate reality: ${e.message}`);
     }
   }
 
@@ -5307,6 +5779,11 @@ function removePowerField(button) {
     try {
       const types = ['Event (e.g., Battle of Riftgate)', 'Person (e.g., Rift King)', 'Location (e.g., Nexus Spire)'];
       const statuses = ['Stable', 'Threatened', 'Altered'];
+      const gmOutput = document.getElementById('gmReferenceOutput');
+      if (!gmOutput) {
+        throw new Error('gmReferenceOutput element not found');
+      }
+
       const point = {
         Type: types[Math.floor(Math.random() * types.length)],
         Description: prompt('Enter description (e.g., Battle of Riftgate)') || 'Unnamed',
@@ -5315,10 +5792,10 @@ function removePowerField(button) {
       };
       let output = '<strong>Fixed Point</strong><br>';
       for (const [key, value] of Object.entries(point)) output += `<strong>${key}:</strong> ${value}<br>`;
-      document.getElementById('gmReferenceOutput').innerHTML = output;
+      gmOutput.innerHTML = output;
     } catch (e) {
       console.error('Error generating fixed point:', e);
-      alert('Failed to generate fixed point.');
+      alert(`Failed to generate fixed point: ${e.message}`);
     }
   }
 
@@ -5423,8 +5900,6 @@ function removePowerField(button) {
       alert('Failed to display table.');
     }
   }
-
-  // Duplicate generateCharacterSheet function removed to prevent errors.
 
   function collectCharacterData() {
     try {
@@ -6649,6 +7124,49 @@ function removePowerField(button) {
   // Initialize on page load
   document.addEventListener('DOMContentLoaded', () => {
     try {
+    // Function overrides with safety checks (from previous fix)
+    const origUpdateSheetInputs = typeof updateSheetInputs === 'function' ? updateSheetInputs : (options = {}) => {
+      console.warn('Original updateSheetInputs not defined, skipping call');
+    };
+    updateSheetInputs = function(options = {}) {
+      try {
+        origUpdateSheetInputs(options);
+        resetStatPointsOnLevelChange();
+      } catch (e) {
+        console.error('Error in overridden updateSheetInputs:', e);
+        alert('Failed to update sheet inputs.');
+      }
+    };
+
+    const origPopulateCharacterSheet = typeof populateCharacterSheet === 'function' ? populateCharacterSheet : (data) => {
+      console.warn('Original populateCharacterSheet not defined, skipping call');
+    };
+    populateCharacterSheet = function(data) {
+      try {
+        origPopulateCharacterSheet(data);
+        loadStatPointsFromData(data);
+      } catch (e) {
+        console.error('Error in overridden populateCharacterSheet:', e);
+        alert('Failed to populate character sheet.');
+      }
+    };
+
+    const origCollectCharacterData = typeof collectCharacterData === 'function' ? collectCharacterData : () => {
+      console.warn('Original collectCharacterData not defined, returning empty object');
+      return {};
+    };
+    collectCharacterData = function() {
+      try {
+        const data = origCollectCharacterData();
+        saveStatPointsToData(data);
+        return data;
+      } catch (e) {
+        console.error('Error in overridden collectCharacterData:', e);
+        alert('Failed to collect character data.');
+        return {};
+      }
+    };
+
     // Initialize stat point globals based on current level
     const charLevelEl = document.getElementById('charLevel');
     if (!charLevelEl) {
@@ -6711,55 +7229,67 @@ function removePowerField(button) {
     // Call updateStatPointUI once at the end
     updateStatPointUI();
 
-    // Add dynamic onchange handlers
+    // Define named handler functions to allow removal
+    const handleCharNameChange = () => {
+      if (!window.isLoadingCharacter) {
+        console.log('charName changed to:', document.getElementById('charName')?.value || 'N/A');
+        updateInputs();
+        updateSkillSpecOptions();
+        updateFeats();
+        updateClassAbilities();
+      }
+    };
+
+    const handleCharLevelChange = () => {
+      if (!window.isLoadingCharacter) {
+        console.log('charLevel changed to:', document.getElementById('charLevel')?.value || 'N/A');
+        resetStatPointsOnLevelChange();
+        updateSheetInputs({ preserveAttributes: true });
+        updateInputs();
+        updateSkillSpecOptions();
+        updateFeats();
+        updateClassAbilities();
+        updateStatPointUI();
+      }
+    };
+
+    const handleCharClassChange = () => {
+      if (!window.isLoadingCharacter) {
+        console.log('charClass changed to:', document.getElementById('charClass')?.value || 'N/A');
+        updateSheetInputs({ preserveAttributes: true });
+        updateInputs();
+        updateSkillSpecOptions();
+        updateFeats();
+        updateClassAbilities();
+      }
+    };
+
+    const handleAttributeChange = () => {
+      if (!window.isLoadingCharacter) {
+        updateSheetInputs({ preserveAttributes: true });
+      }
+    };
+
+    // Add dynamic onchange handlers with removal to prevent overlap
     const inputs = [
-      {
-        id: 'charName',
-        handler: () => {
-          console.log('charName changed to:', document.getElementById('charName').value);
-          updateInputs();
-          updateSkillSpecOptions();
-          updateFeats();
-          updateClassAbilities();
-        }
-      },
-      {
-        id: 'charLevel',
-        handler: () => {
-          console.log('charLevel changed to:', document.getElementById('charLevel').value);
-          resetStatPointsOnLevelChange();
-          updateSheetInputs({ preserveAttributes: true });
-          updateInputs();
-          updateSkillSpecOptions();
-          updateFeats();
-          updateClassAbilities();
-          updateStatPointUI();
-        }
-      },
-      {
-        id: 'charClass',
-        handler: () => {
-          console.log('charClass changed to:', document.getElementById('charClass').value);
-          updateSheetInputs({ preserveAttributes: true });
-          updateInputs();
-          updateSkillSpecOptions();
-          updateFeats();
-          updateClassAbilities();
-        }
-      },
-      { id: 'attrSTR', handler: () => updateSheetInputs({ preserveAttributes: true }) },
-      { id: 'attrDEX', handler: () => updateSheetInputs({ preserveAttributes: true }) },
-      { id: 'attrCON', handler: () => updateSheetInputs({ preserveAttributes: true }) },
-      { id: 'attrINT', handler: () => updateSheetInputs({ preserveAttributes: true }) },
-      { id: 'attrWIS', handler: () => updateSheetInputs({ preserveAttributes: true }) },
-      { id: 'attrCHA', handler: () => updateSheetInputs({ preserveAttributes: true }) }
+      { id: 'charName', handler: handleCharNameChange },
+      { id: 'charLevel', handler: handleCharLevelChange },
+      { id: 'charClass', handler: handleCharClassChange },
+      { id: 'attrSTR', handler: handleAttributeChange },
+      { id: 'attrDEX', handler: handleAttributeChange },
+      { id: 'attrCON', handler: handleAttributeChange },
+      { id: 'attrINT', handler: handleAttributeChange },
+      { id: 'attrWIS', handler: handleAttributeChange },
+      { id: 'attrCHA', handler: handleAttributeChange }
     ];
+
     inputs.forEach(({ id, handler }) => {
       const input = document.getElementById(id);
       if (input) {
-        input.addEventListener('change', () => {
-          if (!window.isLoadingCharacter) handler();
-        });
+        // Remove existing listener to prevent overlap
+        input.removeEventListener('change', handler);
+        input.addEventListener('change', handler);
+        console.log(`Added change event listener for ${id}`);
       } else {
         console.warn(`Input ${id} not found`);
       }
